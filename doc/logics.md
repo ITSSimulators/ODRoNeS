@@ -1,6 +1,6 @@
 ODRoNeS (OpenDRIVE Road Network System)
 =======================================
-The Road Network System is essentially an array of connected `sections` on a system 
+The Road Network System `rns` is essentially an array of connected `sections` on a system 
  that will allow you to use both cartesian to road coordinates interchangeably.
 
 `sections`, are essentially a dynamic array of (roughly) parallel lanes,
@@ -21,9 +21,10 @@ The Road Network System is essentially an array of connected `sections` on a sys
   However, it relies on the geometry (and derived) class(es) to do all the calculations.
   More details can be found later, in the [lanes](#lanes) subsection.
 
-Thus, lanes calculate these things differently depending on whether they're
-  straight or curved, and the underlying maths belong to matvec,
-  or a series of static methods written in class mvf (maths and vector functions).
+Thus, lanes calculate these things differently depending on whether their geometry,
+  and the underlying maths belong to the `mvf` class.
+
+Ultimately, see the ` rns.h` and the `lane.h` headers to find out more.
 
 
 Lanes
@@ -217,15 +218,6 @@ Conflicts will be linked IF:
  - they belong to the same crosswalk lane... until pedestrian isles are introduced.
  - they are too close, i e, if c2.so - c1.se < 2 * car.length.
 
-
-
-### Numerical Intersections ###
-   - calc the bounding box of curve C1 and the bounding box of curve C2.
-   - if there's overlap, split curve C1 into C1.1 and C1.2 and curve C2 into C2.1 and C2.2,
-     calculate the new bounding boxes, and check whether C1.1 overlaps with either C2.* and same for C1.2 w C2.*.
-     Keep all the overlaps and keep iterate decreasing the size of the boxes.
-   - When the curves have less than 4 points, calculate the crossing between all the line pairs of C1.n and C2.n,
-     i e, crossing between: C1.n[0,1] and C2.n[0,1], C2.n[1,2] and C2.n[2,3].
 
 
 ## Ancillary Classes ##
