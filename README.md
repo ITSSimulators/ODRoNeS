@@ -45,7 +45,7 @@ In order to learn how to use the library and the headers, have a look at the `do
 
 You can also identify the different lanes with labels and colours passing the `-i` flag:
 
-    ./rnscheck <map-file.xodr>
+    ./rnscheck -i <map-file.xodr>
 
 
 
