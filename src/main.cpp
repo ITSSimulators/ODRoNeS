@@ -45,13 +45,20 @@ int main(int argc, char *argv[])
     options.allow_unrecognised_options();
 
     options.add_options()
-            ("m,map","Input file map", cxxopts::value<std::string>())
-            ("version", "Print RNS version")
+	    ("h,help", "Print usage message") 
+            ("m,map", "Input file map", cxxopts::value<std::string>())
+            ("v,version", "Print RNS version")
             ("i,identify", "Identify lanes");
 
     options.parse_positional("map");
 
     auto result = options.parse(argc, argv);
+    if (result.count("help"))
+    {
+	std::cout << options.help() << std::endl;
+	return 0; 
+    }
+
 
     // Option 1 - Version
     if (result.count("version"))

@@ -35,6 +35,21 @@ and on Windows one:
 Alternatively, if using Microsoft Visual Studio, you can open the created solution after configuring with CMake.
 
 
+Usage
+-----
+In order to learn how to use the library and the headers, have a look at the `doc` folder. 
+ In order to visualise your map, you can use `rnscheck`. 
+ Launch it from the command line passing the path to the map as the last argument:
+
+    ./rnscheck <map-file.xodr>
+
+You can also identify the different lanes with labels and colours passing the `-i` flag:
+
+    ./rnscheck <map-file.xodr>
+
+
+
+
 Documentation
 -------------
 Details on the structure of the library can be found in ` doc `. 
