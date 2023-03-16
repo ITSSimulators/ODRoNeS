@@ -6,10 +6,12 @@ ODRoNeS is a simulation-ready road network system supporting the OpenDRIVE stand
 
 
 The library is written in C++ and is shipped with few open-source dependencies: 
+
  - [cxxopts](https://github.com/jarro2783/cxxopts)
  - [tinyxml2](https://github.com/leethomason/tinyxml2)
  - [clothoids](https://github.com/ebertolazzi/Clothoids)
-while it uses [Qt](https://www.qt.io) for visualisation. 
+
+and it uses [Qt](https://www.qt.io) for visualisation. 
 
 
 Install
@@ -46,10 +48,10 @@ The coverage of the standard is not yet complete, and it is still missing:
  * Variable speed.
  * Several traffic signs.
  * Poly3 geometry (though it is deprecated).
- * Rail and railway stations.
+ * Rail and railway stations.   
 and possibly more. 
 
-However, while there's still work to be done, the library is now strong enough to go public. 
+While there's still work to be done, the library is now strong enough to go public. 
 
 
 Author
