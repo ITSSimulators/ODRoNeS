@@ -341,8 +341,6 @@ public:
     // static bool getIntersectionPointFromOTtoLane(arr2 &p, arr2 const &o, arr2 &t, const lane* l);
     //! Project point onto lane
     bool projectPointOntoLane(arr2 &p, arr2 const &o, bool verbose=true) const;
-    //! Project point onto lane using _points; return false if _points have not been set up.
-    // bool projectPointOntoLane_points(arr2 &p, arr2 const &o) const;
 
     //! return the botton left corner and the top right corner, and 0 if things went well;
     bool getBoundingBox(arr2 &bl, arr2 &tr) const;
