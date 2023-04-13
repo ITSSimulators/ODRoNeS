@@ -2,4 +2,5 @@
 *.autosave
 CMakeLists.txt.user*
 compile_commands.json
+doc/maps
 
