@@ -25,8 +25,7 @@ project(ODRoNeS)
 cmake_policy(VERSION 3.20)
 
 
-
-# Now some more defines for it:
+# Package definitions:
 set(PACKAGE "ODRoNeS")
 set(VERSION "0.8")
 set(PACKAGE_URL "")
@@ -35,6 +34,11 @@ set(PACKAGE_STRING "${PACKAGE} ${VERSION}")
 set(PACKAGE_TARNAME ${PACKAGE})
 set(PACKAGE_VERSION ${VERSION})
 set(PACKAGE_BUGREPORT "")
+
+
+# Ask for C++17
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
 
@@ -55,6 +59,7 @@ include_directories(${RNS_DIR}/3rdParty/cxxopts)
 include_directories(${RNS_DIR}/3rdParty/tinyxml2)
 
 
+# Qt graphical interface:
 option(USE_QT "Build SmartActors with a graphical interface" ON)
 if (USE_QT)
   find_package(Qt6 COMPONENTS Core Gui Widgets 3DCore 3DRender 3DExtras)
