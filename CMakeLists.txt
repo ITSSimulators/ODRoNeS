@@ -20,12 +20,9 @@
 #  to publications you cite the package and its related publications. 
 #
 
-cmake_minimum_required(VERSION 3.13.3)
+cmake_minimum_required(VERSION 3.20)
 project(ODRoNeS)
-cmake_policy(VERSION 3.13.3)
-if (${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.17)
-    cmake_policy(SET CMP0100 NEW)
-endif (${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.17)
+cmake_policy(VERSION 3.20)
 
 
 
@@ -60,13 +57,14 @@ include_directories(${RNS_DIR}/3rdParty/tinyxml2)
 
 option(USE_QT "Build SmartActors with a graphical interface" ON)
 if (USE_QT)
-  find_package(Qt5 COMPONENTS Core Gui Widgets)
-  if (NOT ${Qt5_FOUND})
+  find_package(Qt6 COMPONENTS Core Gui Widgets 3DCore 3DRender 3DExtras)
+  if (NOT ${Qt6_FOUND})
       message(FATAL_ERROR "You could also try compiling without Qt support using -DUSE_QT=OFF")
-  endif (NOT ${Qt5_FOUND})
-  set(QT_LIBRARIES Qt5::Core Qt5::Gui Qt5::Widgets)
+  endif (NOT ${Qt6_FOUND})
+  set(QT_LIBRARIES Qt6::Core Qt6::Gui Qt6::Widgets)
   set(CMAKE_AUTOUIC ON)
   set(CMAKE_AUTOMOC ON)
+  set(CMAKE_AUTORCC ON)
 endif(USE_QT)
 
 add_library(rns
@@ -106,6 +104,12 @@ add_executable(rnscheck
     ${RNS_DIR}/src/rnswindow.cpp ${RNS_DIR}/include/rnswindow.h
 )
 target_link_libraries(rnscheck rns ${QT_LIBRARIES})
+
+qt_add_executable(rns3d 
+    ${RNS_DIR}/src/mainQt3D.cpp 
+    ${RNS_DIR}/src/mainwindow.cpp ${RNS_DIR}/include/mainwindow.h)
+target_link_libraries(rns3d PRIVATE Qt6::Widgets Qt6::3DCore Qt6::3DRender Qt6::3DExtras)
+
 
 install (TARGETS rnscheck RUNTIME DESTINATION bin)
 install (TARGETS rns DESTINATION lib)
