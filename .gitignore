@@ -1,0 +1,5 @@
+*.sw?
+*.autosave
+CMakeLists.txt.user*
+compile_commands.json
+
