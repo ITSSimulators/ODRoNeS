@@ -113,7 +113,7 @@ target_link_libraries(rnscheck rns ${QT_LIBRARIES})
 qt_add_executable(rns3d 
     ${RNS_DIR}/src/mainQt3D.cpp 
     ${RNS_DIR}/src/mainwindow.cpp ${RNS_DIR}/include/mainwindow.h)
-target_link_libraries(rns3d PRIVATE Qt6::Widgets Qt6::3DCore Qt6::3DRender Qt6::3DExtras)
+target_link_libraries(rns3d PRIVATE rns Qt6::Widgets Qt6::3DCore Qt6::3DRender Qt6::3DExtras)
 
 
 install (TARGETS rnscheck RUNTIME DESTINATION bin)
