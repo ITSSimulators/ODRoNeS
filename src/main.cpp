@@ -29,7 +29,6 @@
 #include <fstream>
 
 #include "cxxopts.hpp"
-#include "rns.h"
 #include "rnswindow.h"
 
 static float rnsversion = 0.8;
