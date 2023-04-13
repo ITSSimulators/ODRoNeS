@@ -5,6 +5,8 @@
 #include <Qt3DCore>
 #include <Qt3DExtras>
 
+#include "rns.h"
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -25,7 +27,8 @@ private:
     Qt3DExtras::Qt3DWindow *view;
     Qt3DExtras::QFirstPersonCameraController *cameraController;
     Qt3DCore::QEntity *root;
-    QSize lastCWSize;
+
+    RNS *_rns;
 
 };
 #endif // MAINWINDOW_H

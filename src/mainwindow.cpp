@@ -10,7 +10,25 @@ MainWindow::MainWindow(std::string iFile, bool identifyLanes, QWidget *parent)
 
     setup();
 
-    // Add plane
+    _rns = new RNS(iFile, concepts::drivingSide::leftHand, true);
+    _rns->printLanes();
+    int minX, minY, maxX, maxY;
+    _rns->getDimensions(minX, minY, maxX, maxY);
+
+    for (uint i=0; i < _rns->sectionsSize(); ++i)
+    {
+        for (uint j=0; j<_rns->sections(i).size(); ++j)
+        {
+            lane *l = _rns->sections(i)[j];
+            QByteArray indexBytes, vertexBytes;
+            int indexSize = 0; int vertexSize = 0;
+            l->fillInVerticesAndIndices(indexBytes, vertexBytes, indexSize, vertexSize);
+        }
+    }
+
+
+
+    /* // Add plane */
     Qt3DCore::QEntity *planeEntity = new Qt3DCore::QEntity(root);
     Qt3DExtras::QPlaneMesh *planeMesh = new Qt3DExtras::QPlaneMesh(planeEntity);
     planeMesh->setWidth(20);
@@ -33,6 +51,7 @@ MainWindow::MainWindow(std::string iFile, bool identifyLanes, QWidget *parent)
 
 
 
+
     view->show();
 }
 
@@ -51,8 +70,6 @@ void MainWindow::setup()
 
     ui->listWidget->setMinimumHeight(100);
     ui->listWidget->setMaximumHeight(250);
-
-    lastCWSize = ui->centralwidget->size();
 
     // store the old values, since  will be used by the new window container:
     QSize thisSize = ui->threeD->size();
@@ -76,7 +93,7 @@ void MainWindow::setup()
     ui->verticalLayout->replaceWidget(tmp, ui->threeD);
 
     Qt3DExtras::QForwardRenderer *renderer = (Qt3DExtras::QForwardRenderer *)view->activeFrameGraph();
-    renderer->setClearColor("black");
+    renderer->setClearColor(QColor(240, 240, 240));
 
     root = new Qt3DCore::QEntity();
     view->setRootEntity(root);
