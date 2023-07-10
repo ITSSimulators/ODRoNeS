@@ -2015,7 +2015,7 @@ std::vector<QPainterPath> lane::getQPainterPaths(uint n) const
     return qpp;
 }
 
-int lane::fillInVerticesAndIndices(QByteArray &indexBytes, QByteArray &vertexBytes, int &indexSize, int &vertexSize) const
+int lane::fillInVerticesAndIndices(uint n, QByteArray &indexBytes, QByteArray &vertexBytes, int &indexSize, int &vertexSize) const
 {
     return 0;
 }

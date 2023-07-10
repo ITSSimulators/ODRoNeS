@@ -386,7 +386,7 @@ public:
 #ifdef QT_CORE_LIB
     QPainterPath getQPainterPath(uint n) const; ///< get a QPainterPath with n points per Bezier line.
     std::vector<QPainterPath> getQPainterPaths(uint n) const; ///< get a vector with the QPainterPaths of each Bezier line in the lane.
-    int fillInVerticesAndIndices(QByteArray &indexBytes, QByteArray &vertexBytes, int &indexSize, int &vertexSize) const; ///< as the method states: allocate and fill in the required 3D data.
+    int fillInVerticesAndIndices(uint n, QByteArray &indexBytes, QByteArray &vertexBytes, int &indexSize, int &vertexSize) const; ///< as the method states: allocate and fill in the required 3D data.
 #endif
 
 private:
