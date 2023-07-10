@@ -115,6 +115,10 @@ qt_add_executable(rns3d
     ${RNS_DIR}/src/mainwindow.cpp ${RNS_DIR}/include/mainwindow.h)
 target_link_libraries(rns3d PRIVATE rns Qt6::Widgets Qt6::3DCore Qt6::3DRender Qt6::3DExtras)
 
+add_executable(uniformSampling
+	${RNS_DIR}/src/uniformSampling.cpp 
+	)
+target_link_libraries(uniformSampling rns)
 
 install (TARGETS rnscheck RUNTIME DESTINATION bin)
 install (TARGETS rns DESTINATION lib)
