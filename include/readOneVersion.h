@@ -136,8 +136,11 @@ class readOneVersion
 public:
     readOneVersion(std::string iFile);
 
+    bool ready() { return _ready; };
+
 private:
     LogicalRoadNetwork *_ovn;
+    bool _ready;
 };
 
 #endif // USE_ONEVERSION

@@ -56,7 +56,9 @@ public:
     concepts::drivingSide drivingSide() const; ///< return the driving side.
     void drivingSide(concepts::drivingSide side); ///< manually set the driving side.
 
-    bool makeRoads(std::string odrMap, concepts::drivingSide drivingSide, bool loadSidewalk);
+    bool makeRoads(std::string mapFile, concepts::drivingSide drivingSide, bool loadSidewalk);
+    bool makeOpenDRIVERoads(std::string mapFile, concepts::drivingSide drivingSide, bool loadSidewalk);
+    bool makeOneVersionRoads(std::string mapFile);
     void printLanes() const; ///< print sections and lanes
 
     lane* getLaneWithSUID(int sID, int lID) const;

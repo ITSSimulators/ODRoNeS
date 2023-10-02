@@ -25,7 +25,8 @@
 
 #include "readOneVersion.h"
 
-readOneVersion::readOneVersion(std::string iFile)
+readOneVersion::readOneVersion(std::string iFile) :
+    _ready(false)
 {
     _ovn = new LogicalRoadNetwork(iFile);
     if (!_ovn)
@@ -53,11 +54,11 @@ readOneVersion::readOneVersion(std::string iFile)
         for (uint j = 0; j < rna.size(); j++)
         {
             secID += 1;
-            std::cout << "here's a new section: " << secID << std::endl;
+            // std::cout << "here's a new section: " << secID << std::endl; // new section.
             // For Every Lane Group:
             for (uint k = 0; k < rna[j]->numLaneGroups(); ++k)
             {
-                std::cout << "here's a new lane group: " << k << std::endl;
+                // std::cout << "here's a new lane group: " << k << std::endl; // mark it.
                 const LaneGroup *lg = rna[j]->laneGroupForIndex(k);
                 // For Every Lane:
                 for (uint l = 0; l < lg->numLanes(); ++l)

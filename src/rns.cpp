@@ -56,22 +56,10 @@ RNS::RNS(const RNS& r)
 }
 
 
-RNS::RNS(std::string odrMap, concepts::drivingSide drivingSide, bool loadSidewalk)
+RNS::RNS(std::string mapFile, concepts::drivingSide drivingSide, bool loadSidewalk)
 {
     initialise();
-    if (!std::string(std::filesystem::path(odrMap).extension()).compare(".xodr"))
-        _ready = makeRoads(odrMap, drivingSide, loadSidewalk);
-#ifdef USE_ONEVERSION
-    else if (!std::string(std::filesystem::path(odrMap).extension()).compare(".bin"))
-    {
-        readOneVersion r(odrMap);
-    }
-#endif // USE_ONEVERSION
-    else
-    {
-        std::cerr << "[ Error ] unrecognised extension " << std::filesystem::path(odrMap).extension() << std::endl;
-        std::cerr << "---  Try loading a .xodr file if using OPENDrive or a .bin file if using OneVersion" << std::endl;
-    }
+    _ready = makeRoads(mapFile, drivingSide, loadSidewalk);
     return;
 }
 
@@ -225,11 +213,36 @@ void RNS::tSigns(const std::vector<lane::tSign> &t)
 
 }
 
-bool RNS::makeRoads(std::string odrMap, concepts::drivingSide drivingSide, bool loadSidewalk)
+bool RNS::makeRoads(std::string mapFile, concepts::drivingSide drivingSide, bool loadSidewalk)
+{
+    if (!std::string(std::filesystem::path(mapFile).extension()).compare(".xodr"))
+        return makeRoads(mapFile, drivingSide, loadSidewalk);
+#ifdef USE_ONEVERSION
+    else if (!std::string(std::filesystem::path(mapFile).extension()).compare(".bin"))
+        return makeOneVersionRoads(mapFile);
+#endif // USE_ONEVERSION
+    else
+    {
+        std::cerr << "[ Error ] unrecognised extension " << std::filesystem::path(mapFile).extension() << std::endl;
+        std::cerr << "---  Try loading a .xodr file if using OPENDrive or a .bin file if using OneVersion" << std::endl;
+    }
+    return false;
+}
+
+bool RNS::makeOneVersionRoads(std::string mapFile)
+{
+    _ready = false;
+    readOneVersion r(mapFile);
+    return _ready;
+}
+
+bool RNS::makeOpenDRIVERoads(std::string odrMap, concepts::drivingSide drivingSide, bool loadSidewalk)
 {
     _ready = false;
 
     _drivingSide = drivingSide;
+
+
 
     std::cout << "[ Warning ] work in progress; ignoring loadSidewalk value: " << loadSidewalk << std::endl;
 
