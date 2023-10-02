@@ -28,13 +28,20 @@
 readOneVersion::readOneVersion(std::string iFile)
 {
     _ovn = new LogicalRoadNetwork(iFile);
+    if (!_ovn)
+    {
+        std::cout << "[ Error ] OneVersion's LogicalRoadNetwork failed to load!" << std::endl;
+        return;
+    }
+
+    std::cout << "-- There are " << _ovn->getNetNodeCount() << " network nodes and "
+              << _ovn->getJunctionCount() << " junctions in " << iFile << std::endl;
 
     // Loop over every possible lane, and add its details to the right place.
     //  For every network node
     //    For every road node
     //      For every LaneGroup in RN.laneGroup.array
     //        create a section, and put in there the lanes within the laneGroup.
-
     uint secID = 0;
     // For Every Network Node:
     for (uint i = 1; i <= _ovn->getNetNodeCount(); ++i) // who did that 1-based?!
@@ -59,12 +66,15 @@ readOneVersion::readOneVersion(std::string iFile)
                     const Lane* lane = lg->laneForIndex(l);
                     if (lane->laneType() == Lane::Patch)
                     {
+                        std::cout << "this lane is a patch (standard)" << std::endl;
                         // use centreRefCurve:
                         const geom::Curve* curve = lane->centreRefCurve();
                         for (uint m = 0; m < curve->numSegments(); ++m)
                         {
+                            std::cout << "this is segment " << m << std::endl;
                             if (curve->segmentType(m) == geom::Curve::StraightSegment)
                             {
+                                std::cout << "this segment is straight" << std::endl;
                                 curve->segmentAttribute(m, geom::Curve::Length);
                                 curve->segmentAttribute(m, geom::Curve::CumulativeLength);
 
@@ -76,6 +86,7 @@ readOneVersion::readOneVersion(std::string iFile)
                             }
                             else if (curve->segmentType(m) == geom::Curve::CircularSegment)
                             {
+                                std::cout << "this segment is an arc" << std::endl;
                                 curve->segmentAttribute(m, geom::Curve::Length);
                                 curve->segmentAttribute(m, geom::Curve::CumulativeLength);
                                 curve->segmentAttribute(m, geom::Curve::Radius);
@@ -94,11 +105,7 @@ readOneVersion::readOneVersion(std::string iFile)
                             {
                                 // it looks like it's just a straight,
                                 //    and you have lots of straights...
-                                if (m > 0)
-                                {
-                                    std::cout << "ERROR: I don't think the system handles that." << std::endl;
-                                }
-
+                                std::cout << "this segment is piecewise linear" << std::endl;
                                 curve->segmentAttribute(m, geom::Curve::Length);
                                 curve->segmentAttribute(m, geom::Curve::CumulativeLength);
 
@@ -110,6 +117,10 @@ readOneVersion::readOneVersion(std::string iFile)
                                 geom::Curve::CartCoordType end;
                                 curve->getPointAtIndex(m, end);
 
+                            }
+                            else
+                            {
+                                std::cout << "This segment is not yet supported!" << std::endl;
                             }
                         }
                     }
@@ -125,9 +136,6 @@ readOneVersion::readOneVersion(std::string iFile)
                     {
                         std::cout << "Lane Type unknown!" << std::endl;
                     }
-
-
-
                 }
             }
         }
