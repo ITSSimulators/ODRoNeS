@@ -27,7 +27,11 @@
 
 RNSWindow::RNSWindow(std::string iFile, bool identifyLanes, QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::RNSWindow)
+    ui(new Ui::RNSWindow),
+    _rns(nullptr),
+    _grns(nullptr),
+    _gzoom(nullptr),
+    _scene(nullptr)
 {
     ui->setupUi(this);
     setWindowTitle(tr("ODRoNeS"));
@@ -76,11 +80,11 @@ RNSWindow::RNSWindow(std::string iFile, bool identifyLanes, QWidget *parent) :
 
 RNSWindow::~RNSWindow()
 {
+    if (_gzoom) delete _gzoom;
     delete ui;
-    delete _gzoom;
-    delete _grns;
-    delete _rns;
-    delete _scene;
+    if (_grns) delete _grns;
+    if (_rns) delete _rns;
+    if (_scene) delete _scene;
 }
 
 #endif // QT_CORE_LIB

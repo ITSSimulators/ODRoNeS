@@ -39,6 +39,7 @@ public:
     ~RNS();
 
     void clearMemory();
+    void initialise();
     void assignInputRNSToThis(const RNS& r);
 
     void setSections(uint sectionsSize); ///< allocate and enumerate so many sections;

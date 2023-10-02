@@ -21,13 +21,21 @@
 //
 
 #include "rns.h"
+#ifdef USE_ONEVERSION
+#include "readOneVersion.h"
+#endif // USE_ONEVERSION
 
-RNS::RNS() :
-    _sections(nullptr),
-    _sectionsSize(0),
-    _ready(false)
+RNS::RNS()
 {
+    initialise();
     return;
+}
+
+void RNS::initialise()
+{
+    _sections = nullptr;
+    _sectionsSize = 0;
+    _ready = false;
 }
 
 
@@ -38,7 +46,6 @@ RNS::~RNS()
 
 RNS& RNS::operator=(RNS& r)
 {
-    clearMemory();
     assignInputRNSToThis(r);
     return *this;
 }
@@ -51,7 +58,21 @@ RNS::RNS(const RNS& r)
 
 RNS::RNS(std::string odrMap, concepts::drivingSide drivingSide, bool loadSidewalk)
 {
-    _ready = makeRoads(odrMap, drivingSide, loadSidewalk);
+    initialise();
+    if (!std::string(std::filesystem::path(odrMap).extension()).compare(".xodr"))
+        _ready = makeRoads(odrMap, drivingSide, loadSidewalk);
+#ifdef USE_ONEVERSION
+    else if (!std::string(std::filesystem::path(odrMap).extension()).compare(".bin"))
+    {
+        readOneVersion r(odrMap);
+    }
+#endif // USE_ONEVERSION
+    else
+    {
+        std::cerr << "[ Error ] unrecognised extension " << std::filesystem::path(odrMap).extension() << std::endl;
+        std::cerr << "---  Try loading a .xodr file if using OPENDrive or a .bin file if using OneVersion" << std::endl;
+    }
+    return;
 }
 
 
@@ -63,6 +84,10 @@ void RNS::clearMemory()
         _sections = nullptr;
         _sectionsSize = 0;
     }
+    _sectionsSize = 0;
+    _tSigns.clear();
+    _ready = false;
+
 }
 
 
