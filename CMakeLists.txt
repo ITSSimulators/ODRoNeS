@@ -72,11 +72,42 @@ if (USE_QT)
   set(CMAKE_AUTORCC ON)
 endif(USE_QT)
 
+# OneVersion interface:
+option(USE_ONEVERSION "Add support for OneVersion maps" OFF)
+if(USE_ONEVERSION)
+  # Find the headers:
+  find_path(ONEVERSION_INCLUDE_DIR NAMES sim/Car.h
+          HINTS ${ONEVERSION_HOME}/Simulator3/include
+          HINTS $ENV{ONEVERSION_HOME}/Simulator3/include)
+  cmake_path(GET ONEVERSION_INCLUDE_DIR PARENT_PATH ONEVERSION_ROOT)
+  cmake_path(GET ONEVERSION_ROOT PARENT_PATH ONEVERSION_ROOT)
+  message(STATUS "OneVersion: ${ONEVERSION_ROOT}")
+  include_directories(${ONEVERSION_INCLUDE_DIR})
+  message(STATUS "OneVersion include: ${ONEVERSION_INCLUDE_DIR}")
+  include_directories(${ONEVERSION_ROOT}/include)
+  message(STATUS "OneVersion include: ${ONEVERSION_ROOT}/include")
+
+
+  # Find the library
+  find_library(ONEVERSION_LIBRARY NAMES libsim sim HINTS ${ONEVERSION_ROOT}/lib)
+  message(STATUS "libsim: ${ONEVERSION_LIBRARY}")
+
+  # Definitions and dependencies:
+  include(${ONEVERSION_ROOT}/share/cmake/BuildSim.cmake)
+  add_compile_definitions(${ONEVERSION_DEFINITIONS})
+  include_directories(${SIMDEPS_INCLUDE_DIRS})
+
+  # Add an extra definition
+  add_definitions(-DUSE_ONEVERSION)
+
+endif(USE_ONEVERSION)
+
 add_library(rns
     ${RNS_DIR}/include/constants.h 
     ${RNS_DIR}/src/rnsconcepts.cpp ${RNS_DIR}/include/rnsconcepts.h
     ${RNS_DIR}/src/matvec.cpp ${RNS_DIR}/include/matvec.h
     ${RNS_DIR}/src/readOdr.cpp ${RNS_DIR}/include/readOdr.h
+    ${RNS_DIR}/src/readOneVersion.cpp ${RNS_DIR}/include/readOneVersion.h
     ${RNS_DIR}/src/geometry.cpp ${RNS_DIR}/include/geometry.h
     ${RNS_DIR}/src/parametric.cpp ${RNS_DIR}/include/parametric.h
     ${RNS_DIR}/src/numerical.cpp ${RNS_DIR}/include/numerical.h
@@ -103,12 +134,18 @@ add_library(rns
     3rdParty/tinyxml2/tinyxml2.cpp
 )
 target_link_libraries(rns clothoids ${QT_LIBRARIES})
+if (USE_ONEVERSION)
+    target_link_libraries(rns ${ONEVERSION_LIBRARY} ${SIMDEPS_LIBRARIES})
+endif (USE_ONEVERSION)
 
 add_executable(rnscheck
     ${RNS_DIR}/src/main.cpp
     ${RNS_DIR}/src/rnswindow.cpp ${RNS_DIR}/include/rnswindow.h
 )
 target_link_libraries(rnscheck rns ${QT_LIBRARIES})
+if (USE_ONEVERSION)
+    target_link_libraries(rns ${ONEVERSION_LIBRARY} ${SIMDEPS_LIBRARIES})
+endif (USE_ONEVERSION)
 
 qt_add_executable(rns3d 
     ${RNS_DIR}/src/mainQt3D.cpp 
