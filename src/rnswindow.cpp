@@ -34,6 +34,11 @@ RNSWindow::RNSWindow(std::string iFile, bool identifyLanes, QWidget *parent) :
     ui->centralwidget->setLayout(ui->verticalLayout);
 
     _rns = new RNS(iFile, concepts::drivingSide::leftHand, true);
+    if (!_rns->ready())
+    {
+        std::cout << "[ Error ] Something went wrong loading the Road Network System" << std::endl;
+        return;
+    }
     _rns->printLanes();
     int minX, minY, maxX, maxY;
     _rns->getDimensions(minX, minY, maxX, maxY);
