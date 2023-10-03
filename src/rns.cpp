@@ -232,7 +232,52 @@ bool RNS::makeRoads(std::string mapFile, concepts::drivingSide drivingSide, bool
 bool RNS::makeOneVersionRoads(std::string mapFile)
 {
     _ready = false;
-    readOneVersion r(mapFile);
+
+    _drivingSide = concepts::drivingSide::leftHand;
+
+    // Load the roads file:
+    readOneVersion read(mapFile);
+    if (!read.ready())
+    {
+        std::cerr << "[ RNS ] unable to load the OneVersion map" << std::endl;
+        return false;
+    }
+
+    // Allocate and do the geometry of for the lanes:
+    uint sectionsSize = 0;
+    for (uint i = 0; i < read.sections.size(); )
+        sectionsSize += read.sections[i].lgSize;
+    setSections(sectionsSize);
+
+    uint sectionsNdx = 0;
+    for (uint i = 0; i < read.sections.size(); ++i)
+    {
+        if (!read.sections[i].lanes.size())
+        {
+            std::cout << "[ Strange ] section: " << read.sections[i].id << ", aka " << read.sections[i].idString() << " has no lane... " << std::endl;
+            continue;
+        }
+
+        for (uint j = 0; j < read.sections[i].lgSize; ++j)
+        {
+            // get the number of lanes in this laneGroup:
+            uint jthLGSize = 0;
+            for (uint k = 0; k < read.sections[i].lanes.size(); ++k)
+                if (read.sections[i].lanes[k].lgIndex == j) jthLGSize += 1;
+
+            // allocate the right amount of lanes for this section:
+            _sections[sectionsNdx].set(jthLGSize);
+
+            // read just the lanes within this lane group:
+            // _sections[sectionsNdx].setOneDriveRoad(read.sections()[i], j);
+
+            // and carry on:
+            sectionsNdx += 1;
+        }
+    }
+
+
+
     return _ready;
 }
 
@@ -263,7 +308,7 @@ bool RNS::makeOpenDRIVERoads(std::string odrMap, concepts::drivingSide drivingSi
     uint sectionsSize = 0;
     for (uint i = 0; i < read.sections.size(); ++i)
         sectionsSize += read.sections[i].lsSize;
-    setSections(static_cast<uint>(sectionsSize));
+    setSections(sectionsSize);
 
     uint sectionsNdx = 0;
     for (uint i = 0; i < read.sections.size(); ++i)

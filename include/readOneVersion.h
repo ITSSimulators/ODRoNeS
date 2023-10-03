@@ -25,14 +25,11 @@
 
 #ifdef USE_ONEVERSION
 
+// Only System and ODRoNeS headers should be here.
 #include <iostream>
 #include <string>
 #include <vector>
 
-// OneVersion headers:
-#include "config/config.h"
-#include "lrn/orig/LogicalRoadNetwork.h"
-#include "lrn/orig/NetworkNode.h"
 
 
 /*! The classes OneVersion and readOneVersion are meant
@@ -44,57 +41,105 @@
 class OneVersion
 {
 public:
-    class curve3d
+    class OVID
     {
     public:
-        enum class SegmentType // aka SegmentEnum
-        { straight, circular, picewiseLinear };
-
-        class cartCoordType
+        OVID()
         {
-        public:
-            cartCoordType()
-            {
-                x = 0, y = 0; z = 0;
-                xp = 0; yp = 0; zp = 0;
-            }
-
-        public:
-            double x, y, z;
-            double xp, yp, zp;
+          laneID = -1; lgIndex = -1;
+          roadIDM = -1; roadIDm = -1;
+          nnodeID = -1;
         };
 
-        class segment
+        OVID& operator= (const OVID& input)
         {
-            segment()
-            {
-                startX = 0; startY = 0; startZ = 0;
-                startXp = 0; startYp = 0; startZp = 0;
-                endX = 0; endY = 0; endZ = 0;
-                endXp = 0; endYp = 0; endZp = 0;
-                length = 0; cummulativeLength = 0;
-                radius = 0;
-                centreX = 0; centreY = 0; centreZ = 0;
-                rightHand = 0;
-            }
-        public:
-            double startX, startY, startZ;
-            double startXp, startYp, startZp;
-            double endX, endY, endZ;
-            double endXp, endYp, endZp;
-            double length;
-            double cummulativeLength;
-            double radius;                    ///< Circle: radius of curvature.
-            double centreX, centreY, centreZ; ///< Circle: centre of the arc.
-            int rightHand; ///< Circle: +1 for rightHand (clockwise?), -1 for leftHand
+            laneID = input.laneID;
+            lgIndex = input.lgIndex;
+            roadIDM = input.roadIDM;
+            roadIDm = input.roadIDm;
+            nnodeID = input.nnodeID;
+            return *this;
         };
 
+        bool operator== (const OVID& input) const
+        {
+            if (laneID != input.laneID) return false;
+            if (lgIndex != input.lgIndex) return false;
+            if (roadIDM != input.roadIDM) return false;
+            if (roadIDm != input.roadIDm) return false;
+            if (nnodeID != input.nnodeID) return false;
+            return true;
+        };
+
+    public:
+        int laneID;
+        int lgIndex;
+        int roadIDM;
+        int roadIDm;
+        int nnodeID;
+    };
+
+    class cartCoordType
+    {
+    public:
+        cartCoordType()
+        {
+            x = 0, y = 0; z = 0;
+            xp = 0; yp = 0; zp = 0;
+        }
+
+    public:
+        double x, y, z;
+        double xp, yp, zp;
+    };
+
+
+    enum class SegmentType // aka SegmentEnum
+    { straight, circular, piecewiseLinear };
+
+    class segment
+    {
+    public:
+        segment()
+        {
+            start.x = 0; start.y = 0; start.z = 0;
+            start.xp = 0; start.yp = 0; start.zp = 0;
+            end.x = 0; end.y = 0; end.z = 0;
+            end.xp =0; end.yp = 0; end.zp = 0;
+            length = 0; cummulativeLength = 0;
+            radius = 0;
+            centreX = 0; centreY = 0; centreZ = 0;
+            rightHand = 0;
+        }
+    public:
+        cartCoordType start;
+        cartCoordType end;
+        double length;
+        double cummulativeLength;
+        double radius;                    ///< Circle: radius of curvature.
+        double centreX, centreY, centreZ; ///< Circle: centre of the arc.
+        int rightHand; ///< Circle: +1 for rightHand (clockwise?), -1 for leftHand
+        SegmentType type;
+    };
+
+    class linearFunc
+    {
+    public:
+        linearFunc() { a = 0; b = 0; };
+        double evaluate( double t ) { return a * t + b; };
+
+        double a; ///< ax + b
+        double b; ///< ax + b
+    };
+
+    class curve3d
+    {
     public:
         curve3d() {};
 
     public:
-        std::vector<SegmentType> segmentTypes;
-
+        std::vector<segment> segments;
+        linearFunc centreFunction;
 
     };
 
@@ -103,16 +148,24 @@ public:
     public:
         smaL()
         {
-            id = 0; ovID = 0; ndxLG = 0;
-        }
+            id = 0;
+            nearsideLane = nullptr; offsideLane = nullptr;
+            length = 0; dir = 0;
+            lgIndex = 0; lgLength = 0; lgStartDistance = 0;
+        };
     public:
         uint id;
-        uint ovID;
-        uint ndxLG; ///< lane group index.
+        OVID ovID, nearsideLaneOVID, offsideLaneOVID;
+        smaL* offsideLane;
+        smaL* nearsideLane;
+        float length;
+        uint lgIndex; ///< lane group index.
+        float lgLength; ///< lane group length
+        float lgStartDistance; ///< lane group start distance
+        int dir; ///< +1 / -1 depending on wether the direction is the same to the curve
+        OneVersion::curve3d curve;
         std::vector<smaL*> prevLane;
         std::vector<smaL*> nextLane;
-
-
     };
 
     class smaS
@@ -120,12 +173,24 @@ public:
     public:
         smaS()
         {
-            id = 0; ovID = 0; lgSize = 0;
-        }
+            id = 0; lgSize = 0;
+            friction = 0; speedLimit = 0;
+            forwardsNode = -1; backwardsNode = -1;
+            startJunction = -1; endJunction = -1;
+            junction = -1;
+        };
+        std::string idString() const
+        {
+            return std::to_string(ovID.roadIDM) + "." + std::to_string(ovID.roadIDm);
+        };
     public:
         uint id;
-        uint ovID;
+        OVID ovID, forwardsRoadOVID, backwardsRoadOVID;
+        int forwardsNode, backwardsNode, startJunction, endJunction;
+        int junction; ///< -1 unless it belongs to a junction / junction.number otherwise.
         uint lgSize; ///< number of lane groups.
+        float friction;
+        float speedLimit;
         std::vector<smaL> lanes;
     };
 };
@@ -138,8 +203,10 @@ public:
 
     bool ready() { return _ready; };
 
+public:
+    std::vector<OneVersion::smaS> sections;
+
 private:
-    LogicalRoadNetwork *_ovn;
     bool _ready;
 };
 
