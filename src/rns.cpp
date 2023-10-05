@@ -215,10 +215,11 @@ void RNS::tSigns(const std::vector<lane::tSign> &t)
 
 bool RNS::makeRoads(std::string mapFile, concepts::drivingSide drivingSide, bool loadSidewalk)
 {
-    if (!std::string(std::filesystem::path(mapFile).extension()).compare(".xodr"))
-        return makeRoads(mapFile, drivingSide, loadSidewalk);
+
+    if (!std::string(std::filesystem::path{mapFile}.extension()).compare(".xodr"))
+        return makeOpenDRIVERoads(mapFile, drivingSide, loadSidewalk);
 #ifdef USE_ONEVERSION
-    else if (!std::string(std::filesystem::path(mapFile).extension()).compare(".bin"))
+    else if (!std::string(std::filesystem::path{mapFile}.extension()).compare(".bin"))
         return makeOneVersionRoads(mapFile);
 #endif // USE_ONEVERSION
     else
@@ -245,7 +246,7 @@ bool RNS::makeOneVersionRoads(std::string mapFile)
 
     // Allocate and do the geometry of for the lanes:
     uint sectionsSize = 0;
-    for (uint i = 0; i < read.sections.size(); )
+    for (uint i = 0; i < read.sections.size(); ++i)
         sectionsSize += read.sections[i].lgSize;
     setSections(sectionsSize);
 
@@ -269,7 +270,7 @@ bool RNS::makeOneVersionRoads(std::string mapFile)
             _sections[sectionsNdx].set(jthLGSize);
 
             // read just the lanes within this lane group:
-            // _sections[sectionsNdx].setOneDriveRoad(read.sections()[i], j);
+            _sections[sectionsNdx].setOneVersionRoad(read.sections[i], j);
 
             // and carry on:
             sectionsNdx += 1;
@@ -278,6 +279,7 @@ bool RNS::makeOneVersionRoads(std::string mapFile)
 
 
 
+    _ready = true;
     return _ready;
 }
 

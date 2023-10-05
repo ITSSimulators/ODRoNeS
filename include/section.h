@@ -33,6 +33,7 @@
 #include <memory>
 #include "matvec.h"
 #include "readOdr.h"
+#include "readOneVersion.h"
 #include "rnsconcepts.h"
 #include "lane.h"
 
@@ -63,6 +64,7 @@ public:
     int addLane(const std::vector<bezier2> &bzr, scalar width, scalar speed, lane::sign sgn);
     int addLane(const std::vector<bezier3> &bzr, scalar width, scalar speed, lane::sign sgn);
     int addLane(const std::vector<Odr::geometry> &geom, const std::vector<Odr::offset> &off, const Odr::smaL &odrL, scalar se);
+    int addLane(const OneVersion::smaS &sec, uint index);
 
     /*! Set port and starboard lanes (and potentially flip some lanes);
      * This method is of general applicability and uses the OpenDrive convention
@@ -88,6 +90,9 @@ public:
 
     /*! store the input data, and add all the lanes for this laneSection ID */
     void setOdrRoad(const Odr::smaS &sec, uint lsID);
+
+    /*! store the input data and all the lanes for this OneVersion laneGroup */
+    void setOneVersionRoad(const OneVersion::smaS &sec, uint lgID);
 
     uint getOdrID() const;
     void lockOdrFlippable(); // set _odrFlippable to false for every lane in the section;
@@ -118,6 +123,7 @@ private:
     size_t _allocSize;
     arr2 _bbblc, _bbtrc; ///< bounding box bottom left corner, bounding box top right corner.
     uint _odrID;
+    OneVersion::OVID _ovID;
 };
 
 

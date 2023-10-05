@@ -26,6 +26,7 @@
 #include <iostream>
 #include "matvec.h"
 #include "readOdr.h"
+#include "readOneVersion.h"
 
 #ifdef QT_CORE_LIB
 #include <QPainterPath>

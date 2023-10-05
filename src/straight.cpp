@@ -42,6 +42,21 @@ straight::straight(const arr2& origin, const arr2& dest)
     _ready = true;
 }
 
+straight::straight(const OneVersion::segment &sgm)
+{
+     assignInputGeomToThis(straight({sgm.start.x, sgm.start.y}, {sgm.end.x, sgm.end.y}));
+
+     if (! mvf::areSameValues(_length, sgm.length) )
+     {
+         std::cout << "Wrong length!" << std::endl;
+     }
+
+     if (! mvf::areCloseEnough(1, mvf::scalarProduct(_to, {sgm.start.tx, sgm.start.ty}), 1e-8) )
+     {
+         std::cout << "Wrong tangent!" << std::endl;
+     }
+}
+
 straight::straight(const Odr::geometry &odg, int sign, scalar offsetA, scalar so, scalar se)
 {
     // Firstly make sure that so and se fall in range:

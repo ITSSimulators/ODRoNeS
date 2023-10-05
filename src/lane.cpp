@@ -396,6 +396,65 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
 
 }
 
+void lane::set(const OneVersion::smaS &sec, uint index)
+{
+    const OneVersion::smaL *smal = &(sec.lanes[index]);
+    _ovID = smal->ovID;
+    _length = smal->length; ///< that's a good estimate but I don't think it's the real length of the lane
+
+    lane::sign s =lane::sign::o;
+    if (smal->dir == 1) s = lane::sign::p;
+    else if (smal->dir == -1) s = lane::sign::n;
+
+    initialise(smal->width0, sec.speedLimit, mvf::shape::oneversion, s);
+
+    _kind = kind::tarmac;
+
+    bool geomPrint = false;
+
+    // Having this sort of variable width would be not difficult.
+    // It would just mean having an extra step at getPointAfterDistance and the like.
+    bool vw = true;
+    if ((mvf::areSameValues(smal->curve.centreFunction.a, 0)) &&
+            (mvf::areSameValues(smal->curve.leftEdgeFunction.a, 0)) &&
+            (mvf::areSameValues(smal->curve.rightEdgeFunction.a, 0)))
+        vw = false;
+    if (vw)
+    {
+        std::cout << "Active reference functions are not supported yet!" << std::endl;
+        // return;
+    }
+
+
+    for (uint i = 0; i < smal->curve.segments.size(); ++i)
+    {
+        const OneVersion::segment* sgm = &(smal->curve.segments[i]);
+        if (sgm->type == OneVersion::SegmentType::straight)
+            _geom.push_back(new straight(*sgm));
+        else if (sgm->type == OneVersion::SegmentType::circular)
+            _geom.push_back(new arc(*sgm));
+        else
+        {
+            std::cerr << "Unsupported shape!" << std::endl;
+        }
+
+        _length += _geom.back()->length();
+    }
+
+    scalar ds = numerical::defaultDs(_length);
+    uint size = 1 + static_cast<uint>(std::round(_length / ds));
+    numerical::initialise(ds, size);
+    if (numerical::setup())
+    {
+        std::cout << "[ Error ] on " << getCSUID() << " in configuring numerical for the top class" << std::endl;
+    }
+
+    calcBoundingBox();
+
+
+
+}
+
 bool lane::isOdrFwd() const
 {
     return _odrFwd;
@@ -1092,6 +1151,7 @@ std::string lane::sUID(int sID, int lID)
 std::string lane::getCSUID() const
 {
     if  (isOpenDrive()) return getSUID() + " (" + getOdrSUID() + ")";
+    else if (isOneVersion()) return getSUID() + " (" + getOVSUID() + ")";
     return getSUID();
 }
 
@@ -1099,6 +1159,12 @@ std::string lane::getOdrSUID() const
 {
     if (!isOpenDrive()) return "";
     return sUID(_odrSectionID, _odrID);
+}
+
+std::string lane::getOVSUID() const
+{
+    if (!isOneVersion()) return "";
+    return std::to_string(_ovID.roadIDM) + "." + std::to_string(_ovID.roadIDm) + ":" + std::to_string(_ovID.laneID);
 }
 
 std::string lane::getSUID() const
@@ -1149,6 +1215,11 @@ bool lane::isOpenDrive() const
     return false;
 }
 
+bool lane::isOneVersion() const
+{
+    if (_shape == mvf::shape::oneversion) return true;
+    return false;
+}
 
 void lane::getTangentInPoint(arr2 &t, const arr2 &p) const
 {

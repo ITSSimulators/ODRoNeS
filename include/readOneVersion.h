@@ -23,8 +23,6 @@
 #ifndef READONEVERSION_H
 #define READONEVERSION_H
 
-#ifdef USE_ONEVERSION
-
 // Only System and ODRoNeS headers should be here.
 #include <iostream>
 #include <string>
@@ -85,12 +83,12 @@ public:
         cartCoordType()
         {
             x = 0, y = 0; z = 0;
-            xp = 0; yp = 0; zp = 0;
+            tx = 0; ty = 0; tz = 0;
         }
 
     public:
         double x, y, z;
-        double xp, yp, zp;
+        double tx, ty, tz;
     };
 
 
@@ -103,9 +101,9 @@ public:
         segment()
         {
             start.x = 0; start.y = 0; start.z = 0;
-            start.xp = 0; start.yp = 0; start.zp = 0;
+            start.tx = 0; start.ty = 0; start.tz = 0;
             end.x = 0; end.y = 0; end.z = 0;
-            end.xp =0; end.yp = 0; end.zp = 0;
+            end.tx =0; end.ty = 0; end.tz = 0;
             length = 0; cummulativeLength = 0;
             radius = 0;
             centreX = 0; centreY = 0; centreZ = 0;
@@ -140,6 +138,8 @@ public:
     public:
         std::vector<segment> segments;
         linearFunc centreFunction;
+        linearFunc leftEdgeFunction;
+        linearFunc rightEdgeFunction;
 
     };
 
@@ -150,7 +150,7 @@ public:
         {
             id = 0;
             nearsideLane = nullptr; offsideLane = nullptr;
-            length = 0; dir = 0;
+            length = 0; width0 = 0; dir = 0;
             lgIndex = 0; lgLength = 0; lgStartDistance = 0;
         };
     public:
@@ -159,6 +159,7 @@ public:
         smaL* offsideLane;
         smaL* nearsideLane;
         float length;
+        float width0; ///< width at the origin
         uint lgIndex; ///< lane group index.
         float lgLength; ///< lane group length
         float lgStartDistance; ///< lane group start distance
@@ -209,7 +210,5 @@ public:
 private:
     bool _ready;
 };
-
-#endif // USE_ONEVERSION
 
 #endif // READONEVERSION_H

@@ -70,6 +70,14 @@ RNSWindow::RNSWindow(std::string iFile, bool identifyLanes, QWidget *parent) :
     _gzoom = new GraphicalZoom(ui->graphicsView);
     _gzoom->set_modifiers(Qt::NoModifier);
 
+    if ((_rns->sectionsSize()) && (_rns[0].lanesSize()))
+    {
+        arr2 blc, trc;
+        _rns[0][0].getBoundingBox(blc, trc);
+        ui->graphicsView->setSceneRect(blc[0], blc[1], trc[0] - blc[0], trc[1] - blc[1]);
+    }
+
+
 
     // And finally...
     // show();

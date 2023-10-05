@@ -44,9 +44,9 @@ public:
         here.y = c.xyz.y();
         here.z = c.xyz.z();
 
-        here.xp = c.tangent.x();
-        here.yp = c.tangent.y();
-        here.zp = c.tangent.z();
+        here.tx = c.tangent.x();
+        here.ty = c.tangent.y();
+        here.tz = c.tangent.z();
 
         return here;
     }
@@ -205,6 +205,7 @@ public:
             // Get some extra data:
             sections.back().friction = rna[j]->getFriction();
             sections.back().speedLimit = rna[j]->getSpeedLim();
+            sections.back().lgSize = rna[j]->numLaneGroups();
 
             // Explore what is numLanes:
             // uint numLanes = rna[j]->getNumLanes(); // what is numLanes?
@@ -280,6 +281,7 @@ readOneVersion::readOneVersion(std::string iFile) :
             OVS::loadEverySectionAndLane(sections, nna[j]->getRoadList());
     }
 
+    _ready = true;
 }
 
 #endif // USE_ONEVERSION

@@ -32,10 +32,8 @@
 #include <algorithm>
 #include <string>
 
-// typedef scalar arr3[3];
-// typedef scalar arr2[2];
 typedef std::array<scalar, 2> arr2;
-// typedef unsigned int uint;
+// typedef std::array<scalar, 3> arr3;
 
 class mvf
 {
@@ -94,7 +92,7 @@ public:
 
     // 3 - Geometry
     //! the shape of a segment:
-    enum class shape {straight, vwStraight, clockwise, counterclockwise, vwArc, bezier2, bezier3, paramPoly3, vwParamPoly3, vwSpiral, opendrive, unknown};
+    enum class shape {straight, vwStraight, clockwise, counterclockwise, vwArc, bezier2, bezier3, paramPoly3, vwParamPoly3, vwSpiral, opendrive, oneversion, unknown};
     static std::string shapeString(shape s);
     enum class side {port, bow, starboard};
     static std::string sideString(side s);

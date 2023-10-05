@@ -44,6 +44,7 @@
 #include "vwNumerical.h"
 #include "vwSpiral.h"
 #include "readOdr.h"
+#include "readOneVersion.h"
 #include "rnsconcepts.h"
 
 #ifdef QT_CORE_LIB
@@ -182,6 +183,7 @@ public:
     void set(const std::vector<bezier2> &bzr, scalar width, scalar speed, sign sgn, bool permanent = true);
     void set(const std::vector<bezier3> &bzr, scalar width, scalar speed, sign sgn, bool permanent = true);
     void set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> off, const Odr::smaL &odrL, scalar se);
+    void set(const OneVersion::smaS &sec, uint index);
     void setBezierLines(const std::vector<bezier2> &bzr);
     void setBezierLines(const std::vector<bezier3> &bzr);
     void clearMemory();
@@ -310,6 +312,7 @@ public:
     bool isArc() const;
     bool isArc(mvf::shape s) const;
     bool isOpenDrive() const;
+    bool isOneVersion() const;
     void getTangentInPoint(arr2 &t, const arr2 &p) const;
     arr2 getTangentInPoint(const arr2 &p) const;
     //! returns the road angle in degrees, Qt style: -90 means Eastwards, 0 means Southwards.
@@ -356,6 +359,7 @@ public:
     static std::string sUID(int sID, int lID);
     std::string getSUID() const; ///< String Unique ID
     std::string getOdrSUID() const; ///< Odr String Unique ID
+    std::string getOVSUID() const; ///< OneVersion String ID
     std::string getCSUID() const; ///< Complete SUID: "<SUID> (<OdrSUID>)"
     bool isSUID(std::string name) const;
     bool isCSUID(std::string name) const;
@@ -430,6 +434,8 @@ private:
      *   used when thinking about flipping the lane */
     bool _odrFwd;
     bool _flippable; ///< whether the lane can be flipped from forward to backwards.
+
+    OneVersion::OVID _ovID; ///< the OneVersion id of the lane.
 
 };
 

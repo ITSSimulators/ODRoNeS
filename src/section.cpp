@@ -233,6 +233,25 @@ int section::addLane(const std::vector<Odr::geometry> &geom, const std::vector<O
 }
 
 
+int section::addLane(const OneVersion::smaS &sec, uint index)
+{
+    int err = 0;
+    if (_writtenSize == _allocSize)
+    {
+        std::cerr << "cannot add more lanes to section " << _id << std::endl;
+        err = 1;
+    }
+    else
+    {
+        _lanes[_writtenSize].setID(static_cast<int>(_writtenSize));
+        _lanes[_writtenSize].set(sec, index);
+        updateBoundingBox(static_cast<uint>(_writtenSize));
+        _writtenSize += 1;
+    }
+    return err;
+}
+
+
 
 
 bool section::setIthConflictLane(uint ithCW, lane *cwl)
@@ -243,6 +262,20 @@ bool section::setIthConflictLane(uint ithCW, lane *cwl)
             return false;
     }
     return true;
+}
+
+void section::setOneVersionRoad(const OneVersion::smaS &sec, uint lgID)
+{
+    _ovID = sec.ovID;
+    _ovID.lgIndex = lgID;
+
+    for (uint i = 0; i < sec.lanes.size(); ++i)
+    {
+        if (sec.lanes[i].ovID.lgIndex != lgID)
+            continue;
+
+        addLane(sec, i);
+    }
 }
 
 void section::setOdrRoad(const Odr::smaS &sec, uint lsID)

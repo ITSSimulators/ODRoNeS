@@ -43,6 +43,44 @@ void arc::base()
     _pending = false;
 }
 
+
+arc::arc(const OneVersion::segment &sgm)
+{
+
+    _centre = {sgm.centreX, sgm.centreY};
+    _origin = {sgm.start.x, sgm.start.y};
+    _dest = {sgm.end.x, sgm.end.y};
+    _to = {sgm.start.tx, sgm.start.ty};
+
+    mvf::tangent(_co, _centre, _origin);
+    mvf::tangent(_cd, _centre, _dest);
+
+    _alpha = mvf::subtendedAngle(_co, _cd);
+    _radiusOfCurvature = sgm.radius;
+
+    if ((_co[0] * _cd[1] - _co[1] * _cd[0]) > 0)
+        _shape = mvf::shape::counterclockwise;
+    else
+        _shape = mvf::shape::clockwise;
+
+    _length = std::abs(_alpha * _radiusOfCurvature);
+
+    mvf::boundingBoxForArc(_blc, _trc, _origin, _dest, _centre, mvf::distance(_origin, _centre), _shape);
+
+    _o = _origin;
+    _d = _dest;
+
+    if ( !mvf::areCloseEnough(_length, sgm.length, 1e-6) )
+    {
+        std::cerr << "[ Error ] This arc lane has the wrong length!" << std::endl;
+    }
+
+    _ready = true;
+
+
+
+}
+
 arc::arc(const Odr::geometry &odg, int sign, scalar offsetA, scalar so, scalar se)
 {
     arr2 ti = {std::cos(odg.hdg), std::sin(odg.hdg)};
