@@ -400,7 +400,6 @@ void lane::set(const OneVersion::smaS &sec, uint index)
 {
     const OneVersion::smaL *smal = &(sec.lanes[index]);
     _ovID = smal->ovID;
-    _length = smal->length; ///< that's a good estimate but I don't think it's the real length of the lane
 
     lane::sign s =lane::sign::o;
     if (smal->dir == 1) s = lane::sign::p;
@@ -426,6 +425,7 @@ void lane::set(const OneVersion::smaS &sec, uint index)
     }
 
 
+    _length = 0;
     for (uint i = 0; i < smal->curve.segments.size(); ++i)
     {
         const OneVersion::segment* sgm = &(smal->curve.segments[i]);

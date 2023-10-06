@@ -51,6 +51,7 @@ straight::straight(const OneVersion::segment &sgm, scalar offset)
 
      _origin = {_o[0] +  no[0] * offset, _o[1] + no[1] * offset};
      _dest = {_origin[0] + _to[0] * sgm.length, _origin[1] + _to[1] * sgm.length };
+     _length = mvf::distance(_origin, _dest);
 
      mvf::boundingBoxFromTwoPoints(_blc, _trc, _origin, _dest);
 

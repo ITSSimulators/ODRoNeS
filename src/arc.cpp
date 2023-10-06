@@ -75,14 +75,6 @@ arc::arc(const OneVersion::segment &sgm, scalar offset)
 
     mvf::boundingBoxForArc(_blc, _trc, _origin, _dest, _centre, mvf::distance(_origin, _centre), _shape);
 
-
-    if ( !mvf::areCloseEnough(_length, sgm.length, 1e-6) )
-    {
-        std::cerr << "[ Error ] This arc lane has the wrong length." <<
-                     " arc::_length = " << _length <<
-                     " vs sgm.length = " << sgm.length << std::endl;
-    }
-
     _ready = true;
 
 
