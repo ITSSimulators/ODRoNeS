@@ -415,9 +415,9 @@ void lane::set(const OneVersion::smaS &sec, uint index)
     // Having this sort of variable width would be not difficult.
     // It would just mean having an extra step at getPointAfterDistance and the like.
     bool vw = true;
-    if ((mvf::areSameValues(smal->curve.centreFunction.a, 0)) &&
-            (mvf::areSameValues(smal->curve.leftEdgeFunction.a, 0)) &&
-            (mvf::areSameValues(smal->curve.rightEdgeFunction.a, 0)))
+    if ((mvf::areSameValues(smal->curve.centreFunction.b, 0)) &&
+            (mvf::areSameValues(smal->curve.leftEdgeFunction.b, 0)) &&
+            (mvf::areSameValues(smal->curve.rightEdgeFunction.b, 0)))
         vw = false;
     if (vw)
     {
@@ -430,7 +430,7 @@ void lane::set(const OneVersion::smaS &sec, uint index)
     {
         const OneVersion::segment* sgm = &(smal->curve.segments[i]);
         if (sgm->type == OneVersion::SegmentType::straight)
-            _geom.push_back(new straight(*sgm));
+            _geom.push_back(new straight(*sgm, smal->curve.centreFunction.a));
         else if (sgm->type == OneVersion::SegmentType::circular)
             _geom.push_back(new arc(*sgm));
         else
@@ -1422,8 +1422,8 @@ void lane::nSetupPointsXYUniformly(scalar ds)
 
     if (ndx < _pointsSize -1)
     {
-        _pointsSize = ndx + 1;
         std::cout << "[ WARNING! ] we changed _pointsSize: " << _pointsSize << " to " << ndx + 1 << std::endl;
+        _pointsSize = ndx + 1;
     }
 
     _pointsX[_pointsSize -1] = _geom.back()->dest()[0]; // _dest[0];

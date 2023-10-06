@@ -30,7 +30,7 @@ class straight : public geometry
 public:
 
     straight(const Odr::geometry &odr, int sign, scalar offsetA, scalar so, scalar se);
-    straight(const OneVersion::segment &sgm);
+    straight(const OneVersion::segment &sgm, scalar offset);
     straight(const arr2 &origin, const arr2 &dest);
     straight(const straight& s);
 

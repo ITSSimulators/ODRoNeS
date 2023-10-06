@@ -31,6 +31,7 @@
 #include "lrn/orig/NetworkNode.h"
 #include "lrn/orig/LogicalJunc.h"
 
+typedef std::array<double,2> arr2;
 
 // // // // Static methods using the external OneVersion headers // // // //
 class OneVersionStatic
@@ -89,6 +90,24 @@ public:
         }
     }
 
+    static arr2 roadToCart(double distance, double offset, double loft, const Lane* l)
+    {
+        arr2 xy = {0, 0};
+
+        if (l->laneType() == Lane::Patch)
+        {
+            geom::CartCoord cartCoord;
+            geom::CurveCoord offsetCoord;
+            offsetCoord.distance = distance + l->group()->startDistance();
+            offsetCoord.offset = offset + l->offsetForDistance(offsetCoord.distance);
+            l->centreRefCurve()->curveToCartesian(offsetCoord, cartCoord);
+
+            xy = {cartCoord.xyz.x(), cartCoord.xyz.y()};
+        }
+
+        return xy;
+    }
+
     static int populateLane(OneVersion::smaL& smal, uint id, const Lane* l)
     {
         int err = 0;
@@ -104,6 +123,11 @@ public:
             setOVID(smal.offsideLaneOVID, l->offsideLane());
         if (l->laneType() == Lane::Patch)
         {
+
+            arr2 origin = roadToCart(0, 0, 0, l);
+            arr2 end = roadToCart(smal.length, 0, 0, l);
+
+
             smal.curve.centreFunction.a = l->centreFunction().a();
             smal.curve.centreFunction.b = l->centreFunction().b();
 

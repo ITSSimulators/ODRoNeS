@@ -42,19 +42,19 @@ straight::straight(const arr2& origin, const arr2& dest)
     _ready = true;
 }
 
-straight::straight(const OneVersion::segment &sgm)
+straight::straight(const OneVersion::segment &sgm, scalar offset)
 {
-     assignInputGeomToThis(straight({sgm.start.x, sgm.start.y}, {sgm.end.x, sgm.end.y}));
+     arr2 no = {-sgm.start.ty, sgm.start.tx};
+     _o = {sgm.start.x, sgm.start.y};
+     _d = {sgm.end.x, sgm.start.y};
+     _to = {sgm.start.tx, sgm.start.ty};
 
-     if (! mvf::areSameValues(_length, sgm.length) )
-     {
-         std::cout << "Wrong length!" << std::endl;
-     }
+     _origin = {_o[0] +  no[0] * offset, _o[1] + no[1] * offset};
+     _dest = {_origin[0] + _to[0] * sgm.length, _origin[1] + _to[1] * sgm.length };
 
-     if (! mvf::areCloseEnough(1, mvf::scalarProduct(_to, {sgm.start.tx, sgm.start.ty}), 1e-8) )
-     {
-         std::cout << "Wrong tangent!" << std::endl;
-     }
+     mvf::boundingBoxFromTwoPoints(_blc, _trc, _origin, _dest);
+
+     _shape = mvf::shape::straight;
 }
 
 straight::straight(const Odr::geometry &odg, int sign, scalar offsetA, scalar so, scalar se)
