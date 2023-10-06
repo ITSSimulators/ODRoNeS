@@ -44,35 +44,43 @@ void arc::base()
 }
 
 
-arc::arc(const OneVersion::segment &sgm)
+arc::arc(const OneVersion::segment &sgm, scalar offset)
 {
 
     _centre = {sgm.centreX, sgm.centreY};
-    _origin = {sgm.start.x, sgm.start.y};
-    _dest = {sgm.end.x, sgm.end.y};
+    _o = {sgm.start.x, sgm.start.y};
+    _d = {sgm.end.x, sgm.end.y};
     _to = {sgm.start.tx, sgm.start.ty};
 
-    mvf::tangent(_co, _centre, _origin);
-    mvf::tangent(_cd, _centre, _dest);
+    mvf::tangent(_co, _centre, _o);
+    mvf::tangent(_cd, _centre, _d);
+
+    arr2 no = { -_to[1], _to[0] };
+    _origin = {_o[0] + offset * no[0], _o[1] + offset * no[1] };
+    arr2 ne = { - sgm.end.ty, sgm.end.tx};
+    _dest = {_d[0] + offset * ne[0], _d[1] + offset * ne[1] };
 
     _alpha = mvf::subtendedAngle(_co, _cd);
-    _radiusOfCurvature = sgm.radius;
+    _radiusOfCurvature = mvf::distance(_centre, _origin); // sgm.radius;
 
-    if ((_co[0] * _cd[1] - _co[1] * _cd[0]) > 0)
-        _shape = mvf::shape::counterclockwise;
-    else
+    if (_alpha < 0)
+    {
         _shape = mvf::shape::clockwise;
+        _radiusOfCurvature*= -1;
+    }
+    else
+        _shape = mvf::shape::counterclockwise;
 
     _length = std::abs(_alpha * _radiusOfCurvature);
 
     mvf::boundingBoxForArc(_blc, _trc, _origin, _dest, _centre, mvf::distance(_origin, _centre), _shape);
 
-    _o = _origin;
-    _d = _dest;
 
     if ( !mvf::areCloseEnough(_length, sgm.length, 1e-6) )
     {
-        std::cerr << "[ Error ] This arc lane has the wrong length!" << std::endl;
+        std::cerr << "[ Error ] This arc lane has the wrong length." <<
+                     " arc::_length = " << _length <<
+                     " vs sgm.length = " << sgm.length << std::endl;
     }
 
     _ready = true;

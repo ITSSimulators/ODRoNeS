@@ -30,7 +30,7 @@ class arc : public geometry
 public:
     arc();
     arc(const Odr::geometry &odr, int sign, scalar offsetA, scalar so, scalar se);
-    arc(const OneVersion::segment &sgm);
+    arc(const OneVersion::segment &sgm, scalar offset);
     arc(const arr2& origin, const arr2& dest, const arr2& centre, mvf::shape s);
     arc(const arr2& origin, const arr2& dest, const arr2& to);
     arc(const arr2& origin, const arr2& dest); ///< temporary constructor, it will need calling setTo() to finish the setup.

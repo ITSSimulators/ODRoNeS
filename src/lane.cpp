@@ -432,7 +432,7 @@ void lane::set(const OneVersion::smaS &sec, uint index)
         if (sgm->type == OneVersion::SegmentType::straight)
             _geom.push_back(new straight(*sgm, smal->curve.centreFunction.a));
         else if (sgm->type == OneVersion::SegmentType::circular)
-            _geom.push_back(new arc(*sgm));
+            _geom.push_back(new arc(*sgm, smal->curve.centreFunction.a));
         else
         {
             std::cerr << "Unsupported shape!" << std::endl;
