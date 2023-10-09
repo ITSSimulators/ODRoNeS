@@ -94,7 +94,8 @@ public:
     /*! store the input data and all the lanes for this OneVersion laneGroup */
     void setOneVersionRoad(const OneVersion::smaS &sec, uint lgID);
 
-    uint getOdrID() const;
+    uint odrID() const;
+    OneVersion::OVID ovID() const;
     void lockOdrFlippable(); // set _odrFlippable to false for every lane in the section;
     bool flipBackwards(); ///< change the direction of every lane as backwards.
 
@@ -106,6 +107,7 @@ public:
 
     int getID() const; ///< returns the section ID.
     void setID(int id); ///< sets the section ID.
+    std::string getCSUID() const; ///< just like in lane
 
     std::vector<lane::tSign> getTSigns() const; ///< return a vector with non-repeated traffic signs, i e, query the different _lanes and take the physical traffic signs rather than all the repeated allocations.
     void getBoundingBox(arr2 &blc, arr2 &trc) const;

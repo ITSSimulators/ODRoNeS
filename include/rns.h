@@ -61,27 +61,42 @@ public:
     bool makeOneVersionRoads(std::string mapFile);
     void printLanes() const; ///< print sections and lanes
 
+    //! Given the point o, find the set of lane coordinates l, p (projected point) and loff (lateral offset)
+    //!   that is not farther from o than tol. lCoord.l will be nullptr if nothing was found closer than tol.
+    lane::lCoord getLaneCoordsForPoint(const arr2 &o, scalar tol) const;
+
+    //! get the size of whole map rounded "up".
+    void getDimensions(int &minX, int &minY, int &maxX, int &maxY) const;
+    void getDimensions(scalar &minX, scalar &minY, scalar &maxX, scalar &maxY) const;
+
+private:
     lane* getLaneWithSUID(int sID, int lID) const;
     lane* getLaneWithODRIds(uint rID, int lID) const;
+    lane* getLaneWithOVId(const OneVersion::OVID &lID) const;
+    section* getSectionWithOVId(const OneVersion::OVID &sID) const;
+    std::vector<uint> getSectionIDsWithOVRoadNodeId(const OneVersion::OVID &rnID) const; ///< returning a vector because a node may have a number of laneGroups, each one in a different section. That will be an empty vector if roadIDM or roadIDm are < 0
+    std::vector<uint> getSectionIDsWithOVNodeId(int nID) const; ///< returning a vector because a node may have a number of laneGroups, each one in a different section. That will result in an empty vector if nID is < 0;
 
     //! Given two lanes l1 and l2, take a point on each one that is at a fraction (scalar between 0 and 1)
     //!    of their length. Knowing the direction of the lanes in this points,
     //!    return the lane that is on the Port side.
     int findPortAndStarboardLanes(lane* &port, lane* &starboard, lane* l1, lane* l2, scalar dToEoL1, scalar dToEoL2) const;
 
-    //! Given the point o, find the set of lane coordinates l, p (projected point) and loff (lateral offset)
-    //!   that is not farther from o than tol. lCoord.l will be nullptr if nothing was found closer than tol.
-    lane::lCoord getLaneCoordsForPoint(const arr2 &o, scalar tol) const;
     //! Currently unused...
     lane* getLaneWithPoint(const arr2 &p, scalar tol = mvf::absolutePrecision) const;
 
+public:
     std::vector<lane::tSign> tSigns() const;
+private:
     void tSigns(const std::vector<lane::tSign> &t);
 
+    //! Assign li as nextLane to lj or lj as nextLane to li, and set the corresponding prevLanes,
+    //!   as long as the end / start of li and lj are closer than tol.
+    void linkLanesIfInRange(lane *li, lane *lj, scalar tol = lane::odrTol);
 
-    //! get the size of whole map rounded "up".
-    void getDimensions(int &minX, int &minY, int &maxX, int &maxY) const;
-    void getDimensions(scalar &minX, scalar &minY, scalar &maxX, scalar &maxY) const;
+    //! Assign nextLanes and prevLanes to the lanes in sections si and sj by calling linkLanesIfInRange on a double loop.
+    void linkLanesInSections(section &si, section &sj, scalar tol = lane::odrTol);
+
 
     /*! establish the priorities, essentially through the methods below: */
     bool makePriorities(scalar anticipationTime);

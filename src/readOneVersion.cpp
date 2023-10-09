@@ -206,45 +206,49 @@ public:
     static void loadEverySectionAndLane(std::vector<OneVersion::smaS> &sections, const RoadNodeArray &rna)
     {
         // For Every Road Node:
-        for (uint j = 0; j < rna.size(); j++)
+        for (uint i = 0; i < rna.size(); i++)
         {
             sections.push_back(OneVersion::smaS());
             sections.back().id = sections.size() - 1;
 
             // Set all possible identifiers!
-            setOVID(sections.back().ovID, rna[j]);
-            setOVID(sections.back().forwardsRoadOVID, rna[j]->getForwardsRoad());
-            setOVID(sections.back().backwardsRoadOVID, rna[j]->getBackwardsRoad());
-            if (rna[j]->parentNode()->forwardsNode())
-                sections.back().forwardsNode = rna[j]->parentNode()->forwardsNode()->id();
-            if (rna[j]->parentNode()->backwardsNode())
-                sections.back().backwardsNode = rna[j]->parentNode()->backwardsNode()->id();
-            if (rna[j]->parentNode()->startJunc())
-                sections.back().startJunction = rna[j]->parentNode()->startJunc()->number();
-            if (rna[j]->parentNode()->endJunc())
-                sections.back().endJunction = rna[j]->parentNode()->endJunc()->number();
-            if (rna[j]->parentNode()->junction())
-                sections.back().junction = rna[j]->parentNode()->junction()->number();
+            setOVID(sections.back().ovID, rna[i]);
+            if (!rna[i]->getForwardsRoad())
+                std::cout << "section: " << sections.back().ovID.to_string() << " doesn't have a Road Forwards" << std::endl;
+            setOVID(sections.back().forwardsRoadOVID, rna[i]->getForwardsRoad());
+            if (!rna[i]->getBackwardsRoad())
+                std::cout << "section: " << sections.back().ovID.to_string() << " doesn't have a Road Backwards" << std::endl;
+            setOVID(sections.back().backwardsRoadOVID, rna[i]->getBackwardsRoad());
+            if (rna[i]->parentNode()->forwardsNode())
+                sections.back().forwardsNode = rna[i]->parentNode()->forwardsNode()->id();
+            if (rna[i]->parentNode()->backwardsNode())
+                sections.back().backwardsNode = rna[i]->parentNode()->backwardsNode()->id();
+            if (rna[i]->parentNode()->startJunc())
+                sections.back().startJunction = rna[i]->parentNode()->startJunc()->number();
+            if (rna[i]->parentNode()->endJunc())
+                sections.back().endJunction = rna[i]->parentNode()->endJunc()->number();
+            if (rna[i]->parentNode()->junction())
+                sections.back().junction = rna[i]->parentNode()->junction()->number();
 
             // Get some extra data:
-            sections.back().friction = rna[j]->getFriction();
-            sections.back().speedLimit = rna[j]->getSpeedLim();
-            sections.back().lgSize = rna[j]->numLaneGroups();
+            sections.back().friction = rna[i]->getFriction();
+            sections.back().speedLimit = rna[i]->getSpeedLim();
+            sections.back().lgSize = rna[i]->numLaneGroups();
 
             // Explore what is numLanes:
             // uint numLanes = rna[j]->getNumLanes(); // what is numLanes?
             // For Every Lane Group:
             uint laneID = 0;
-            for (uint k = 0; k < rna[j]->numLaneGroups(); ++k)
+            for (uint j = 0; j < rna[i]->numLaneGroups(); ++j)
             {
                 // std::cout << "here's a new lane group: " << k << std::endl; // mark it.
-                const LaneGroup *lg = rna[j]->laneGroupForIndex(k);
+                const LaneGroup *lg = rna[i]->laneGroupForIndex(j);
                 // For Every Lane:
-                for (uint l = 0; l < lg->numLanes(); ++l)
+                for (uint k = 0; k < lg->numLanes(); ++k)
                 {
                     // std::cout << "here's lane: " << .back()< ":" << l << std::endl;
                     sections.back().lanes.push_back(OneVersion::smaL());
-                    populateLane(sections.back().lanes.back(), laneID, lg->laneForIndex(l));
+                    populateLane(sections.back().lanes.back(), laneID, lg->laneForIndex(k));
 
                     if (sections.back().lanes.back().ovID.lgIndex !=
                             sections.back().lanes.back().lgIndex )

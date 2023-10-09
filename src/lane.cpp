@@ -114,6 +114,7 @@ void lane::base()
     _sign = sign::o;
 
     _odrID = (std::numeric_limits<int>::max)();
+    _odrSectionID = -1;
     _odrFwd = true;
     _flippable = true;
 
@@ -1118,9 +1119,14 @@ int lane::getID() const
     return _id;
 }
 
-int lane::getOdrID() const
+int lane::odrID() const
 {
     return _odrID;
+}
+
+OneVersion::OVID lane::ovID() const
+{
+    return _ovID;
 }
 
 void lane::setID(int id)
@@ -1164,7 +1170,7 @@ std::string lane::getOdrSUID() const
 std::string lane::getOVSUID() const
 {
     if (!isOneVersion()) return "";
-    return std::to_string(_ovID.roadIDM) + "." + std::to_string(_ovID.roadIDm) + ":" + std::to_string(_ovID.laneID);
+    return _ovID.to_string();
 }
 
 std::string lane::getSUID() const

@@ -49,6 +49,17 @@ public:
           nnodeID = -1;
         };
 
+        std::string to_string() const
+        {
+            std::string id = std::to_string(nnodeID) + ":"
+                    + std::to_string(roadIDM) + "."
+                    + std::to_string(roadIDm) + ":"
+                    + std::to_string(lgIndex) + ":"
+                    + std::to_string(laneID);
+            return id;
+        };
+
+
         OVID& operator= (const OVID& input)
         {
             laneID = input.laneID;
@@ -68,6 +79,38 @@ public:
             if (nnodeID != input.nnodeID) return false;
             return true;
         };
+
+        bool operator!= (const OVID& input) const
+        {
+            return (!operator==(input));
+        };
+
+        bool sameRoad(const OVID& input) const
+        {
+            if (roadIDM != input.roadIDM) return false;
+            if (roadIDm != input.roadIDm) return false;
+            if (nnodeID != input.nnodeID) return false;
+            return true;
+        };
+
+        bool validRoad() const
+        {
+            if (roadIDM == -1) return false;
+            if (roadIDm == -1) return false;
+            if (nnodeID == -1) return false;
+            return true;
+        }
+
+        bool validLane()
+        {
+            if (laneID == -1) return false;
+            if (lgIndex == -1) return false;
+            if (roadIDM == -1) return false;
+            if (roadIDm == -1) return false;
+            if (nnodeID == -1) return false;
+            return true;
+        }
+
 
     public:
         int laneID;
@@ -179,11 +222,32 @@ public:
             forwardsNode = -1; backwardsNode = -1;
             startJunction = -1; endJunction = -1;
             junction = -1;
+            // firstInNN = false; lastInNN = false;
         };
+
         std::string idString() const
         {
             return std::to_string(ovID.roadIDM) + "." + std::to_string(ovID.roadIDm);
         };
+
+        bool hasForwardsNode() const
+        {
+            if (forwardsNode == -1) return false;
+            return true;
+        };
+
+        bool hasBackwardsNode() const
+        {
+            if (backwardsNode == -1) return false;
+            return true;
+        };
+
+        bool isJunction() const
+        {
+            if (junction == -1) return false;
+            return true;
+        };
+
     public:
         uint id;
         OVID ovID, forwardsRoadOVID, backwardsRoadOVID;
@@ -192,6 +256,7 @@ public:
         uint lgSize; ///< number of lane groups.
         float friction;
         float speedLimit;
+        // bool lastInNN, firstInNN; ///< whether this section is the first (or not) or the last (or not) in the Network Node.
         std::vector<smaL> lanes;
     };
 };

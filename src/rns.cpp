@@ -218,14 +218,16 @@ bool RNS::makeRoads(std::string mapFile, concepts::drivingSide drivingSide, bool
 
     if (!std::string(std::filesystem::path{mapFile}.extension()).compare(".xodr"))
         return makeOpenDRIVERoads(mapFile, drivingSide, loadSidewalk);
-#ifdef USE_ONEVERSION
     else if (!std::string(std::filesystem::path{mapFile}.extension()).compare(".bin"))
+#ifdef USE_ONEVERSION
         return makeOneVersionRoads(mapFile);
+#else
+        std::cerr << "[ Error ] ODRoNeS was compiled without support for OneVersion. Unable to load a OneVersion file." << std::endl;
 #endif // USE_ONEVERSION
     else
     {
         std::cerr << "[ Error ] unrecognised extension " << std::filesystem::path(mapFile).extension() << std::endl;
-        std::cerr << "---  Try loading a .xodr file if using OPENDrive or a .bin file if using OneVersion" << std::endl;
+        std::cerr << "---  Try loading a .xodr file if using OpenDRIVE or a .bin file if using OneVersion" << std::endl;
     }
     return false;
 }
@@ -268,7 +270,6 @@ bool RNS::makeOneVersionRoads(std::string mapFile)
 
             // allocate the right amount of lanes for this section:
             _sections[sectionsNdx].set(jthLGSize);
-
             // read just the lanes within this lane group:
             _sections[sectionsNdx].setOneVersionRoad(read.sections[i], j);
 
@@ -278,9 +279,74 @@ bool RNS::makeOneVersionRoads(std::string mapFile)
     }
 
 
+    // Now do the linking.
+    // Here, the stored knowledge is RoadNodes linking to RoadNodes,
+    //   and NetworkNodes linking to NetworkNodes and Junctions (I believe).
+    for (uint i = 0; i < read.sections.size(); ++i)
+    {
+        for (uint m = 0; m < read.sections[i].lgSize; ++m)
+        {
+            OneVersion::OVID ovID = read.sections[i].ovID;
+            ovID.lgIndex = m;
+            section *si = getSectionWithOVId(ovID);
+            if (!si)
+            {
+                std::cout << "[ Error ] No section for: " << i << ", ovID: "
+                          << read.sections[i].ovID.to_string() << std::endl;
+            }
+
+            // Link this section with the next RoadNode:
+            std::vector<uint> nextRNs = getSectionIDsWithOVRoadNodeId(read.sections[i].forwardsRoadOVID);
+            // now do a loop over the nextRNs, and a double loop later to link all the lanes in range
+            for (uint k = 0; k < nextRNs.size(); ++k)
+                linkLanesInSections(*si, _sections[nextRNs[k]]);
+
+            // Link this section with the previous RoadNode:
+            std::vector<uint> prevRNs = getSectionIDsWithOVRoadNodeId(read.sections[i].backwardsRoadOVID);
+            // now do a loop over the prevRNs, and a double loop later to link all the lanes in range
+            for (uint k = 0; k < prevRNs.size(); ++k)
+                linkLanesInSections(*si, _sections[prevRNs[k]]);
+
+            // If this is the last section of the NetworkNode,
+            //   - link it to the first section in the next NetworkNode.
+            //   - link it to the next Junction
+
+            // If this is the first section of the NetworkNode,
+            //   - link it to the last section in the previous NetworkNode.
+            //   - link it to the previous Junction
+        }
+    }
 
     _ready = true;
     return _ready;
+}
+
+void RNS::linkLanesIfInRange(lane *li, lane *lj, scalar tol)
+{
+    if ((mvf::areCloseEnough(li->getDestination(), lj->getOrigin(), tol)) ||
+            (mvf::areCloseEnough(li->getDestination(), lj->getDestination(), tol)))
+        li->setNextLane(lj, false);
+
+    if ((mvf::areCloseEnough(li->getOrigin(), lj->getOrigin(), tol)) ||
+            (mvf::areCloseEnough(li->getOrigin(), lj->getDestination(), tol)))
+        li->setPrevLane(lj, false);
+
+    if ((mvf::areCloseEnough(lj->getDestination(), li->getOrigin(), tol)) ||
+            (mvf::areCloseEnough(lj->getDestination(), li->getDestination(), tol)))
+        lj->setNextLane(li, false);
+
+    if ((mvf::areCloseEnough(lj->getOrigin(), li->getOrigin(), tol)) ||
+            (mvf::areCloseEnough(lj->getOrigin(), li->getDestination(), tol)))
+        lj->setPrevLane(li, false);
+}
+
+void RNS::linkLanesInSections(section &si, section &sj, scalar tol)
+{
+    for (uint i = 0; i < si.size(); ++i)
+    {
+        for (uint j = 0; j < sj.size(); ++j)
+            linkLanesIfInRange(si[i], sj[j]);
+    }
 }
 
 bool RNS::makeOpenDRIVERoads(std::string odrMap, concepts::drivingSide drivingSide, bool loadSidewalk)
@@ -360,28 +426,7 @@ bool RNS::makeOpenDRIVERoads(std::string odrMap, concepts::drivingSide drivingSi
                 if (!sml) continue;
 
                 lane* nextLane = getLaneWithODRIds(read.sections[sml->sID].odrID, sml->odrID);
-
-                if ((mvf::areCloseEnough(lij->getDestination(), nextLane->getOrigin(), lane::odrTol)) ||
-                    (mvf::areCloseEnough(lij->getDestination(), nextLane->getDestination(), lane::odrTol)))
-                {
-                    lij->setNextLane(nextLane, false);
-                    // std::cout << "assigning " << nextLane->getCSUID() << " as nextlane to " << lij->getCSUID() << std::endl;
-                }
-
-                if ((mvf::areCloseEnough(lij->getOrigin(), nextLane->getOrigin(), lane::odrTol)) ||
-                    (mvf::areCloseEnough(lij->getOrigin(), nextLane->getDestination(), lane::odrTol)))
-                {
-                    lij->setPrevLane(nextLane, false);
-                    // std::cout << "assigning " << nextLane->getCSUID() << " as prevlane to " << lij->getCSUID() << std::endl;
-                }
-
-                if ((mvf::areCloseEnough(nextLane->getDestination(), lij->getOrigin(), lane::odrTol)) ||
-                    (mvf::areCloseEnough(nextLane->getDestination(), lij->getDestination(), lane::odrTol)))
-                    nextLane->setNextLane(lij, false);
-
-                if ((mvf::areCloseEnough(nextLane->getOrigin(), lij->getOrigin(), lane::odrTol)) ||
-                    (mvf::areCloseEnough(nextLane->getOrigin(), lij->getDestination(), lane::odrTol)))
-                    nextLane->setPrevLane(lij, false);
+                linkLanesIfInRange(lij, nextLane);
             }
 
             for (uint k = 0; k < read.sections[i].lanes[j].prevLane.size(); ++k)
@@ -390,29 +435,7 @@ bool RNS::makeOpenDRIVERoads(std::string odrMap, concepts::drivingSide drivingSi
                 if (!sml) continue;
 
                 lane* prevLane = getLaneWithODRIds(read.sections[sml->sID].odrID, sml->odrID);
-
-                if ((mvf::areCloseEnough(lij->getDestination(), prevLane->getOrigin(), lane::odrTol)) ||
-                    (mvf::areCloseEnough(lij->getDestination(), prevLane->getDestination(), lane::odrTol)))
-                {
-                    lij->setNextLane(prevLane, false);
-                    // std::cout << "assigning " << prevLane->getCSUID() << " as nextlane to " << lij->getCSUID() << std::endl;
-                }
-
-                if ((mvf::areCloseEnough(lij->getOrigin(), prevLane->getOrigin(), lane::odrTol)) ||
-                    (mvf::areCloseEnough(lij->getOrigin(), prevLane->getDestination(), lane::odrTol)))
-                {
-                    lij->setPrevLane(prevLane, false);
-                    // std::cout << "assigning " << prevLane->getCSUID() << " as prevlane to " << lij->getCSUID() << std::endl;
-                }
-
-                if ((mvf::areCloseEnough(prevLane->getDestination(), lij->getOrigin(), lane::odrTol)) ||
-                    (mvf::areCloseEnough(prevLane->getDestination(), lij->getDestination(), lane::odrTol)))
-                    prevLane->setNextLane(lij, false);
-
-                if ((mvf::areCloseEnough(prevLane->getOrigin(), lij->getOrigin(), lane::odrTol)) ||
-                    (mvf::areCloseEnough(prevLane->getOrigin(), lij->getDestination(), lane::odrTol)))
-                    prevLane->setPrevLane(lij, false);
-
+                linkLanesIfInRange(lij, prevLane);
             }
         }
     }
@@ -517,10 +540,10 @@ lane* RNS::getLaneWithODRIds(uint rID, int lID) const
 {
     for (uint i = 0; i < _sectionsSize; ++i)
     {
-        if (_sections[i].getOdrID() != rID) continue;
+        if (_sections[i].odrID() != rID) continue;
         for (uint j = 0; j < _sections[i].size(); ++j)
         {
-            if (_sections[i][j]->getOdrID() == lID) return _sections[i][j];
+            if (_sections[i][j]->odrID() == lID) return _sections[i][j];
         }
     }
 
@@ -528,6 +551,59 @@ lane* RNS::getLaneWithODRIds(uint rID, int lID) const
 }
 
 
+lane* RNS::getLaneWithOVId(const OneVersion::OVID &lID) const
+{
+    OneVersion::OVID sID = lID;
+    sID.laneID = -1;
+    for (uint i = 0; i < _sectionsSize; ++i)
+    {
+        if (_sections[i].ovID() != sID) continue;
+        for (uint j = 0; j < _sections[i].size(); ++j)
+        {
+            if (_sections[i][j]->ovID() == lID) return _sections[i][j];
+        }
+    }
+
+    return nullptr;
+}
+
+
+section* RNS::getSectionWithOVId(const OneVersion::OVID &sID) const
+{
+    for (uint i = 0; i < _sectionsSize; ++i)
+    {
+        if (_sections[i].ovID() == sID) return &(_sections[i]);
+    }
+    return nullptr;
+
+}
+
+
+std::vector<uint> RNS::getSectionIDsWithOVRoadNodeId(const OneVersion::OVID &rnID) const
+{
+    std::vector<uint> s;
+    if ((rnID.roadIDM == -1) || (rnID.roadIDm == -1)) return s;
+    for (uint i = 0; i < _sectionsSize; ++i)
+    {
+        if (_sections[i].ovID().sameRoad(rnID))
+            s.push_back(i);
+
+    }
+    return s;
+}
+
+std::vector<uint> RNS::getSectionIDsWithOVNodeId(int nID) const
+{
+    std::vector<uint> s;
+    if (nID < 0) return s;
+
+    for (uint i = 0; i < _sectionsSize; ++i)
+    {
+        if (_sections[i].ovID().nnodeID == nID)
+            s.push_back(i);
+    }
+    return s;
+}
 
 
 int RNS::findPortAndStarboardLanes(lane* &port, lane* &starboard, lane *l1, lane *l2, scalar dToEoL1, scalar dToEoL2) const

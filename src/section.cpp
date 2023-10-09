@@ -36,7 +36,7 @@ section::section() :
 void section::set(size_t size)
 {
     _allocSize = size;
-    _lanes = new lane[size];
+    _lanes = new lane[size]();
     for (uint i = 0; i < size; ++i)
     {
         _lanes[i].setID(i);
@@ -500,9 +500,9 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
 
         for (uint j = 0; j < _writtenSize; ++j)
         {
-            if (sec.tsigns[i].orientation * _lanes[j].getOdrID() < 0) continue; // orientation may be -1, 0 or +1
+            if (sec.tsigns[i].orientation * _lanes[j].odrID() < 0) continue; // orientation may be -1, 0 or +1
 
-            if (_lanes[j].getOdrID() > 0) lts.mDir = 1;
+            if (_lanes[j].odrID() > 0) lts.mDir = 1;
             else lts.mDir = -1;
             lts.lane = j;
             lts.assigned = true;
@@ -544,9 +544,14 @@ std::vector<lane::tSign> section::getTSigns() const
 }
 
 
-uint section::getOdrID() const
+uint section::odrID() const
 {
     return _odrID;
+}
+
+OneVersion::OVID section::ovID() const
+{
+    return _ovID;
 }
 
 
@@ -587,6 +592,22 @@ size_t section::getMaxSize() const
 int section::getID() const
 {
     return _id;
+}
+
+std::string section::getCSUID() const
+{
+    std::string id = std::to_string(_id);
+    if (_writtenSize > 0)
+    {
+        if (_lanes[0].isOpenDrive())
+            id += " (" + std::to_string(_odrID) + ")";
+        else if (_lanes[0].isOneVersion())
+            id += " (" + std::to_string(_ovID.nnodeID) + ":"
+                    + std::to_string(_ovID.roadIDM) + "."
+                    + std::to_string(_ovID.roadIDm) + ":"
+                    + std::to_string(_ovID.lgIndex) + ")";
+    }
+    return id;
 }
 
 void section::setID(int id)

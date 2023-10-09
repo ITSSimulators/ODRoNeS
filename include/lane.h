@@ -352,7 +352,8 @@ public:
 
     //! retuns the lane ID;
     int getID() const;
-    int getOdrID() const;
+    int odrID() const;
+    OneVersion::OVID ovID() const;
     void setID(int id);
     void setSectionID(int id);
     void setOdrSectionID(int id);
