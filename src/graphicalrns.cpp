@@ -129,7 +129,7 @@ void graphicalRNS::setupRoadsAndLabels(const RNS &rns)
             {
                 arr2 o = l->getOrigin();
                 arr2 halfway;
-                l->getPointAfterDistance(halfway, o, 0.5*l->getLength());
+                l->getPointAfterDistance(halfway, o, 0.5*l->getLength() + l->getID());
                 _labels[laneNumber].pos = {ct::mToPix * halfway[0], - ct::mToPix * halfway[1]};
                 std::string laneID = l->getCSUID();
                 _labels[laneNumber].id = laneID.c_str();
