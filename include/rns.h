@@ -61,6 +61,9 @@ public:
     bool makeOneVersionRoads(std::string mapFile);
     void printLanes() const; ///< print sections and lanes
 
+    /*! establish the priorities, essentially through the methods below: */
+    bool makePriorities(scalar anticipationTime);
+
     //! Given the point o, find the set of lane coordinates l, p (projected point) and loff (lateral offset)
     //!   that is not farther from o than tol. lCoord.l will be nullptr if nothing was found closer than tol.
     lane::lCoord getLaneCoordsForPoint(const arr2 &o, scalar tol) const;
@@ -69,7 +72,11 @@ public:
     void getDimensions(int &minX, int &minY, int &maxX, int &maxY) const;
     void getDimensions(scalar &minX, scalar &minY, scalar &maxX, scalar &maxY) const;
 
+public:
+    std::vector<lane::tSign> tSigns() const;
 private:
+    void tSigns(const std::vector<lane::tSign> &t);
+
     lane* getLaneWithSUID(int sID, int lID) const;
     lane* getLaneWithODRIds(uint rID, int lID) const;
     lane* getLaneWithOVId(const OneVersion::OVID &lID) const;
@@ -85,11 +92,6 @@ private:
     //! Currently unused...
     lane* getLaneWithPoint(const arr2 &p, scalar tol = mvf::absolutePrecision) const;
 
-public:
-    std::vector<lane::tSign> tSigns() const;
-private:
-    void tSigns(const std::vector<lane::tSign> &t);
-
     //! Assign li as nextLane to lj or lj as nextLane to li, and set the corresponding prevLanes,
     //!   as long as the end / start of li and lj are closer than tol.
     void linkLanesIfInRange(lane *li, lane *lj, scalar tol = lane::odrTol);
@@ -97,10 +99,6 @@ private:
     //! Assign nextLanes and prevLanes to the lanes in sections si and sj by calling linkLanesIfInRange on a double loop.
     void linkLanesInSections(section &si, section &sj, scalar tol = lane::odrTol);
 
-
-    /*! establish the priorities, essentially through the methods below: */
-    bool makePriorities(scalar anticipationTime);
-private:
     /*! arrange conflicts and default priorities for lanes in different sections and same ending: priority is to the right */
     bool makePrioritiesSameEndingDifferentSectionLanes(scalar anticipationTime);
     /*! lanes within the same section with no next lane, or same ending will be marked as "merge" */

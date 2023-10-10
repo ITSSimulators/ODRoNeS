@@ -20,10 +20,9 @@
 //  to publications you cite the package and its related publications.
 //
 
+#include "readOneVersion.h"
 
 #ifdef USE_ONEVERSION
-
-#include "readOneVersion.h"
 
 // OneVersion headers:
 #include "config/config.h"
@@ -311,5 +310,6 @@ readOneVersion::readOneVersion(std::string iFile) :
 
     _ready = true;
 }
-
+#else
+readOneVersion::readOneVersion(std::string iFile) : _ready(false) {}
 #endif // USE_ONEVERSION
