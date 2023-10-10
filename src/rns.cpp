@@ -236,7 +236,7 @@ bool RNS::makeOneVersionRoads(std::string mapFile)
 {
     _ready = false;
 
-    _drivingSide = concepts::drivingSide::leftHand;
+    _drivingSide = concepts::drivingSide::leftHand; // Ask Tony whether this comes from the file itself.
 
     // Load the roads file:
     readOneVersion read(mapFile);
@@ -317,36 +317,16 @@ bool RNS::makeOneVersionRoads(std::string mapFile)
         }
     }
 
+    // Set port and starboard lanes, and assume left hand driving:
+    for (uint i = 0; i < _sectionsSize; ++i)
+    {
+        if (!_sections[i].isTransitable()) continue;
+        _sections[i].setPortAndStarboard(_drivingSide); // true, false);
+    }
+
+
     _ready = true;
     return _ready;
-}
-
-void RNS::linkLanesIfInRange(lane *li, lane *lj, scalar tol)
-{
-    if ((mvf::areCloseEnough(li->getDestination(), lj->getOrigin(), tol)) ||
-            (mvf::areCloseEnough(li->getDestination(), lj->getDestination(), tol)))
-        li->setNextLane(lj, false);
-
-    if ((mvf::areCloseEnough(li->getOrigin(), lj->getOrigin(), tol)) ||
-            (mvf::areCloseEnough(li->getOrigin(), lj->getDestination(), tol)))
-        li->setPrevLane(lj, false);
-
-    if ((mvf::areCloseEnough(lj->getDestination(), li->getOrigin(), tol)) ||
-            (mvf::areCloseEnough(lj->getDestination(), li->getDestination(), tol)))
-        lj->setNextLane(li, false);
-
-    if ((mvf::areCloseEnough(lj->getOrigin(), li->getOrigin(), tol)) ||
-            (mvf::areCloseEnough(lj->getOrigin(), li->getDestination(), tol)))
-        lj->setPrevLane(li, false);
-}
-
-void RNS::linkLanesInSections(section &si, section &sj, scalar tol)
-{
-    for (uint i = 0; i < si.size(); ++i)
-    {
-        for (uint j = 0; j < sj.size(); ++j)
-            linkLanesIfInRange(si[i], sj[j]);
-    }
 }
 
 bool RNS::makeOpenDRIVERoads(std::string odrMap, concepts::drivingSide drivingSide, bool loadSidewalk)
@@ -511,6 +491,34 @@ void RNS::printLanes() const
 
 }
 
+
+void RNS::linkLanesIfInRange(lane *li, lane *lj, scalar tol)
+{
+    if ((mvf::areCloseEnough(li->getDestination(), lj->getOrigin(), tol)) ||
+            (mvf::areCloseEnough(li->getDestination(), lj->getDestination(), tol)))
+        li->setNextLane(lj, false);
+
+    if ((mvf::areCloseEnough(li->getOrigin(), lj->getOrigin(), tol)) ||
+            (mvf::areCloseEnough(li->getOrigin(), lj->getDestination(), tol)))
+        li->setPrevLane(lj, false);
+
+    if ((mvf::areCloseEnough(lj->getDestination(), li->getOrigin(), tol)) ||
+            (mvf::areCloseEnough(lj->getDestination(), li->getDestination(), tol)))
+        lj->setNextLane(li, false);
+
+    if ((mvf::areCloseEnough(lj->getOrigin(), li->getOrigin(), tol)) ||
+            (mvf::areCloseEnough(lj->getOrigin(), li->getDestination(), tol)))
+        lj->setPrevLane(li, false);
+}
+
+void RNS::linkLanesInSections(section &si, section &sj, scalar tol)
+{
+    for (uint i = 0; i < si.size(); ++i)
+    {
+        for (uint j = 0; j < sj.size(); ++j)
+            linkLanesIfInRange(si[i], sj[j]);
+    }
+}
 
 
 lane* RNS::getLaneWithSUID(int sID, int lID) const
