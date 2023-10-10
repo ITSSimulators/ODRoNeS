@@ -290,7 +290,6 @@ readOneVersion::readOneVersion(std::string iFile) :
     //      For every LaneGroup in RN.laneGroup.array
     //        create a Section, and put in there the lanes within the LaneGroup.
 
-
     // For Every Network Node:
     for (uint i = 1; i <= ovn->getNetNodeCount(); ++i) // who did that 1-based?!
     {
@@ -299,6 +298,10 @@ readOneVersion::readOneVersion(std::string iFile) :
     }
 
 
+    /* We don't need that. It just adds repeated lanes, and later on they cause confusion.
+     *  The repeated lanes have exactly the same characteristics,
+     *  including the same _ovIDs and don't bring anything new.
+     *
     // Now loop over the junctions:
     // For Every Junction
     for (uint i = 1; i <= ovn->getJunctionCount(); ++i) // that is 1-based too!
@@ -310,6 +313,7 @@ readOneVersion::readOneVersion(std::string iFile) :
         for (uint j = 0; j < nna.size(); ++j)
             OVS::loadEverySectionAndLane(sections, nna[j]->getRoadList());
     }
+    */
 
     _ready = true;
 }
