@@ -21,6 +21,7 @@
 //
 
 #include "readOneVersion.h"
+#include "constants.h"
 
 #ifdef USE_ONEVERSION
 
@@ -232,6 +233,8 @@ public:
             // Get some extra data:
             sections.back().friction = rna[i]->getFriction();
             sections.back().speedLimit = rna[i]->getSpeedLim();
+            if (sections.back().speedLimit == 0)
+                sections.back().speedLimit = 70 * ct::mphToMs; // defaulting to motorway speed.
             sections.back().lgSize = rna[i]->numLaneGroups();
 
             // Explore what is numLanes:
