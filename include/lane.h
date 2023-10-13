@@ -79,7 +79,7 @@ public:
 
 public:
     arr2 pos; ///< the point on the lane at which the conflict (crosswalk) crosses the lane
-    scalar s; ///< s coordinate (distance from the of the road);
+    scalar s; ///< s coordinate (distance from the begining of the road);
     scalar so, se; ///< s coordinates at which we should stop and at which we're safe;
     std::vector<lane*> hpLane; ///< lanes that have higher priority... (or that are dangerous!)
     std::vector<uid> links; ///< a vector of conflicts that need to be solved at the same time.

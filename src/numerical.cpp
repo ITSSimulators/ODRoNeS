@@ -314,7 +314,7 @@ scalar numerical::nDistanceToTheEoL(const arr2 &p) const
 
 bool numerical::nGetPointAfterDistance(arr2 &p, const arr2 &o, scalar d) const
 {
-    if (d > maxS()) return false;
+    if ((d > maxS()) || (d < 0)) return false;
     arr2 q;
     scalar s = numerical::nProjectPointHere(q, o) + d;
     if (s > maxS())
