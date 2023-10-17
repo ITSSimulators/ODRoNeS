@@ -41,7 +41,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
-
+# Defining RNS_DIR is convenient when you have ODRoNeS as a git submodule.
 if (NOT DEFINED RNS_DIR)
    set( RNS_DIR ${PROJECT_SOURCE_DIR} )
 endif (NOT DEFINED RNS_DIR)
@@ -131,7 +131,7 @@ add_library(rns
     # Qt plots:
     ${RNS_DIR}/src/graphicalrns.cpp ${RNS_DIR}/include/graphicalrns.h
     ${RNS_DIR}/src/graphicalZoom.cpp ${RNS_DIR}/include/graphicalZoom.h
-    3rdParty/tinyxml2/tinyxml2.cpp
+    ${RNS_DIR}/3rdParty/tinyxml2/tinyxml2.cpp
 )
 target_link_libraries(rns clothoids ${QT_LIBRARIES})
 if (USE_ONEVERSION)
