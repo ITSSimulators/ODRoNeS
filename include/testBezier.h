@@ -32,6 +32,8 @@
 #include "bezier3.h"
 #include "matvec.h"
 
+#include <random>
+
 class testBezier : public QGraphicsItem
 {
 public:
@@ -43,8 +45,11 @@ public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                QWidget *widget) override;
 
+private:
 
-
+    scalar randomUnif01();
+    std::minstd_rand _randomGenerator;
+    std::uniform_real_distribution<> _unifDist01;
 };
 
 #endif // QT_CORE_LIB

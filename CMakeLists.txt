@@ -125,9 +125,9 @@ add_library(rns
     ${RNS_DIR}/src/section.cpp ${RNS_DIR}/include/section.h
     ${RNS_DIR}/src/rns.cpp ${RNS_DIR}/include/rns.h
     # Some tests:
-    # src/testArcLane.cpp include/testArcLane.h
-    # src/testLane.cpp include/testLane.h
-    # src/testBezier.cpp include/testBezier.h
+    # ${RNS_DIR}/src/testArcLane.cpp ${RNS_DIR}/include/testArcLane.h
+    # ${RNS_DIR}/src/testLane.cpp ${RNS_DIR}/include/testLane.h
+    # ${RNS_DIR}/src/testBezier.cpp ${RNS_DIR}/include/testBezier.h
     # Qt plots:
     ${RNS_DIR}/src/graphicalrns.cpp ${RNS_DIR}/include/graphicalrns.h
     ${RNS_DIR}/src/graphicalZoom.cpp ${RNS_DIR}/include/graphicalZoom.h

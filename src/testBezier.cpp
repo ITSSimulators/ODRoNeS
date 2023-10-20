@@ -27,6 +27,13 @@
 testBezier::testBezier()
 {
     setCacheMode(DeviceCoordinateCache);
+    _randomGenerator.seed(1714);
+    _unifDist01 = std::uniform_real_distribution<>(0,1);
+}
+
+scalar testBezier::randomUnif01()
+{
+    return _unifDist01(_randomGenerator);
 }
 
 QRectF testBezier::boundingRect() const
@@ -42,8 +49,43 @@ QPainterPath testBezier::shape() const
     return path;
 }
 
+
 void testBezier::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
+
+    /* Draw a new car shape, with front and rear lengths, and place it correctly.
+    qreal lengthPix = teh::suvLength * ct::mToPixD;
+    qreal widthPix = 0.4 * lengthPix;
+    QRectF chassis = QRectF(-widthPix / 2., -lengthPix / 2., widthPix, lengthPix);
+    QRectF halfC1 = QRectF(-widthPix / 2., 0, widthPix, lengthPix / 2.);
+    QRectF halfC2 = QRectF(0, -lengthPix / 2., widthPix / 2., lengthPix);
+
+    qreal fLength = 0.3 * lengthPix;
+    qreal rLength = lengthPix - fLength;
+    QRectF newCh = QRectF(-widthPix / 2., -rLength, widthPix, lengthPix);
+    QRectF newH1 = QRectF(-widthPix / 2., 0, widthPix, fLength);
+    QRectF newH2 = QRectF(0 / 2., -rLength, widthPix / 2., lengthPix);
+    // QRectF windshield = QRectF(-5.25, 4, chassis.width() - 1.5, 5);
+    qreal windshieldH = 1 * ct::mToPixD;
+    qreal windshieldW = 0.9 * newCh.width();
+    qreal bonet = 1.0 * ct::mToPixD;
+    QRectF windshield = QRectF(-0.5 * windshieldW, fLength - bonet - windshieldH,
+                               windshieldW, windshieldH);
+
+    scalar x = -10;
+    scalar y = -3;
+    setPos(x * ct::mToPix, - y * ct::mToPix);
+    // painter->drawRect(chassis);
+    // painter->drawRect(halfC1);
+    // painter->drawRect(halfC2);
+    painter->drawRect(newCh);
+    painter->drawRect(newH1);
+    painter->drawRect(newH2);
+    painter->drawRect(windshield);
+    // setPos(0 * ct::mToPix, - 0 * ct::mToPix);
+    */
+
+
 
 
     // ORDER 2:
@@ -347,8 +389,8 @@ void testBezier::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWid
         pen.setColor(Qt::cyan);
         painter->setPen(pen);
         arr2 xy = lb2.curvexy(i * 1.0 / parts);
-        xy[0] += 3 * ( mvf::randomUnif01() - 0.5);
-        xy[1] += 3 * ( mvf::randomUnif01() - 0.5);
+        xy[0] += 3 * ( randomUnif01() - 0.5);
+        xy[1] += 3 * ( randomUnif01() - 0.5);
         arr2 p, nrm, tg;
         scalar t = lb2.projectPointHereT(p, xy);
 
@@ -372,8 +414,8 @@ void testBezier::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWid
         pen.setColor(Qt::cyan);
         painter->setPen(pen);
         arr2 xy = lb3.curvexy(i * 1.0 / parts);
-        xy[0] += 3 * ( mvf::randomUnif01() - 0.5);
-        xy[1] += 3 * ( mvf::randomUnif01() - 0.5);
+        xy[0] += 3 * ( randomUnif01() - 0.5);
+        xy[1] += 3 * ( randomUnif01() - 0.5);
         arr2 p, nrm, tg;
         scalar t = lb3.projectPointHereT(p, xy);
 
