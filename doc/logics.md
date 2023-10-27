@@ -250,3 +250,20 @@ Conflicts will be linked IF:
 
  More details about how variable width is calculated can be read below, 
   under the section OpenDrive Extras.
+
+
+
+OneVersion
+-----------
+OneVersion is an internal format that ODRoNeS supports (temporarily?) though not fully. 
+ This is done by linking to OneVersion and quering the library itself, which is fine to load maps.
+ Because there are very similar classes and concepts, 
+ the only header allowed to import is ` readOneVersion.h `,
+ and headers from OneVersion should never be imported directly in ODRoNeS.
+ 
+ 
+
+
+
+
+
