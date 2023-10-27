@@ -622,6 +622,17 @@ bool section::isSameSection(const section *s) const
     return false;
 }
 
+bool section::isConnected(const section &s) const
+{
+    for (uint i = 0; i < _writtenSize; ++i)
+    {
+        for (uint j = 0; j < s.size(); ++j)
+            if (_lanes[i].isConnectedButNotThis( s.getLane(j) )) return true;
+    }
+    return false;
+}
+
+
 bool section::isCrosswalk() const
 {
     if (size() == 0) return false;

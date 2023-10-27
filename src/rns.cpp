@@ -586,6 +586,14 @@ section* RNS::getSectionWithOVId(const OneVersion::OVID &sID) const
 
 }
 
+std::vector<uint> RNS::getSectionIDsWithOVRoadNodeId(int rnMID, int rnmID) const
+{
+    OneVersion::OVID rnID;
+    rnID.roadIDM = rnMID;
+    rnID.roadIDm = rnmID;
+    return getSectionIDsWithOVRoadNodeId(rnID);
+}
+
 
 std::vector<uint> RNS::getSectionIDsWithOVRoadNodeId(const OneVersion::OVID &rnID) const
 {
@@ -711,6 +719,82 @@ lane* RNS::getLaneWithPoint(const arr2 &p, scalar tol) const
 }
 
 
+
+std::vector<uint> RNS::buildForwardsFromSecID(uint first, const std::vector<uint> &ids) const
+{
+    std::vector<uint> poppable = ids;
+    std::vector<uint> output;
+
+
+    for (uint i = 0; i < ids.size(); ++i)
+    {
+        bool bond = false;
+        for (uint j = 0; j < poppable.size(); ++j)
+        {
+            if (_sections[poppable[j]].isConnected(_sections[first]))
+            {
+                bond = true;
+                first = poppable[j];
+                output.push_back(first);
+                poppable.erase(poppable.begin()+j);
+                break;
+            }
+        }
+        if (!bond)
+        {
+            output.clear();
+            break;
+        }
+    }
+    return output;
+}
+
+std::vector<uint> RNS::buildBackwardsFromSecID(uint last, const std::vector<uint> &ids) const
+{
+
+    std::vector<uint> output = buildForwardsFromSecID(last, ids);
+    std::reverse(output.begin(), output.end());
+    return output;
+}
+
+
+bool RNS::findFirstLinkIDInSection(int &first, uint last, const std::vector<uint> &ids_o) const
+{
+    bool success = false;
+    first = -1;
+    for (uint i = 0; i < ids_o.size(); ++i )
+    {
+        if (_sections[ids_o[i]].isConnected(_sections[last]))
+        {
+            first = ids_o[i];
+            success = true;
+            break;
+        }
+    }
+    return success;
+}
+
+bool RNS::findLastAndFirstLinkingSectionIDs(int &last_o, int &first_e, const std::vector<uint> &ids_o, const std::vector<uint> &ids_e) const
+{
+    bool success = false;
+    last_o = -1;
+    first_e = -1;
+    for (uint i = 0; i < ids_o.size(); ++i)
+    {
+        for (uint j = 0; j < ids_e.size(); ++j)
+        {
+            if (_sections[ids_o[i]].isConnected(_sections[ids_e[j]]))
+            {
+                success = true;
+                last_o = ids_o[i];
+                first_e = ids_e[j];
+                break;
+            }
+        }
+        if (success) break;
+    }
+    return success;
+}
 
 
 void RNS::getDimensions(int &minX, int &minY, int &maxX, int &maxY) const

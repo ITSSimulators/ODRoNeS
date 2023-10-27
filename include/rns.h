@@ -81,9 +81,21 @@ private:
     lane* getLaneWithODRIds(uint rID, int lID) const;
     lane* getLaneWithOVId(const OneVersion::OVID &lID) const;
     section* getSectionWithOVId(const OneVersion::OVID &sID) const;
-    std::vector<uint> getSectionIDsWithOVRoadNodeId(const OneVersion::OVID &rnID) const; ///< returning a vector because a node may have a number of laneGroups, each one in a different section. That will be an empty vector if roadIDM or roadIDm are < 0
-    std::vector<uint> getSectionIDsWithOVNodeId(int nID) const; ///< returning a vector because a node may have a number of laneGroups, each one in a different section. That will result in an empty vector if nID is < 0;
+public:
+    std::vector<uint> getSectionIDsWithOVRoadNodeId(const OneVersion::OVID &rnID) const; ///< returning a vector because a node may have a number of laneGroups, and rns store each one in a different section. That will be an empty vector if roadIDM or roadIDm are < 0
+    std::vector<uint> getSectionIDsWithOVRoadNodeId(int rnMID, int rnmID) const; ///< returning a vector because a node may have a number of laneGroups, and rns store each one in a different section. That will be an empty vector if roadIDM or roadIDm are < 0
+    std::vector<uint> getSectionIDsWithOVNodeId(int nID) const; ///< returning a vector because a node may have a number of laneGroups, and rns store each one in a different section. That will result in an empty vector if nID is < 0;
 
+
+    // Order ids.
+    std::vector<uint> buildBackwardsFromSecID(uint last, const std::vector<uint> &ids) const; /*! put the ids array in order so that the sections link and finish at "last" */
+    std::vector<uint> buildForwardsFromSecID(uint first, const std::vector<uint> &ids) const; /*! put the ids array in order so that the sections link and finish at "last" */
+
+    bool findLastAndFirstLinkingSectionIDs(int &last_o, int &first_e, const std::vector<uint> &ids_o, const std::vector<uint> &ids_e ) const; ///< defaulting to -1 and -1, given two arrays of section ids, ids_o and ids_e, find the two that link together the whole set; returning false in case of failure */
+    bool findFirstLinkIDInSection(int &first, uint last, const std::vector<uint> &ids_o ) const; ///< defaulting to -1, given section id "last" and an array of section ids, ids_o, find the id of the section linking to last; returning false in case of failure*/
+
+
+private:
     //! Given two lanes l1 and l2, take a point on each one that is at a fraction (scalar between 0 and 1)
     //!    of their length. Knowing the direction of the lanes in this points,
     //!    return the lane that is on the Port side.

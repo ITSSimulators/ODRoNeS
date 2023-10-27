@@ -1565,6 +1565,14 @@ bool lane::isConnected(const lane *l) const
 
 }
 
+bool lane::isConnectedButNotThis(const lane *l) const
+{
+    if (l == nullptr) return false;
+    if (isNextLane(l)) return true;
+    if (isPrevLane(l)) return true;
+    return false;
+}
+
 bool lane::hasNextLane() const
 {
     if (_nextLaneSize == 0) return false;

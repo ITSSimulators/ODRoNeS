@@ -302,6 +302,7 @@ public:
     bool isNextLane(const lane *l) const; ///< true if *l != nullptr AND *l is within _nextLine;
     bool isPrevLane(const lane *l) const; ///< true if *l == this._prevLane
     bool isConnected(const lane *l) const; ///< true if *l is not null && is (this, next or prev);
+    bool isConnectedButNotThis(const lane *l) const; ///< true if *l is not null and is next or prev;
     bool hasNextLane() const; ///< true if _nextLane != nullptr.
     bool hasMultipleNextLanes() const; ///< true if _nextLaneSize > 1;
     bool hasPrevLane() const; ///< true if _prevLane != nullptr.

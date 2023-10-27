@@ -102,6 +102,7 @@ public:
     lane* operator[](size_t index); ///< get a lane
     lane* getLane(size_t index) const; ///< get the same bloody lane
     bool isSameSection(const section *s) const; ///< true if *s == this
+    bool isConnected(const section &s) const; ///< true if any lane in *s is connected to any lane of this.
     size_t size() const; ///< return the amount of stuff stored
     size_t getMaxSize() const; ///< return the allocated size;
 
