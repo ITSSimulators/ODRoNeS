@@ -509,14 +509,14 @@ bool lane::flipBackwards()
         }
 
         uint oldNextLaneSize = _nextLaneSize;
-        lane** oldNextLane = _nextLane;
+        const lane** oldNextLane = _nextLane;
         _nextLaneSize = _prevLaneSize;
         _nextLane = _prevLane;
 
         _prevLaneSize = oldNextLaneSize;
         _prevLane = oldNextLane;
 
-        lane* oldPortLane = _portLane;
+        const lane* oldPortLane = _portLane;
         _portLane = _starboardLane;
         _starboardLane = oldPortLane;
 
@@ -673,7 +673,7 @@ void lane::assignInputLaneToThis(const lane &t)
     if (t.hasNextLane())
     {
         _nextLaneSize = t._nextLaneSize;
-        _nextLane = new lane*[_nextLaneSize];
+        _nextLane = new const lane*[_nextLaneSize];
         for (size_t i=0; i < _nextLaneSize; ++i)
             _nextLane[i] = t._nextLane[i];
     }
@@ -685,7 +685,7 @@ void lane::assignInputLaneToThis(const lane &t)
     if (t.hasPrevLane())
     {
         _prevLaneSize = t._prevLaneSize;
-        _prevLane = new lane*[_prevLaneSize];
+        _prevLane = new const lane*[_prevLaneSize];
         for (size_t i = 0; i < _prevLaneSize; ++i)
             _prevLane[i] = t._prevLane[i];
     }
@@ -743,12 +743,12 @@ void lane::assignInputLaneToThis(const lane &t)
 
 
 
-void lane::setPrevLane(lane *l, bool crosslink)
+void lane::setPrevLane(const lane *l)
 {
     if (isPrevLane(l)) return;
 
     if (_prevLaneSize == 0)
-        _prevLane = new lane*[1];
+        _prevLane = new const lane*[1];
     else
     {
         // check that l was previously not there:
@@ -756,11 +756,11 @@ void lane::setPrevLane(lane *l, bool crosslink)
             if (_prevLane[i]->isSameLane(l)) return;
 
         // now carry on with the assignment:
-        lane **tmp = new lane*[_prevLaneSize];
+        const lane **tmp = new const lane*[_prevLaneSize];
         for (uint i = 0; i < _prevLaneSize; ++i)
             tmp[i] = _prevLane[i];
         delete[] _prevLane;
-        _prevLane = new lane*[_prevLaneSize + 1];
+        _prevLane = new const lane*[_prevLaneSize + 1];
         for (uint i = 0; i < _prevLaneSize; ++i)
             _prevLane[i] = tmp[i];
         delete[] tmp;
@@ -768,7 +768,7 @@ void lane::setPrevLane(lane *l, bool crosslink)
     _prevLane[_prevLaneSize] = l;
     _prevLaneSize += 1;
 
-    // Curved lanes cannot be configured without a previous lane:
+    // Curved lanes used to need a previous lane to be configured:
     if ((isArc()) && (mvf::areSameValues(_length,0)))
     {
         if (dynamic_cast<arc*>(_geom[0])->pending()) // setupCurvedLane();
@@ -780,18 +780,24 @@ void lane::setPrevLane(lane *l, bool crosslink)
         }
     }
 
+}
+
+void lane::setPrevLane(lane *l, bool crosslink)
+{
+    setPrevLane(l);
+
     // Now add this lane as a next lane of l:
-    else if ( (_isPermanent) && ( (!isCrosswalk())) && (crosslink) )
-         l->setNextLane(this);
+    if ( (_isPermanent) && ( (!isCrosswalk())) && (crosslink) )
+         l->setNextLane(this, false);
 }
 
 
-void lane::setNextLane(lane *l, bool crosslink)
+void lane::setNextLane(const lane *l)
 {
     if (isNextLane(l)) return;
 
     if (_nextLaneSize == 0)
-       _nextLane = new lane*[1];
+       _nextLane = new const lane*[1];
     else
     {
         // check that l was previously not there:
@@ -799,21 +805,26 @@ void lane::setNextLane(lane *l, bool crosslink)
             if (_nextLane[i]->isSameLane(l)) return;
 
         // now carry on with the assignment:
-       lane **tmp = new lane*[_nextLaneSize];
+       const lane **tmp = new const lane*[_nextLaneSize];
        for (uint i = 0; i < _nextLaneSize; ++i)
          tmp[i] = _nextLane[i];
        delete[] _nextLane;
-       _nextLane = new lane*[_nextLaneSize + 1];
+       _nextLane = new const lane*[_nextLaneSize + 1];
        for (uint i = 0; i < _nextLaneSize; ++i)
          _nextLane[i] = tmp[i];
        delete[] tmp;
     }
     _nextLane[_nextLaneSize] = l;
     _nextLaneSize += 1;
+}
+
+void lane::setNextLane(lane *l, bool crosslink)
+{
+    setNextLane(l);
 
     // Now add this lane as a previous lane of l:
     if ((_isPermanent) && ((!isCrosswalk()) && (crosslink)))
-        l->setPrevLane(this);
+        l->setPrevLane(this, false);
 }
 
 
@@ -892,12 +903,12 @@ lane::sign lane::invertSign(sign s)
     return s;
 }
 
-void lane::setPortLane(lane *l)
+void lane::setPortLane(const lane *l)
 {
     _portLane = l;
 }
 
-void lane::setStarboardLane(lane *l)
+void lane::setStarboardLane(const lane *l)
 {
     _starboardLane = l;
 }
@@ -909,17 +920,17 @@ void lane::setSection(section &s)
 }
 
 
-lane* lane::getNextLane() const
+const lane* lane::getNextLane() const
 {
     return getNextLane(0);
 }
 
-lane* lane::getNextLane(uint idx) const
+const lane* lane::getNextLane(uint idx) const
 {
     return _nextLane[idx];
 }
 
-std::tuple<lane**, size_t> lane::getNextLanes() const
+std::tuple<const lane**, size_t> lane::getNextLanes() const
 {
     return std::make_tuple(_nextLane, _nextLaneSize);
 }
@@ -929,17 +940,17 @@ size_t lane::getNextLaneSize() const
     return _nextLaneSize;
 }
 
-lane* lane::getPrevLane() const
+const lane* lane::getPrevLane() const
 {
     return getPrevLane(0);
 }
 
-lane* lane::getPrevLane(uint idx) const
+const lane* lane::getPrevLane(uint idx) const
 {
     return _prevLane[idx];
 }
 
-std::tuple<lane**, size_t> lane::getPrevLanes() const
+std::tuple<const lane**, size_t> lane::getPrevLanes() const
 {
     return std::make_tuple(_prevLane, _prevLaneSize);
 }
@@ -949,12 +960,12 @@ size_t lane::getPrevLaneSize() const
     return _prevLaneSize;
 }
 
-lane* lane::getPortLane() const
+const lane* lane::getPortLane() const
 {
     return _portLane;
 }
 
-lane* lane::getStarboardLane() const
+const lane* lane::getStarboardLane() const
 {
     return _starboardLane;
 }
@@ -969,7 +980,7 @@ mvf::side lane::getMergeSide() const
     return mvf::side::bow;
 }
 
-lane* lane::getMergeLane() const
+const lane* lane::getMergeLane() const
 {
     for (uint i = 0; i < _conflicts.size(); ++i)
     {
@@ -1812,62 +1823,6 @@ bool lane::addConflictLane(scalar s, lane *l)
     return addConflictLane(static_cast<uint>(idx), l);
 }
 
-
-void lane::crosslinkConflict(uint cndx, conflict::uid ocuid)
-{
-    conflict::uid tcuid = {this, _conflicts[cndx].s};
-    if (!conflict::is1stLinkedTo2nd({ocuid.l, ocuid.s}, {tcuid.l, tcuid.s}))
-        _conflicts[cndx].links.push_back(ocuid);
-
-    if (!conflict::is1stLinkedTo2nd({tcuid.l, tcuid.s}, {ocuid.l, ocuid.s}))
-    {
-        uint cuidj = ocuid.l->getConflictIdx(ocuid.s);
-        ocuid.l->_conflicts[cuidj].links.push_back(tcuid); // {this, _conflicts[cndx].s});
-    }
-
-
-    std::vector<conflict::uid> tlinks = _conflicts[cndx].links ;
-    for (uint t = 0; t < tlinks.size(); ++t)
-    {
-        if (!conflict::is1stLinkedTo2nd({ocuid.l, ocuid.s}, {tlinks[t].l, tlinks[t].s}))
-        {
-            uint ndx = tlinks[t].l->getConflictIdx(tlinks[t].s);
-            tlinks[t].l->_conflicts[ndx].links.push_back(ocuid);
-        }
-        if (!conflict::is1stLinkedTo2nd({tlinks[t].l, tlinks[t].s}, {ocuid.l, ocuid.s}))
-        {
-            uint ndx = ocuid.l->getConflictIdx(ocuid.s);
-            ocuid.l->_conflicts[ndx].links.push_back(tlinks[t]);
-        }
-    }
-
-    std::vector<conflict::uid> olinks = ocuid.l->getConflictLinks(ocuid.s);
-    for (uint o = 0; o < olinks.size(); ++o)
-    {
-        if (!conflict::is1stLinkedTo2nd({tcuid.l, tcuid.s}, {olinks[o].l, olinks[o].s}))
-        {
-            uint ndx = olinks[o].l->getConflictIdx(olinks[o].s);
-            olinks[o].l->_conflicts[ndx].links.push_back(tcuid);
-        }
-        if (!conflict::is1stLinkedTo2nd({olinks[o].l, olinks[o].s}, {tcuid.l, tcuid.s}))
-        {
-            uint ndx = tcuid.l->getConflictIdx(tcuid.s);
-            tcuid.l->_conflicts[ndx].links.push_back(olinks[o]);
-        }
-    }
-}
-
-void lane::crosslinkConflict(scalar cSCoord, conflict::uid cuid)
-{
-    int idx = getConflictIdx(cSCoord);
-    if (idx < 0)
-    {
-        std::cout << "unable to find a conflict in lane " << getSUID() << " at length " << cSCoord << std::endl;
-        return;
-    }
-    return crosslinkConflict(static_cast<uint>(idx), cuid);
-}
-
 bool lane::conflictIsCrosswalk(uint i) const
 {
     if (_conflicts[i].k == conflict::kind::zebraWalk) return true;
@@ -1899,12 +1854,12 @@ uint lane::crosswalksSize() const
     return size;
 }
 
-std::vector<lane*> lane::getConflictLanes(uint i) const
+std::vector<const lane*> lane::getConflictLanes(uint i) const
 {
     return _conflicts[i].hpLane;
 }
 
-std::vector<lane*> lane::getConflictLanes(scalar s) const
+std::vector<const lane*> lane::getConflictLanes(scalar s) const
 {
     return getConflictLanes(static_cast<uint>(getConflictIdx(s)));
 }
@@ -1939,14 +1894,19 @@ int lane::getConflictIdx(scalar s) const
 }
 
 
-std::vector<conflict::uid> lane::getConflictLinks(uint i) const
+std::vector<conflict::cuid> lane::getConflictLinks(uint i) const
 {
     return _conflicts[i].links;
 }
 
-std::vector<conflict::uid> lane::getConflictLinks(scalar s) const
+std::vector<conflict::cuid> lane::getConflictLinks(scalar s) const
 {
     return getConflictLinks(static_cast<uint>(getConflictIdx(s)));
+}
+
+void lane::addConflictLink(uint i, conflict::cuid id)
+{
+    _conflicts[i].links.push_back(id);
 }
 
 conflict::kind lane::getConflictKind(uint i) const
@@ -1981,32 +1941,6 @@ void lane::setConflictHPLanes(scalar s, lane *hpLane, scalar anticipationTime)
     return setConflictHPLanes(static_cast<uint>(getConflictIdx(s)), hpLane, anticipationTime);
 }
 
-
-bool lane::swapConflictPriority(uint ci)
-{
-    bool swapped = false;
-    conflict::kind ko = _conflicts[ci].k;
-    for (uint lj = 0; lj < _conflicts[ci].hpLane.size(); ++lj)
-    {
-        int ick = _conflicts[ci].hpLane[lj]->getConflictIdx(this);
-        if (ick < 0) continue;
-        uint uck = static_cast<uint>(ick);
-        _conflicts[ci].k = _conflicts[ci].hpLane[lj]->getConflictKind(uck);
-        _conflicts[ci].hpLane[lj]->setConflictKind(uck, ko);
-        std::cout << "swapped priorities and now: " << getSUID() << ":" << conflict::kindString(_conflicts[ci].k)
-                  << " and " << _conflicts[ci].hpLane[lj]->getSUID()
-                  << ":" << conflict::kindString(_conflicts[ci].hpLane[lj]->getConflictKind(uck)) << std::endl;
-        swapped = true;
-    }
-    return swapped;
-
-}
-
-
-bool lane::swapConflictPriority(scalar s)
-{
-    return swapConflictPriority(static_cast<uint>(getConflictIdx(s)));
-}
 
 
 std::vector<lane::tSign> lane::getTSigns() const
@@ -2133,25 +2067,8 @@ std::string conflict::kindString(conflict::kind k)
     }
 }
 
-bool conflict::areSameConflicts(const uid &i, const uid &j)
-{
-    if ( (mvf::areCloseEnough(i.s, j.s, 1e-2)) && (i.l == j.l)) return true;
-    return false;
-}
 
 bool conflict::areSameConflicts(const cuid &i, const cuid &j)
-{
-    if ( (mvf::areCloseEnough(i.s, j.s, 1e-2)) && (i.l == j.l)) return true;
-    return false;
-}
-
-bool conflict::areSameConflicts(const uid &i, const cuid &j)
-{
-    if ( (mvf::areCloseEnough(i.s, j.s, 1e-2)) && (i.l == j.l)) return true;
-    return false;
-}
-
-bool conflict::areSameConflicts(const cuid &i, const uid &j)
 {
     if ( (mvf::areCloseEnough(i.s, j.s, 1e-2)) && (i.l == j.l)) return true;
     return false;
@@ -2164,7 +2081,7 @@ bool conflict::isMerge(conflict::kind k)
 }
 
 
-scalar conflict::distance(const uid &i, const uid &j)
+scalar conflict::distance(const cuid &i, const cuid &j)
 {
     if (i.l == j.l) return j.s - i.s;
     else if (i.l->isNextLane(j.l)) return j.s + i.l->getLength() - i.s;
@@ -2183,7 +2100,7 @@ bool conflict::is1stLinkedTo2nd(const cuid &ci, const cuid &cj)
 {
     if ((ci.l == nullptr) || (cj.l == nullptr)) return false;
     if (areSameConflicts(ci, cj)) return true;
-    std::vector<uid> jLinks = cj.l->getConflictLinks(cj.s);
+    std::vector<cuid> jLinks = cj.l->getConflictLinks(cj.s);
     for (uint j = 0; j < jLinks.size(); ++j)
     {
         if (areSameConflicts(jLinks[j], ci)) return true;
@@ -2201,6 +2118,7 @@ scalar conflict::calcStopMargin(const lane *l1, const lane *l2)
     constexpr scalar ds = 0.1;
     constexpr scalar stdWidth = 3.5;
     scalar threshold = 1.0*0.5*((std::max)(stdWidth, l1->getWidth()) + (std::max)(stdWidth, l2->getWidth()));
+
     // std::cout << "threshold set to: " << threshold << " with l1.width: " << l1->getWidth() << " and l2.width: " << l2->getWidth() << std::endl;
     while (d < threshold)
     {
@@ -2287,12 +2205,12 @@ conflict conflict::createIntersectionConflict(const arr2 &pos, const lane *lpLan
 }
 
 
-scalar conflict::fillInHPLanes(conflict &cnf, lane *hpLane, scalar anticipationTime)
+scalar conflict::fillInHPLanes(conflict &cnf, const lane *hpLane, scalar anticipationTime)
 {
     cnf.hpLane.clear();
     cnf.hpLane.push_back(hpLane);
     scalar ant_i = hpLane->unsafeDistanceFromTheBoL(cnf.pos) / hpLane->getSpeed();
-    lane *l_i = hpLane;
+    const lane *l_i = hpLane;
     while (ant_i < anticipationTime) // there should be a while here:
     {
         scalar ant_j = 0;

@@ -106,7 +106,7 @@ void RNS::assignInputRNSToThis(const RNS& r)
             _sections[is][jl]->setSection( _sections[is] ); // this one's easy, lanes belong to sections.
 
             // Port Lane:
-            lane* wl = _sections[is][jl]->getPortLane();
+            const lane* wl = _sections[is][jl]->getPortLane();
             if (wl)
                 _sections[is][jl]->setPortLane( getLaneWithSUID(wl->getID(), wl->getSectionID()) );
 
@@ -118,7 +118,7 @@ void RNS::assignInputRNSToThis(const RNS& r)
             // Next Lane:
             if (_sections[is][jl]->hasNextLane())
             {
-                lane** nls; size_t nlsSize;
+                const lane** nls; size_t nlsSize;
                 std::tie(nls, nlsSize) = _sections[is][jl]->getNextLanes();
                 for (uint knl = 0; knl < nlsSize; ++knl)
                     _sections[is][jl]->setNextLane(knl, getLaneWithSUID(nls[knl]->getID(), nls[knl]->getSectionID()));
@@ -127,7 +127,7 @@ void RNS::assignInputRNSToThis(const RNS& r)
             // Prev Lane:
             if (_sections[is][jl]->hasPrevLane())
             {
-                lane** pls; size_t plsSize;
+                const lane** pls; size_t plsSize;
                 std::tie(pls, plsSize) = _sections[is][jl]->getPrevLanes();
                 for (uint knl = 0; knl < plsSize; ++knl)
                     _sections[is][jl]->setPrevLane(knl, getLaneWithSUID(pls[knl]->getID(), pls[knl]->getSectionID()));
@@ -1154,3 +1154,93 @@ void RNS::makePrioritiesDifferentEndingDifferentSectionCrossingLanes(scalar anti
     }
 }
 
+lane* RNS::getLane(const lane *l)
+{
+    if (!l) return nullptr;
+    return _sections[l->getSectionID()][l->getID()];
+}
+
+void RNS::crosslinkConflict(lane *l, uint cndx, conflict::cuid ocuid)
+{
+    conflict::cuid tcuid = {l, l->getConflictSCoord(cndx)};
+    if (!conflict::is1stLinkedTo2nd({ocuid.l, ocuid.s}, {tcuid.l, tcuid.s}))
+        l->addConflictLink(cndx, ocuid);
+        // l->_conflicts[cndx].links.push_back(ocuid);
+
+    if (!conflict::is1stLinkedTo2nd({tcuid.l, tcuid.s}, {ocuid.l, ocuid.s}))
+    {
+        uint cuidj = ocuid.l->getConflictIdx(ocuid.s);
+        getLane(ocuid.l)->addConflictLink(cuidj, tcuid);
+    }
+
+
+    std::vector<conflict::cuid> tlinks = l->getConflictLinks(cndx);
+    for (uint t = 0; t < tlinks.size(); ++t)
+    {
+        if (!conflict::is1stLinkedTo2nd({ocuid.l, ocuid.s}, {tlinks[t].l, tlinks[t].s}))
+        {
+            uint ndx = tlinks[t].l->getConflictIdx(tlinks[t].s);
+            getLane(tlinks[t].l)->addConflictLink(ndx, ocuid);
+        }
+        if (!conflict::is1stLinkedTo2nd({tlinks[t].l, tlinks[t].s}, {ocuid.l, ocuid.s}))
+        {
+            uint ndx = ocuid.l->getConflictIdx(ocuid.s);
+            getLane(ocuid.l)->addConflictLink(ndx,tlinks[t]);
+        }
+    }
+
+    std::vector<conflict::cuid> olinks = ocuid.l->getConflictLinks(ocuid.s);
+    for (uint o = 0; o < olinks.size(); ++o)
+    {
+        if (!conflict::is1stLinkedTo2nd({tcuid.l, tcuid.s}, {olinks[o].l, olinks[o].s}))
+        {
+            uint ndx = olinks[o].l->getConflictIdx(olinks[o].s);
+            getLane(olinks[o].l)->addConflictLink(ndx, tcuid);
+        }
+        if (!conflict::is1stLinkedTo2nd({olinks[o].l, olinks[o].s}, {tcuid.l, tcuid.s}))
+        {
+            uint ndx = tcuid.l->getConflictIdx(tcuid.s);
+            getLane(tcuid.l)->addConflictLink(ndx,olinks[o]);
+        }
+    }
+}
+
+void RNS::crosslinkConflict(lane *l, scalar cSCoord, conflict::cuid cuid)
+{
+    int idx = l->getConflictIdx(cSCoord);
+    if (idx < 0)
+    {
+        std::cout << "unable to find a conflict in lane " << l->getSUID() << " at length " << cSCoord << std::endl;
+        return;
+    }
+    return crosslinkConflict(l, static_cast<uint>(idx), cuid);
+}
+
+
+bool RNS::swapConflictPriority(lane *l, uint ci)
+{
+    bool swapped = false;
+    conflict cnf = l->getConflict(ci);
+    conflict::kind ko = cnf.k;
+    for (uint lj = 0; lj < cnf.hpLane.size(); ++lj)
+    {
+        int ick = cnf.hpLane[lj]->getConflictIdx(l);
+        if (ick < 0) continue;
+        uint uck = static_cast<uint>(ick);
+        l->setConflictKind(ci, cnf.hpLane[lj]->getConflictKind(uck));
+        getLane(cnf.hpLane[lj])->setConflictKind(uck, ko);
+        std::cout << "swapped priorities and now: " << l->getSUID() << ":"
+                  << conflict::kindString(l->getConflictKind(ci))
+                  << " and " << cnf.hpLane[lj]->getSUID()
+                  << ":" << conflict::kindString(cnf.hpLane[lj]->getConflictKind(uck)) << std::endl;
+        swapped = true;
+    }
+    return swapped;
+
+}
+
+
+bool RNS::swapConflictPriority(lane *l, scalar s)
+{
+    return swapConflictPriority(l, static_cast<uint>(l->getConflictIdx(s)));
+}

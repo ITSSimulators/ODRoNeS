@@ -57,7 +57,6 @@ class lane;
 class conflict
 {
 public:
-    struct uid { lane *l; scalar s;};
     struct cuid {const lane *l; scalar s;};
     enum class kind { free, giveWay, stop, mergeStarboard, mergePort, zebraWalk, unknown };
     static std::string kindString(kind k);
@@ -81,21 +80,18 @@ public:
     arr2 pos; ///< the point on the lane at which the conflict (crosswalk) crosses the lane
     scalar s; ///< s coordinate (distance from the begining of the road);
     scalar so, se; ///< s coordinates at which we should stop and at which we're safe;
-    std::vector<lane*> hpLane; ///< lanes that have higher priority... (or that are dangerous!)
-    std::vector<uid> links; ///< a vector of conflicts that need to be solved at the same time.
+    std::vector<const lane*> hpLane; ///< lanes that have higher priority... (or that are dangerous!)
+    std::vector<cuid> links; ///< a vector of conflicts that need to be solved at the same time.
     kind k; ///< the type of conflict, same as ending.
 
-    static bool areSameConflicts(const uid &i, const uid &j);
     static bool areSameConflicts(const cuid &i, const cuid &j);
-    static bool areSameConflicts(const uid &i, const cuid &j);
-    static bool areSameConflicts(const cuid &i, const uid &j);
 
     static bool isMerge(conflict::kind k);
 
     static bool is1stLinkedTo2nd(const cuid &ci, const cuid &cj); ///< true if ((ci == cj) || (ci is a link in cj))
 
     /*! signed distance, will return j - i */
-    static scalar distance(const uid &i, const uid &j);
+    static scalar distance(const cuid &i, const cuid &j);
 
     //! Given lanes with same destination l1 and l2, calculate the stop margin for lane l1
     static scalar calcStopMargin(const lane* l1, const lane* l2);
@@ -115,7 +111,7 @@ public:
 
     //! Fill in the lpLane conflict with lanes up to some anticipation tine,
     //!   or back until the first branch. Return the actual anticipation time.
-    static scalar fillInHPLanes(conflict &cnf, lane* hpLane, scalar anticipationTime);
+    static scalar fillInHPLanes(conflict &cnf, const lane* hpLane, scalar anticipationTime);
 
 };
 
@@ -189,29 +185,31 @@ public:
     void clearMemory();
     bool isSet() const; ///< return whether the lane is ready or not.
 
-    void setNextLane(lane *l, bool crosslink = true); ///< set the following lane in the Logical Road Network
+    void setNextLane(const lane *l); ///< setNextLane and don't crosslink.
+    void setNextLane(lane *l, bool crosslink); ///< set the following lane in the Logical Road Network
     void setNextLane(uint ndx, lane *l); ///< set the ndxth next lane in the _nextLanes array with minimal checks;
-    void setPrevLane(lane *l, bool crosslink = true); ///< set the previous lane in the Logical Road Network
+    void setPrevLane(const lane *l); ///< setPrevLane and don't crosslink.
+    void setPrevLane(lane *l, bool crosslink); ///< set the previous lane in the Logical Road Network
     void setPrevLane(uint ndx, lane *l); ///< set the ndxth prev lane in the _prevLanes array with minimal checks;
-    void setPortLane(lane *l); ///< set the Port (left) lane.
-    void setStarboardLane(lane *l); ///< set the Starboard (right) lane.
+    void setPortLane(const lane *l); ///< set the Port (left) lane.
+    void setStarboardLane(const lane *l); ///< set the Starboard (right) lane.
     void setSection(section &s); ///< set the section where this lane sits on.
 
     // Getting lanes
-    lane* getNextLane() const; ///< returns a pointer to the first next lane
-    lane* getNextLane(uint idx) const; ///< returns a pointer to the ith next lane.
-    std::tuple<lane**, size_t> getNextLanes() const; ///< returns the tuple <_nextLane, _nextLaneSize>
+    const lane* getNextLane() const; ///< returns a pointer to the first next lane
+    const lane* getNextLane(uint idx) const; ///< returns a pointer to the ith next lane.
+    std::tuple<const lane**, size_t> getNextLanes() const; ///< returns the tuple <_nextLane, _nextLaneSize>
     size_t getNextLaneSize() const; ///< returns the number lanes that start at the end of this one.
 
-    lane* getPrevLane() const; ///< returns a pointer to the previous lane
-    lane* getPrevLane(uint idx) const; ///< returns a pointer to the ith next lane.
-    std::tuple<lane**, size_t> getPrevLanes() const; ///< returns the tuple <_prevLane, _prevLaneSize>
+    const lane* getPrevLane() const; ///< returns a pointer to the previous lane
+    const lane* getPrevLane(uint idx) const; ///< returns a pointer to the ith next lane.
+    std::tuple<const lane**, size_t> getPrevLanes() const; ///< returns the tuple <_prevLane, _prevLaneSize>
     size_t getPrevLaneSize() const; ///< returns the number lanes that end at the beginning of this one.
 
-    lane* getPortLane() const; ///< returns a pointer to the Port (left) lane
-    lane* getStarboardLane() const; ///< returns a pointer to the Starboard (right) lane.
+    const lane* getPortLane() const; ///< returns a pointer to the Port (left) lane
+    const lane* getStarboardLane() const; ///< returns a pointer to the Starboard (right) lane.
     mvf::side getMergeSide() const; ///< returns the side towards this is merging.
-    lane* getMergeLane() const; ///< returns port, starboard, or null depending on the _mergeSide;
+    const lane* getMergeLane() const; ///< returns port, starboard, or null depending on the _mergeSide;
 
     void getOrigin(arr2 &o) const;
     arr2 getOrigin() const;
@@ -260,8 +258,6 @@ public:
     void addConflict(const conflict &cf); ///< store that conflict in order
     bool addConflictLane(uint i, lane *l); ///< add the lane l to conflict[i].hpLane
     bool addConflictLane(scalar s, lane *l); ///< add lane l to conflict hpLane at coord s.
-    void crosslinkConflict(uint cndx, conflict::uid cuid); ///< crosslink conflict with index cndx with cuid, if they were not already.
-    void crosslinkConflict(scalar cSCoord, conflict::uid cuid); ///< crosslink conflict at sCoord with cuid, if they were not already.
     // Quering conflict 1:
     bool hasConflicts() const;  ///< whether it has any conflicts or none.
     uint conflictsSize() const; ///< returns the amount of conflicts that this lane has set.
@@ -276,13 +272,14 @@ public:
     arr2 getConflictPos(scalar s) const; ///< returns the position of the conflict that is on s.
     scalar getConflictLength(uint i) const; ///< returns the width of the ith crosswalk;
     scalar getConflictLength(scalar s) const; ///< overload
-    std::vector<lane*> getConflictLanes(uint i) const; ///< return the lanes of the ith conflict.
-    std::vector<lane*> getConflictLanes(scalar s) const; ///< overload
+    std::vector<const lane*> getConflictLanes(uint i) const; ///< return the lanes of the ith conflict.
+    std::vector<const lane*> getConflictLanes(scalar s) const; ///< overload
     scalar getConflictSCoord(uint i) const; ///< return s, the distance from the begining of the lane for conflict i.
     int getConflictIdx(const lane *l) const; ///< returns the index of the crosswalk that has lane l; -1 if not found
     int getConflictIdx(scalar s) const; ///< returns the index of the crosswalk at sCoord s; -1 if not found.
-    std::vector<conflict::uid> getConflictLinks(uint i) const; ///< return a copy of the _conflicts[i].link vector;
-    std::vector<conflict::uid> getConflictLinks(scalar s) const; ///< return a copy of the _conflicts[ idx(s) ].link vector;
+    std::vector<conflict::cuid> getConflictLinks(uint i) const; ///< return a copy of the _conflicts[i].link vector;
+    std::vector<conflict::cuid> getConflictLinks(scalar s) const; ///< return a copy of the _conflicts[ idx(s) ].link vector;
+    void addConflictLink(uint i, conflict::cuid id);
     uint getConflictLinksSize(uint i) const; ///< return the amount of conflicts linked to the ith conflict.
     conflict::kind getConflictKind(uint i) const; ///< return the kind of conflict that this one is
     conflict::kind getConflictKind(scalar s) const; ///< return the kind of conflict that has conflict at s.
@@ -290,8 +287,6 @@ public:
     void setConflictKind(scalar s, conflict::kind k); ///< set the kind of the conflict at s.
     void setConflictHPLanes(uint i, lane* hpLane, scalar anticipationTime); ///< clear the HPLanes, and fill the vector calling conflict::fillInHPLanes.
     void setConflictHPLanes(scalar s, lane* hpLane, scalar anticipationTime); ///< clear the HPLanes, and fill the vector calling conflict::fillInHPLanes.
-    bool swapConflictPriority(uint i); ///< swap the priorities of conflicts i and the (free) conflict at the other lane.
-    bool swapConflictPriority(scalar s); ///< overload
     // Conflict - crosswalks:
     bool addCrosswalk(const conflict::staticObj &so);
     uint crosswalksSize() const;
@@ -410,12 +405,12 @@ private:
     scalar _speed; ///< the max speed at which one should drive.
     kind _kind; ///< whether it is tarmac or pavement.
 
-    lane** _nextLane; ///< next lane array
+    const lane** _nextLane; ///< next lane array
     uint _nextLaneSize; ///< number of next lanes that this one is linked to.
-    lane** _prevLane; ///< previous lane array
+    const lane** _prevLane; ///< previous lane array
     uint _prevLaneSize; ///< number of previous lanes that this one is linked to.
-    lane* _portLane; ///< lane on the port side.
-    lane* _starboardLane; ///< lane on the starboard side.
+    const lane* _portLane; ///< lane on the port side.
+    const lane* _starboardLane; ///< lane on the starboard side.
 
     section *_section;
     int _sectionID; ///< literally, the ID of the section where the lane belongs to.

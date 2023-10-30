@@ -50,6 +50,8 @@ public:
     section& sections(uint ndx) const; ///< const access the sections
     section& operator[](uint ndx); ///< access section ndx.
 
+    lane* getLane(const lane *l); ///< access a lane for which you only have a const pointer.
+
     bool ready() const; /*! return true if _sections are ready */
     void ready(bool r); ///< manually set _ready to r.
 
@@ -93,6 +95,13 @@ public:
 
     bool findLastAndFirstLinkingSectionIDs(int &last_o, int &first_e, const std::vector<uint> &ids_o, const std::vector<uint> &ids_e ) const; ///< defaulting to -1 and -1, given two arrays of section ids, ids_o and ids_e, find the two that link together the whole set; returning false in case of failure */
     bool findFirstLinkIDInSection(int &first, uint last, const std::vector<uint> &ids_o ) const; ///< defaulting to -1, given section id "last" and an array of section ids, ids_o, find the id of the section linking to last; returning false in case of failure*/
+
+
+public:
+    void crosslinkConflict(lane *l, uint cndx, conflict::cuid cuid); ///< crosslink conflict in l with index cndx with cuid, if they were not already.
+    void crosslinkConflict(lane *l, scalar cSCoord, conflict::cuid cuid); ///< crosslink conflict in l at sCoord with cuid, if they were not already.
+    bool swapConflictPriority(lane *l, uint i); ///< swap the priorities of conflicts lane l - conflict i and the (free) conflict at the other lane.
+    bool swapConflictPriority(lane *l, scalar s); ///< overload
 
 
 private:
