@@ -169,6 +169,7 @@ public:
     lane(const arr2 &origin, const arr2 &dest, scalar width, scalar speed, mvf::shape shp, sign sgn, bool permanent = true);
     lane(const std::vector<bezier2> &bzr, scalar width, scalar speed, sign sgn, bool permanent = true);
     lane(const std::vector<bezier3> &bzr, scalar width, scalar speed, sign sgn, bool permanent = true);
+    lane(const std::vector<arr2> &bzrp, mvf::shape s, scalar width, scalar speed, sign sgn, bool permanent = true);
     void assignInputLaneToThis(const lane& t);
 
     // Configuring the lane:
@@ -178,10 +179,12 @@ public:
     void set(const arr2 &origin, const arr2 &dest, const arr2 &centre, scalar width, scalar speed, mvf::shape shp, sign sgn, bool permanent = true);
     void set(const std::vector<bezier2> &bzr, scalar width, scalar speed, sign sgn, bool permanent = true);
     void set(const std::vector<bezier3> &bzr, scalar width, scalar speed, sign sgn, bool permanent = true);
+    void set(const std::vector<arr2> &bzrp, mvf::shape s, scalar width, scalar speed, sign sgn, bool permanent = true);
     void set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> off, const Odr::smaL &odrL, scalar se);
     void set(const OneVersion::smaS &sec, uint index);
     void setBezierLines(const std::vector<bezier2> &bzr);
     void setBezierLines(const std::vector<bezier3> &bzr);
+    void appendBezierLines(const std::vector<bezier2> &bzr);
     void clearMemory();
     bool isSet() const; ///< return whether the lane is ready or not.
 
@@ -339,7 +342,8 @@ public:
     bool getIntersectionPointFromOT(arr2 &p, const arr2 &o, const arr2 &t) const;
     // static bool getIntersectionPointFromOTtoLane(arr2 &p, arr2 const &o, arr2 &t, const lane* l);
     //! Project point onto lane
-    bool projectPointOntoLane(arr2 &p, arr2 const &o, bool verbose=true) const;
+    bool projectPointOntoLane(arr2 &p, arr2 const &o) const;
+    arr2 projectPointOntoLane(const arr2 &o) const;
 
     //! return the botton left corner and the top right corner, and 0 if things went well;
     bool getBoundingBox(arr2 &bl, arr2 &tr) const;

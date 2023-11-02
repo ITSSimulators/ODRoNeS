@@ -694,7 +694,7 @@ lane::lCoord RNS::getLaneCoordsForPoint(const arr2 &o, scalar tol) const
             // if (!mvf::isPointInBoxTLcBRc(o, {bli[0] - tol, tri[1] + tol}, {tri[0] + tol, bli[1] - tol})) continue; // tl, br
             if (!mvf::isPointInBoxBLcTRc(o, {bli[0] - tol, bli[1] - tol}, {tri[0] + tol, tri[1] + tol})) continue;
 
-            if (!_sections[is][jl]->projectPointOntoLane(pj, o, false)) continue;
+            if (!_sections[is][jl]->projectPointOntoLane(pj, o)) continue;
 
             scalar oj = mvf::distance(pj, o);
             if (oj > tol) continue;

@@ -86,6 +86,14 @@ lane::lane(const std::vector<bezier3> &bzr, scalar width, scalar speed, sign sgn
     setBezierLines(bzr);
 }
 
+lane::lane(const std::vector<arr2> &bzrp, mvf::shape s, scalar width,
+           scalar speed, sign sgn, bool permanent)
+{
+    base();
+    set(bzrp, s, width, speed, sgn, permanent);
+
+}
+
 void lane::base()
 {
     _width = 3;
@@ -191,6 +199,43 @@ void lane::set(const std::vector<bezier3> &bzr, scalar width, scalar speed, sign
     initialise(width, speed, mvf::shape::bezier3, sgn, permanent);
     setBezierLines(bzr);
 }
+
+void lane::set(const std::vector<arr2> &bzrp, mvf::shape s, scalar width, scalar speed, sign sgn, bool permanent)
+{
+    if (s == mvf::shape::bezier2)
+    {
+        if (bzrp.size() % 3)
+        {
+            std::cerr << "[ Error ] configuring lane " << _id << " as an array of bezier2 curves, as we didn't received the right amount of points" << std::endl;
+            return;
+        }
+
+        uint bzCurves = bzrp.size() /  3;
+        std::vector<bezier2> bz(bzCurves);
+        for (uint i = 0; i < bzrp.size(); ++i)
+            bz[i].set( bzrp[3*i], bzrp[3*i+1], bzrp[3*i+2] );
+
+        set(bz, width, speed, sgn, permanent);
+    }
+
+    else if (s == mvf::shape::bezier3)
+    {
+        if (bzrp.size() % 4)
+        {
+            std::cerr << "[ Error ] configuring lane " << _id << " as an array of bezier3 curves, as we didn't received the right amount of points" << std::endl;
+            return;
+        }
+
+        uint bzCurves = bzrp.size() /  4;
+        std::vector<bezier3> bz(bzCurves);
+        for (uint i = 0; i < bzrp.size(); ++i)
+            bz[i].set( bzrp[4*i], bzrp[4*i+1], bzrp[4*i+2], bzrp[4*i+3] );
+
+        set(bz, width, speed, sgn, permanent);
+    }
+}
+
+
 
 void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> off, const Odr::smaL &odrL, scalar endingS)
 {
@@ -612,6 +657,25 @@ void lane::setBezierLines(const std::vector<bezier3> &bzr)
     numerical::initialise(ds, size);
     numerical::setup();
 }
+
+void lane::appendBezierLines(const std::vector<bezier2> &bzr)
+{
+    for (uint i = 0; i < bzr.size(); ++i)
+    {
+        _geom.push_back(new bezier2(bzr[i]));
+        _length += _geom[i]->length();
+    }
+
+    calcBoundingBox();
+
+    scalar ds = numerical::defaultDs(_length);
+    uint size = 1 + static_cast<uint>(std::round(_length / ds));
+    numerical::clearMemory();
+    numerical::initialise(ds, size);
+    numerical::setup();
+}
+
+
 
 lane::~lane()
 {
@@ -1486,7 +1550,15 @@ bool lane::getIntersectionPointFromOT(arr2 &p, const arr2 &o, const arr2 &t) con
 }
 
 
-bool lane::projectPointOntoLane(arr2 &p, const arr2 &o, bool verbose) const
+
+arr2 lane::projectPointOntoLane(const arr2 &o) const
+{
+    arr2 p;
+    projectPointOntoLane(p, o);
+    return p;
+}
+
+bool lane::projectPointOntoLane(arr2 &p, const arr2 &o) const
 {
     if (_geom.size() == 1)
     {
@@ -2131,7 +2203,7 @@ scalar conflict::calcStopMargin(const lane *l1, const lane *l2)
             break;
         }
         arr2 p2;
-        l2->projectPointOntoLane(p2, p1, false); // projectPointOntoLane only returns true.
+        l2->projectPointOntoLane(p2, p1); // projectPointOntoLane only returns true.
         d = mvf::distance(p1, p2);
     }
     // std::cout << " stopMargin for " << l1->getSUID() << " should be set to: " << l1->getLength() - s << std::endl;
