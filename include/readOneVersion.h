@@ -85,11 +85,10 @@ public:
             return (!operator==(input));
         };
 
-        bool sameRoad(const OVID& input) const
+        bool sameRoadIDs(const OVID& input) const
         {
             if (roadIDM != input.roadIDM) return false;
             if (roadIDm != input.roadIDm) return false;
-            if (nnodeID != input.nnodeID) return false;
             return true;
         };
 

@@ -601,7 +601,7 @@ std::vector<uint> RNS::getSectionIDsWithOVRoadNodeId(const OneVersion::OVID &rnI
     if ((rnID.roadIDM == -1) || (rnID.roadIDm == -1)) return s;
     for (uint i = 0; i < _sectionsSize; ++i)
     {
-        if (_sections[i].ovID().sameRoad(rnID))
+        if (_sections[i].ovID().sameRoadIDs(rnID))
             s.push_back(i);
 
     }
@@ -725,8 +725,21 @@ std::vector<uint> RNS::buildForwardsFromSecID(uint first, const std::vector<uint
     std::vector<uint> poppable = ids;
     std::vector<uint> output;
 
-
+    // Check if "first" is in ids:
+    uint accounted = 0;
     for (uint i = 0; i < ids.size(); ++i)
+    {
+        if (first == ids[i])
+        {
+            accounted = 1;
+            poppable.erase(poppable.begin()+i);
+            output.push_back(ids[i]);
+            break;
+        }
+    }
+
+
+    for (uint i = 0; i < ids.size() - accounted; ++i)
     {
         bool bond = false;
         for (uint j = 0; j < poppable.size(); ++j)
