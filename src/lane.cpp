@@ -228,7 +228,7 @@ void lane::set(const std::vector<arr2> &bzrp, mvf::shape s, scalar width, scalar
 
         uint bzCurves = bzrp.size() /  4;
         std::vector<bezier3> bz(bzCurves);
-        for (uint i = 0; i < bzrp.size(); ++i)
+        for (uint i = 0; i < bzCurves; ++i)
             bz[i].set( bzrp[4*i], bzrp[4*i+1], bzrp[4*i+2], bzrp[4*i+3] );
 
         set(bz, width, speed, sgn, permanent);
