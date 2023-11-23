@@ -27,6 +27,9 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <array>
+
+typedef unsigned int uint;
 
 
 

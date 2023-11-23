@@ -216,9 +216,9 @@ void RNS::tSigns(const std::vector<lane::tSign> &t)
 bool RNS::makeRoads(std::string mapFile, concepts::drivingSide drivingSide, bool loadSidewalk)
 {
 
-    if (!std::string(std::filesystem::path{mapFile}.extension()).compare(".xodr"))
+    if ( !std::filesystem::path{mapFile}.extension().string().compare(".xodr"))
         return makeOpenDRIVERoads(mapFile, drivingSide, loadSidewalk);
-    else if (!std::string(std::filesystem::path{mapFile}.extension()).compare(".bin"))
+    else if ( !std::filesystem::path{mapFile}.extension().string().compare(".bin"))
 #ifdef USE_ONEVERSION
         return makeOneVersionRoads(mapFile);
 #else

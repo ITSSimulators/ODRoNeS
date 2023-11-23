@@ -2,8 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <Qt3DCore>
-#include <Qt3DExtras>
+#include <Qt3DCore/Qt3DCore>
+#include <Qt3DExtras/Qt3DExtras>
 
 #include "rns.h"
 
