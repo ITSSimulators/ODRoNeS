@@ -78,7 +78,8 @@ if(USE_ONEVERSION)
   # Find the headers:
   find_path(ONEVERSION_INCLUDE_DIR NAMES sim/Car.h
           HINTS ${ONEVERSION_HOME}/Simulator3/include
-          HINTS $ENV{ONEVERSION_HOME}/Simulator3/include)
+          HINTS $ENV{ONEVERSION_HOME}/Simulator3/include
+	  HINTS ${CMAKE_PREFIX_PATH}/Simulator3/include)
   cmake_path(GET ONEVERSION_INCLUDE_DIR PARENT_PATH ONEVERSION_ROOT)
   cmake_path(GET ONEVERSION_ROOT PARENT_PATH ONEVERSION_ROOT)
   message(STATUS "OneVersion: ${ONEVERSION_ROOT}")
