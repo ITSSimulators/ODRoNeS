@@ -52,6 +52,21 @@ public:
           nnodeID = -1;
         };
 
+
+        void assignInputToThis(const OVID& input)
+        {
+            laneID = input.laneID;
+            lgIndex = input.lgIndex;
+            roadIDM = input.roadIDM;
+            roadIDm = input.roadIDm;
+            nnodeID = input.nnodeID;
+        };
+
+        OVID(const OVID& input)
+        {
+            assignInputToThis(input);
+        };
+
         std::string to_string() const
         {
             std::string id = std::to_string(nnodeID) + ":"
@@ -65,13 +80,10 @@ public:
 
         OVID& operator= (const OVID& input)
         {
-            laneID = input.laneID;
-            lgIndex = input.lgIndex;
-            roadIDM = input.roadIDM;
-            roadIDm = input.roadIDm;
-            nnodeID = input.nnodeID;
+            assignInputToThis(input);
             return *this;
         };
+
 
         bool operator== (const OVID& input) const
         {
