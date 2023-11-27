@@ -31,7 +31,7 @@
 #include "cxxopts.hpp"
 #include "rnswindow.h"
 
-static float rnsversion = 0.8;
+static double rnsversion = 0.8;
 
 int main(int argc, char *argv[])
 {

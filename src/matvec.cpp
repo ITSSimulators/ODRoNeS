@@ -691,7 +691,7 @@ void mvf::numericalIntersections(std::vector<arr2> &intersections,
     else
     {
         ndxOA1 = ndxOA;
-        ndxOA2 = std::floor(0.5*(ndxOA + ndxEA));
+        ndxOA2 = static_cast<uint>(std::floor(0.5*(ndxOA + ndxEA)));
 
         ndxEA1 = ndxOA2 + 1;
         ndxEA2 = ndxEA;
@@ -709,7 +709,7 @@ void mvf::numericalIntersections(std::vector<arr2> &intersections,
     else
     {
         ndxOB1 = ndxOB;
-        ndxOB2 = std::floor(0.5*(ndxOB + ndxEB));
+        ndxOB2 = static_cast<uint>(std::floor(0.5*(ndxOB + ndxEB)));
 
         ndxEB1 = ndxOB2 + 1;
         ndxEB2 = ndxEB;

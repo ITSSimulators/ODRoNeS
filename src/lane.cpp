@@ -210,7 +210,7 @@ void lane::set(const std::vector<arr2> &bzrp, mvf::shape s, scalar width, scalar
             return;
         }
 
-        uint bzCurves = bzrp.size() /  3;
+        uint bzCurves = static_cast<uint>(bzrp.size()) /  3;
         std::vector<bezier2> bz(bzCurves);
         for (uint i = 0; i < bzrp.size(); ++i)
             bz[i].set( bzrp[3*i], bzrp[3*i+1], bzrp[3*i+2] );
@@ -226,7 +226,7 @@ void lane::set(const std::vector<arr2> &bzrp, mvf::shape s, scalar width, scalar
             return;
         }
 
-        uint bzCurves = bzrp.size() /  4;
+        uint bzCurves = static_cast<uint>(bzrp.size()) /  4;
         std::vector<bezier3> bz(bzCurves);
         for (uint i = 0; i < bzCurves; ++i)
             bz[i].set( bzrp[4*i], bzrp[4*i+1], bzrp[4*i+2], bzrp[4*i+3] );
@@ -454,8 +454,6 @@ void lane::set(const OneVersion::smaS &sec, uint index)
     initialise(smal->width0, sec.speedLimit, mvf::shape::oneversion, s);
 
     _kind = kind::tarmac;
-
-    bool geomPrint = false;
 
     // Having this sort of variable width would be not difficult.
     // It would just mean having an extra step at getPointAfterDistance and the like.

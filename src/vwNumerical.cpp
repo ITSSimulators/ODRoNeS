@@ -248,7 +248,7 @@ bool vwNumerical::setup(scalar ds)
         success = false;
     }
 
-    _pointsSize = points.size();
+    _pointsSize = static_cast<uint>(points.size());
     numerical::initialise(ds, _pointsSize);
     _pointsX[0] = points[0][0];
     _pointsY[0] = points[0][1];

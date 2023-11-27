@@ -143,7 +143,7 @@ void graphicalRNS::setupRoadsAndLabels(const RNS &rns)
             else
             {
                 std::vector<QPainterPath> qpp = l->getQPainterPaths(50);
-                _subRoads[laneNumber] = qpp.size();
+                _subRoads[laneNumber] = static_cast<uint>(qpp.size());
                 for (unsigned int k=0; k < qpp.size(); ++k)
                     _roads.push_back(qpp[k]);
             }
