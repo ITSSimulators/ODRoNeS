@@ -43,7 +43,7 @@ include_directories(${RNS_DIR}/3rdParty/tinyxml2)
 
 
 # Qt graphical interface:
-option(USE_QT "Build SmartActors with a graphical interface" ON)
+option(USE_QT "Build ODRoNeS with a graphical interface" ON)
 if (USE_QT)
   find_package(Qt6 COMPONENTS Core Gui Widgets 3DCore 3DRender 3DExtras)
   if (NOT ${Qt6_FOUND})
@@ -86,6 +86,7 @@ if(USE_ONEVERSION)
 
 endif(USE_ONEVERSION)
 
+# Build the RNS library:
 add_library(rns
     ${RNS_DIR}/include/constants.h 
     ${RNS_DIR}/src/rnsconcepts.cpp ${RNS_DIR}/include/rnsconcepts.h
@@ -118,25 +119,28 @@ add_library(rns
     ${RNS_DIR}/3rdParty/tinyxml2/tinyxml2.cpp
 )
 target_link_libraries(rns clothoids ${QT_LIBRARIES})
+
 if (USE_ONEVERSION)
     target_link_libraries(rns ${ONEVERSION_LIBRARY} ${SIMDEPS_LIBRARIES})
 endif (USE_ONEVERSION)
 
-add_executable(rnscheck
-    ${RNS_DIR}/src/main.cpp
-    ${RNS_DIR}/src/rnswindow.cpp ${RNS_DIR}/include/rnswindow.h
-)
-target_link_libraries(rnscheck rns ${QT_LIBRARIES})
-if (USE_ONEVERSION)
-    target_link_libraries(rns ${ONEVERSION_LIBRARY} ${SIMDEPS_LIBRARIES})
-endif (USE_ONEVERSION)
 
-qt_add_executable(rns3d 
-    ${RNS_DIR}/src/mainQt3D.cpp 
-    ${RNS_DIR}/src/mainwindow.cpp ${RNS_DIR}/include/mainwindow.h)
-target_link_libraries(rns3d PRIVATE rns Qt6::Widgets Qt6::3DCore Qt6::3DRender Qt6::3DExtras)
+# Build the Graphical representations, provided you have Qt available
+if (USE_QT)
+  add_executable(rnscheck
+      ${RNS_DIR}/src/main.cpp
+      ${RNS_DIR}/src/rnswindow.cpp ${RNS_DIR}/include/rnswindow.h
+  )
+  target_link_libraries(rnscheck rns ${QT_LIBRARIES})
 
-install (TARGETS rnscheck RUNTIME DESTINATION bin)
+  qt_add_executable(rns3d 
+      ${RNS_DIR}/src/mainQt3D.cpp 
+      ${RNS_DIR}/src/mainwindow.cpp ${RNS_DIR}/include/mainwindow.h)
+  target_link_libraries(rns3d PRIVATE rns Qt6::Widgets Qt6::3DCore Qt6::3DRender Qt6::3DExtras)
+
+  install (TARGETS rnscheck RUNTIME DESTINATION bin)
+endif (USE_QT)
+
 install (TARGETS rns DESTINATION lib)
 install (DIRECTORY ${RNS_DIR}/include DESTINATION ${CMAKE_INSTALL_PREFIX})
                          
