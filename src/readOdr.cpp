@@ -165,32 +165,11 @@ std::vector<Odr::offset> Odr::offset::simplify(const std::vector<offset> &v)
     for (uint i = 1; i < order.size(); ++ i)
     {
         Odr::offset oi = v[order[i].second];
-        // if (mvf::areSameValues(off.back().s, oi.s)) off.back() += oi;
-        if ((mvf::areSameValues(off.back().s, oi.s)) && (mvf::areSameValues(off.back().se, oi.se)))
+        if ((mvf::areSameValues(off.back().s, oi.s)) && (mvf::areSameValues(off.back().se, oi.se))
+                && (off.back().lr == oi.lr))
             off.back() += oi;
         else
             off.push_back(oi);
-    }
-
-    // Finally, look at the interval that we should consider:
-    if (off.size() == 1)
-        off[0].lr = LR::RL;
-    else
-    {
-        for (uint i = 1; i < off.size(); ++i)
-        {
-            if (mvf::areSameValues(off[i-1].se,off[i].s))
-            {
-                off[i-1].lr = LR::L;
-                off[i].lr = LR::R;
-            }
-            else
-            {
-                off[i-1].lr = LR::RL;
-                off[i].lr = LR::RL;
-            }
-        }
-
     }
 
     return off;
@@ -484,6 +463,7 @@ std::vector<Odr::offset> ReadOdr::readLaneOffset(tinyxml2::XMLElement *lanes)
     {
         Odr::offset loff_i;
 
+        loff_i.lr = Odr::offset::LR::L;
         loffXML->QueryDoubleAttribute(Odr::Attr::A, &(loff_i.a));
         loffXML->QueryDoubleAttribute(Odr::Attr::B, &(loff_i.b));
         loffXML->QueryDoubleAttribute(Odr::Attr::C, &(loff_i.c));
@@ -493,6 +473,8 @@ std::vector<Odr::offset> ReadOdr::readLaneOffset(tinyxml2::XMLElement *lanes)
         loff.push_back(loff_i);
         loffXML = loffXML->NextSiblingElement(Odr::Elem::LaneOffset);
     }
+    if (loff.size())
+        loff.back().lr = Odr::offset::LR::RL;
     return loff;
 }
 
@@ -599,6 +581,7 @@ int ReadOdr::addLane(tinyxml2::XMLElement *road, tinyxml2::XMLElement *lane, uin
     while (width)
     {
         _sections[ndxS].lanes.back().w.push_back(Odr::offset());
+        _sections[ndxS].lanes.back().w.back().lr = Odr::offset::LR::L;
         XMLCheckResult(width->QueryDoubleAttribute(Odr::Attr::sOffset, &(_sections[ndxS].lanes.back().w.back().s) ));
         XMLCheckResult(width->QueryDoubleAttribute(Odr::Attr::A, &(_sections[ndxS].lanes.back().w.back().a) ));
         XMLCheckResult(width->QueryDoubleAttribute(Odr::Attr::B, &(_sections[ndxS].lanes.back().w.back().b) ));
@@ -608,12 +591,14 @@ int ReadOdr::addLane(tinyxml2::XMLElement *road, tinyxml2::XMLElement *lane, uin
     }
     if (!_sections[ndxS].lanes.back().w.size())
         _sections[ndxS].lanes.back().w.push_back(Odr::offset()); // {0.,0.,0.,0.,0.});
+    _sections[ndxS].lanes.back().w.back().lr = Odr::offset::LR::RL;
 
 
     tinyxml2::XMLElement *border = lane->FirstChildElement(Odr::Elem::Border);
     while (border)
     {
         _sections[ndxS].lanes.back().border.push_back(Odr::offset());
+        _sections[ndxS].lanes.back().border.back().lr = Odr::offset::LR::L;
         XMLCheckResult(border->QueryDoubleAttribute(Odr::Attr::sOffset, &(_sections[ndxS].lanes.back().border.back().s) ));
         XMLCheckResult(border->QueryDoubleAttribute(Odr::Attr::A, &(_sections[ndxS].lanes.back().border.back().a) ));
         XMLCheckResult(border->QueryDoubleAttribute(Odr::Attr::B, &(_sections[ndxS].lanes.back().border.back().b) ));
@@ -623,6 +608,7 @@ int ReadOdr::addLane(tinyxml2::XMLElement *road, tinyxml2::XMLElement *lane, uin
     }
     if (!_sections[ndxS].lanes.back().border.size())
         _sections[ndxS].lanes.back().border.push_back(Odr::offset()); // {0.,0.,0.,0.,0.} );
+    _sections[ndxS].lanes.back().border.back().lr = Odr::offset::LR::RL;
 
 
     tinyxml2::XMLElement *speed = lane->FirstChildElement(Odr::Elem::Speed);

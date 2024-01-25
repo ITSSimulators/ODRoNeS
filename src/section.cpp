@@ -213,7 +213,7 @@ int section::addLane(const std::vector<bezier3> &bzr, scalar width, scalar speed
 }
 
 
-int section::addLane(const std::vector<Odr::geometry> &geom, const std::vector<Odr::offset> &off, const Odr::smaL &odrL, scalar se)
+int section::addLane(const std::vector<Odr::geometry> &geom, const std::vector<Odr::offset> &off, const std::vector<Odr::offset> &width, const Odr::smaL &odrL, scalar se)
 {
     int err = 0;
     if (_writtenSize == _allocSize)
@@ -225,7 +225,7 @@ int section::addLane(const std::vector<Odr::geometry> &geom, const std::vector<O
     {
         _lanes[_writtenSize].setID(static_cast<int>(_writtenSize));
         _lanes[_writtenSize].setOdrSectionID(_odrID);
-        _lanes[_writtenSize].set(geom, off, odrL, se);
+        _lanes[_writtenSize].set(geom, off, width, odrL, se);
         updateBoundingBox(static_cast<uint>(_writtenSize));
         _writtenSize += 1;
     }
@@ -404,6 +404,7 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
         // Finally, self:
         int last = 0;
         if (w_all_i.size()) last = w_all_i.back().first + 1;
+        int width_first_ndx = w_all_i.size(); // remember that from here to the end its (self) width
         for (uint j = 0; j < w_self_i.size(); ++j)
             w_all_i.push_back(std::pair(last, w_self_i[j]));
 
@@ -421,7 +422,7 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
 
 
         // And tell offset it's been set:
-        for (uint j = 1; j < w_all_i.size(); ++j)
+        for (uint j = 0; j < w_all_i.size(); ++j)
             w_all_i[j].second.seSet = true;
 
 
@@ -435,8 +436,12 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
             off.push_back(w_all_i[j].second);
         }
 
-        off = Odr::offset::simplify(off);
+        std::vector<Odr::offset> s_off = Odr::offset::simplify(off);
 
+        // And have the full sized width / border in a single separate vector:
+        std::vector<Odr::offset> width;
+        for (uint j = width_first_ndx; j < w_all_i.size(); ++j)
+            width.push_back(2 * w_all_i[j].second);
 
         /* Print out offset details
         std::cout << "lane: " << sec.odrID << ":" << sec.lanes[i].odrID << ":" << lsID
@@ -447,15 +452,15 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
                       << off_i[j].b << ", " << off_i[j].c << ", " << off_i[j].d << "}" << std::endl;
         }
         std::cout << " after being simplified from: " << std::endl;
-        for (uint j = 0; j < off[i].size(); ++j)
+        for (uint j = 0; j < s_off[i].size(); ++j)
         {
-            std::cout << "[" << j << "] s: " << off[i][j].s << ", {" << off[i][j].a << ", "
-                      << off[i][j].b << ", " << off[i][j].c << ", " << off[i][j].d << "}" << std::endl;
+            std::cout << "[" << j << "] s: " << s_off[i][j].s << ", {" << s_off[i][j].a << ", "
+                      << s_off[i][j].b << ", " << s_off[i][j].c << ", " << s_off[i][j].d << "}" << std::endl;
         }
         */
 
         // if (addLane(sec.geom, off_i, sec.lanes[i], se)) return;
-        if (addLane(sec.geom, off, sec.lanes[i], se)) return;
+        if (addLane(sec.geom, s_off, width, sec.lanes[i], se)) return;
         validLane = i;
 
         // and calculate the total bounding box for the section.
@@ -478,7 +483,8 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
         l0 = new lane();
         Odr::smaL odrl0 = sec.lanes[validLane];
         odrl0.sign = 1;
-        l0->set(sec.geom, {Odr::offset(0.,0.,0.,0.,so,se)}, sec.lanes[validLane], se);
+        l0->set(sec.geom, {Odr::offset(0.,0.,0.,0.,so,se)}, {Odr::offset(0.,0.,0.,0.,so,se)},
+                sec.lanes[validLane], se);
     }
     // Now use getPointWithOffset(p, d, offset) to get the xy
     //   and calculate st's/

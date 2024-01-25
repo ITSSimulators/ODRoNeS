@@ -70,8 +70,8 @@ private:
     QColor *_laneColours;
     Label *_labels;
     bool *_ignore;
-    std::vector<QPainterPath> _roads;
-    uint *_subRoads;
+    std::vector<QPainterPath> _roads, _leRoads, _reRoads; ///< roads, leftEdges and rightEdges.
+    uint *_subRoads; ///< the number of 'parts' (geometries) in which this lane has been divided.
     Qt::PenStyle *_penStyle;
 
     std::vector<lane::tSign> _tSigns;

@@ -63,7 +63,7 @@ public:
     int addLane(const arr2 &origin, const arr2 &dest, const arr2 &centre, scalar width, scalar speed, mvf::shape shp, lane::sign sgn, bool permanent = true);
     int addLane(const std::vector<bezier2> &bzr, scalar width, scalar speed, lane::sign sgn);
     int addLane(const std::vector<bezier3> &bzr, scalar width, scalar speed, lane::sign sgn);
-    int addLane(const std::vector<Odr::geometry> &geom, const std::vector<Odr::offset> &off, const Odr::smaL &odrL, scalar se);
+    int addLane(const std::vector<Odr::geometry> &geom, const std::vector<Odr::offset> &off, const std::vector<Odr::offset> &width, const Odr::smaL &odrL, scalar se);
     int addLane(const OneVersion::smaS &sec, uint index);
 
     /*! Set port and starboard lanes (and potentially flip some lanes);

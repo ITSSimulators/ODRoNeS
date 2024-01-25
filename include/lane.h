@@ -180,7 +180,7 @@ public:
     void set(const std::vector<bezier2> &bzr, scalar width, scalar speed, sign sgn, bool permanent = true);
     void set(const std::vector<bezier3> &bzr, scalar width, scalar speed, sign sgn, bool permanent = true);
     void set(const std::vector<arr2> &bzrp, mvf::shape s, scalar width, scalar speed, sign sgn, bool permanent = true);
-    void set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> off, const Odr::smaL &odrL, scalar se);
+    void set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> off, const std::vector<Odr::offset> &width, const Odr::smaL &odrL, scalar se);
     void set(const OneVersion::smaS &sec, uint index);
     void setBezierLines(const std::vector<bezier2> &bzr);
     void setBezierLines(const std::vector<bezier3> &bzr);
@@ -214,6 +214,11 @@ public:
     mvf::side getMergeSide() const; ///< returns the side towards this is merging.
     const lane* getMergeLane() const; ///< returns port, starboard, or null depending on the _mergeSide;
 
+    // And the section:
+    section* getSection() const;
+
+
+    // Get the basics:
     void getOrigin(arr2 &o) const;
     arr2 getOrigin() const;
     void getDestination(arr2 &d) const;
@@ -223,18 +228,27 @@ public:
     arr2 getTo() const;
     scalar getCurvature(const arr2 &p) const; ///< returns the curvature (1/R) at one point.
     scalar getLength() const; ///< returns the length of the lane.
-    mvf::shape getShape(uint i) const; ///< returns the shape of _geom[i]
-    std::string getShapeString(uint i) const; ///< returns a string version of the shape of the lane.
-    std::string getShapeString() const; ///< returns either _geom[0], or _shape
-    std::string getShapesString() const; ///< returns a string with all the shapes of the lane in the _geom vector.
     uint getGeometrySize() const; ///< get the size of the _geom array.
     std::vector<std::unique_ptr<geometry>> getGeometries() const;
 
     scalar getWidth() const;
+    scalar getWidth(scalar d) const; ///< get the width at a certain distance down the lane.
 
     scalar getSpeed() const;
     void setSpeed(const scalar speed);
 
+
+    // Shape...
+    mvf::shape getShape(uint i) const; ///< returns the shape of _geom[i]
+    std::string getShapeString(uint i) const; ///< returns a string version of the shape of the lane.
+    std::string getShapeString() const; ///< returns either _geom[0], or _shape
+    std::string getShapesString() const; ///< returns a string with all the shapes of the lane in the _geom vector.
+    bool isOpenDrive() const;
+    bool isOneVersion() const;
+    bool isArc() const;
+    bool isArc(mvf::shape s) const;
+
+    // ... and kind:
     void setKind(kind k);
     kind getKind() const;
     bool isRoundabout() const;
@@ -246,6 +260,8 @@ public:
     bool actorsSupport(concepts::actor k) const;
     // bool actorsOverlap(const lane *l) const;
 
+
+    // Traffic Signs:
     void addTSign(tSign ts);
     std::vector<tSign> getTSigns() const;
     uint tSignsSize() const;
@@ -308,16 +324,10 @@ public:
 
 
     // Geometry in lanes:
-    bool isArc() const;
-    bool isArc(mvf::shape s) const;
-    bool isOpenDrive() const;
-    bool isOneVersion() const;
     void getTangentInPoint(arr2 &t, const arr2 &p) const;
     arr2 getTangentInPoint(const arr2 &p) const;
     //! returns the road angle in degrees, Qt style: -90 means Eastwards, 0 means Southwards.
     scalar getQtHeadingInPoint(const arr2 &p) const;
-
-
     //! returns whether p is on this lane or not...
     //!    within a lateral tolerance of tol... check!
     bool isPointOnLane(const arr2 &p, scalar tol = 1e-3) const;
@@ -350,7 +360,8 @@ public:
     //! calculate the bounding box (without considering lane width) and store it internally into the pair _bbblc, and _bbtrc:
     bool calcBoundingBox();
 
-    //! retuns the lane ID;
+
+    //! Lane IDs
     int getID() const;
     int odrID() const;
     OneVersion::OVID ovID() const;
@@ -365,8 +376,8 @@ public:
     bool isSUID(std::string name) const;
     bool isCSUID(std::string name) const;
     bool isOdrSUID(std::string name) const;
-    section* getSection() const;
     int getSectionID() const;
+
 
     bool isPermanent() const;
 
@@ -385,13 +396,21 @@ public:
     bool isFlippable() const; ///< return _flippable
     bool isOdrFwd() const; ///< return _odrFwd
     bool isOdrShapeSupported(mvf::shape s) const; ///< return true if the shape is supported;
-    int getGeomIndexForPoint(const arr2 &p) const; ///< get the geometry index for this point; return -1 if the point is not there for some tol.
 
 
+private:
+    //! Find the correct geometry:
+    int getGeometryIndex(const arr2 &p) const;  ///< get the geometry index for this point; return -1 if the point is not there for some tol.
+    int getGeometryIndex(scalar d) const; ///< get the geometry index for this point; return -1 if out of bounds;
+
+
+public:
 #ifdef QT_CORE_LIB
+    QPainterPath getEdgeQPainterPath(uint n, int e); ///< e = -1 for left edge and e = 1 for right edge.
     QPainterPath getQPainterPath(uint n) const; ///< get a QPainterPath with n points per Bezier line.
     std::vector<QPainterPath> getQPainterPaths(uint n) const; ///< get a vector with the QPainterPaths of each Bezier line in the lane.
-    int fillInVerticesAndIndices(uint n, QByteArray &indexBytes, QByteArray &vertexBytes, int &indexSize, int &vertexSize) const; ///< as the method states: allocate and fill in the required 3D data.
+    int fillInVerticesAndIndices(scalar step, std::vector<QByteArray> &indexBytes, std::vector<QByteArray> &vertexBytes,
+                                 std::vector<int> &indexSize, std::vector<int> &vertexSize) const; ///< as the method states: allocate and fill in the required 3D data.
 #endif
 
 private:
@@ -424,7 +443,6 @@ private:
 
     mvf::shape _shape; ///< shape of the lane
 
-    Odr::offset _odrWidth; ///< the 5 parametres that define the width;
     std::vector<geometry*> _geom; ///< composed geometry for OpenDRIVE lanes.
 
     bool _isPermanent; ///< whether this lane is permanent or is a lcPath.
@@ -435,6 +453,9 @@ private:
      *   used when thinking about flipping the lane */
     bool _odrFwd;
     bool _flippable; ///< whether the lane can be flipped from forward to backwards.
+    /// Variables needed for the OpenDRIVE variable width:
+    scalar _odrSo; ///< start of the lane section (metres), needed for the variable width, variable speed, elevation...
+    std::vector<Odr::offset> _odrWidth; ///< the 5 parametres that define the width;
 
     OneVersion::OVID _ovID; ///< the OneVersion id of the lane.
 

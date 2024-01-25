@@ -237,7 +237,8 @@ void lane::set(const std::vector<arr2> &bzrp, mvf::shape s, scalar width, scalar
 
 
 
-void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> off, const Odr::smaL &odrL, scalar endingS)
+void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> off,
+               const std::vector<Odr::offset> &width, const Odr::smaL &odrL, scalar endingS)
 {
     _odrID = odrL.odrID;
     _length = odrL.length; ///< that's a good estimate, but it's not the real length of the lane; just the length of the section at tis centre.
@@ -246,7 +247,7 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
     if (odrL.sign == -1) s = lane::sign::n;
     else if (odrL.sign == 1) s = lane::sign::p;
 
-    initialise(odrL.w[0].a, odrL.speed, mvf::shape::opendrive, s);
+    initialise(width[0].a, odrL.speed, mvf::shape::opendrive, s);
 
     if (odrL.kind.compare(Odr::Kind::Driving) == 0)
         _kind = kind::tarmac;
@@ -254,6 +255,10 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
         _kind = kind::pavement;
     else
         _kind = kind::unknown;
+
+    // store the width and the starting point of the lane section.
+    _odrSo = odrL.startingS;
+    _odrWidth = width;
 
     bool geomPrint = false;
 
@@ -286,7 +291,7 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
             else if (odrg[i].g == Odr::Attr::Geometry::paramPoly3)
                 _geom.push_back(new paramPoly3(odrg[i], getSignInt(), off[0].a, soi, sei));
             else if (odrg[i].g == Odr::Attr::Geometry::spiral)
-                _geom.push_back(new vwSpiral(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
+                _geom.push_back(new vwSpiral(odrg[i], getSignInt(), _odrWidth, off, soi, sei, roadSoi, geomPrint));
             else
             {
                 std::cerr << "[ Lane ] Unsupported shape! The code will crash quickly after this." << std::endl;
@@ -296,13 +301,13 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
         else
         {
             if (odrg[i].g == Odr::Attr::Geometry::line)
-                _geom.push_back(new vwStraight(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
+                _geom.push_back(new vwStraight(odrg[i], getSignInt(), _odrWidth, off, soi, sei, roadSoi, geomPrint));
             else if (odrg[i].g == Odr::Attr::Geometry::arc)
-                _geom.push_back(new vwArc(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
+                _geom.push_back(new vwArc(odrg[i], getSignInt(), _odrWidth, off, soi, sei, roadSoi, geomPrint));
             else if (odrg[i].g == Odr::Attr::Geometry::paramPoly3)
-                _geom.push_back(new vwParamPoly3(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
+                _geom.push_back(new vwParamPoly3(odrg[i], getSignInt(), _odrWidth, off, soi, sei, roadSoi, geomPrint));
             else if (odrg[i].g == Odr::Attr::Geometry::spiral)
-                _geom.push_back(new vwSpiral(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
+                _geom.push_back(new vwSpiral(odrg[i], getSignInt(), _odrWidth, off, soi, sei, roadSoi, geomPrint));
             else
             {
                 std::cerr << "[ Lane ] Unsupported shape! The code will crash quickly after this." << std::endl;
@@ -782,6 +787,7 @@ void lane::assignInputLaneToThis(const lane &t)
         else
             std::cout << "[ WARNING ] lane::assignInputToThis doesn't know about this geometry" << std::endl;
     }
+    _odrSo = t._odrSo;
     _odrWidth = t._odrWidth;
 
 
@@ -841,7 +847,6 @@ void lane::setPrevLane(const lane *l)
             _bbtrc = _geom[0]->trc();
         }
     }
-
 }
 
 void lane::setPrevLane(lane *l, bool crosslink)
@@ -1103,7 +1108,7 @@ scalar lane::getCurvature(const arr2 &p) const
         return _geom[0]->getCurvature(p);
     else if (_geom.size() > 1)
     {
-        int lineIdx = getGeomIndexForPoint(p);
+        int lineIdx = getGeometryIndex(p);
         if (lineIdx < 0)
         {
             std::cerr << "getCurvature couldn't get a valid index for p: (" << p[0] << ", " << p[1] << ")" << std::endl;
@@ -1170,6 +1175,8 @@ std::vector<std::unique_ptr<geometry>> lane::getGeometries() const
             v.push_back(std::unique_ptr<geometry>(new vwArc(*(dynamic_cast<vwArc*>(_geom[i]))) ));
         else if (_geom[i]->shape() == mvf::shape::vwParamPoly3)
             v.push_back(std::unique_ptr<geometry>(new vwParamPoly3(*(dynamic_cast<vwParamPoly3*>(_geom[i]))) ));
+        else if (_geom[i]->shape() == mvf::shape::vwSpiral)
+            v.push_back(std::unique_ptr<geometry>(new vwSpiral(*(dynamic_cast<vwSpiral*>(_geom[i]))) ));
         else
             std::cout << "[ WARNING ] lane::getGeometries() - Unknown shape" << std::endl;
 
@@ -1306,7 +1313,7 @@ void lane::getTangentInPoint(arr2 &t, const arr2 &p) const
         t = _geom[0]->getTangentInPoint(p);
     else if (_geom.size() > 1)
     {
-        int lineIdx = getGeomIndexForPoint(p);
+        int lineIdx = getGeometryIndex(p);
         t = _geom[lineIdx]->getTangentInPoint(p);
     }
     return;
@@ -1345,7 +1352,7 @@ bool lane::isPointOnLane(const arr2 &p, scalar tol) const
 }
 
 
-int lane::getGeomIndexForPoint(const arr2 &p) const
+int lane::getGeometryIndex(const arr2 &p) const
 {
     bool fast = true;
     if (fast) /* Fast and slightly insecure */
@@ -1386,6 +1393,38 @@ int lane::getGeomIndexForPoint(const arr2 &p) const
     return -1;
 }
 
+int lane::getGeometryIndex(scalar d) const
+{
+    if (!_geom.size()) return -1;
+
+    constexpr scalar accuracy = 1e-6;
+
+    if (d < 0)
+    {
+        if (mvf::areCloseEnough(d, 0, accuracy))
+            d = 0;
+        else
+            return -1;
+    }
+    else if (d > _length)
+    {
+        if (mvf::areCloseEnough(d, _length, accuracy))
+            d = _length;
+        else
+            return -1;
+    }
+
+    scalar l = 0;
+    for (uint i = 0; i < _geom.size(); ++i)
+    {
+        l += _geom[i]->length();
+        if (d <= l) return i;
+    }
+
+    std::cerr << "[ Error ] lane::getGeomIndexForDistance failed." << std::endl;
+    return -1;
+}
+
 
 bool lane::getPointAfterDistance(arr2 &p, const arr2 &o, scalar d) const
 {
@@ -1395,7 +1434,7 @@ bool lane::getPointAfterDistance(arr2 &p, const arr2 &o, scalar d) const
     }
     else if (_geom.size() > 1)
     {
-        int lineIdx = getGeomIndexForPoint(o);
+        int lineIdx = getGeometryIndex(o);
         if (lineIdx < 0)
         {
             std::cerr << "lane::getPointAfterDistance opendrive: o " << o[0] << " : " << o[1] << " is not in this lane" << std::endl;
@@ -1433,7 +1472,7 @@ scalar lane::unsafeDistanceToTheEoL(const arr2 &p) const
         distance = _geom[0]->distanceToTheEoL(p);
     else if (_geom.size() > 1)
     {
-        int lineIdx = getGeomIndexForPoint(p);
+        int lineIdx = getGeometryIndex(p);
         distance = _geom[lineIdx]->distanceToTheEoL(p);
         for (uint i = lineIdx + 1; i < _geom.size(); ++i)
             distance += _geom[i]->length();
@@ -1692,6 +1731,41 @@ scalar lane::getSpeed() const
 scalar lane::getWidth() const
 {
     return _width;
+}
+
+scalar lane::getWidth(scalar d) const
+{
+    scalar w = 0;
+    int ndx = getGeometryIndex(d);
+    if (ndx < 0) return 0;
+    mvf::shape s = _geom[ndx]->shape();
+    if ( (s == mvf::shape::vwStraight) || (s == mvf::shape::vwArc) ||
+         (s == mvf::shape::vwParamPoly3) || (s == mvf::shape::vwSpiral))
+    {
+        scalar lo = 0;
+        for (int i = 0; i < ndx; ++i )
+            lo += _geom[i]->length();
+
+        vwNumerical *vwn = static_cast<vwNumerical*>(_geom[ndx]);
+        w = vwn->interpolateW(d - lo);
+    }
+    /* if (isOpenDrive())
+    {
+        scalar t = d;
+        if (!_odrFwd) t = _length - t;
+        for (uint i = 0; i < _odrWidth.size(); ++i)
+        {
+            if (!_odrWidth[i].inRange(t)) continue;
+            scalar s = t - _odrWidth[i].s;
+            scalar s2 = s * s;
+            w += _odrWidth[i].a + _odrWidth[i].b * s + _odrWidth[i].c * s2 + _odrWidth[i].d * s * s2;
+        }
+    } */
+    else
+        w = _width;
+
+    return w;
+
 }
 
 void lane::addTSign(tSign ts)
@@ -2104,9 +2178,104 @@ std::vector<QPainterPath> lane::getQPainterPaths(uint n) const
     return qpp;
 }
 
-int lane::fillInVerticesAndIndices(uint n, QByteArray &indexBytes, QByteArray &vertexBytes, int &indexSize, int &vertexSize) const
+QPainterPath lane::getEdgeQPainterPath(uint n, int e)
 {
+    QPainterPath qpp;
+    if ((e != -1) && (e != 1))
+    {
+        std::cerr << "[ Error ] getEdgeQPainterPath means neither left nor right" << std::endl;
+        return qpp;
+    }
+
+    if (n == 0) n = _length; // so that later appDs is 1m.
+    scalar appDs = _length / n;
+
+    scalar s = 0; // total distance down the road.
+    bool first = true;
+    for (uint i = 0; i < _geom.size(); ++i)
+    {
+        scalar si = 0;
+        uint ni = std::floor(_geom[i]->length() / appDs);
+        scalar dsi = _geom[i]->length() / ni;
+        for (uint j = 0; j <= ni; ++j)
+        {
+            arr2 ci;
+            _geom[i]->getPointAfterDistance(ci, _geom[i]->origin(), si);
+            arr2 ti = _geom[i]->getTangentInPoint(ci);
+            arr2 ni;
+            if (e == -1) ni = {-ti[1], ti[0]};
+            else ni = {ti[1], -ti[0]};
+            scalar w = getWidth(s + si);
+            arr2 pi = {ci[0] + 0.48 * w * ni[0], ci[1] + 0.48 * w * ni[1]};
+            if (first)
+            {
+                first = false;
+                qpp.moveTo(QPointF(ct::mToPix * pi[0], -ct::mToPix * pi[1]));
+            }
+            else
+                qpp.lineTo(QPointF(ct::mToPix * pi[0], -ct::mToPix * pi[1]));
+            si += dsi;
+        }
+        s += _geom[i]->length();
+    }
+
+    return qpp;
+}
+
+
+
+
+int lane::fillInVerticesAndIndices(scalar step, std::vector<QByteArray> &indexBytes, std::vector<QByteArray> &vertexBytes, std::vector<int> &indexSize, std::vector<int> &vertexSize) const
+{
+    if ((indexBytes.size() != 0) || (vertexBytes.size() != 0) ||
+        (indexSize.size() != 0) || (vertexSize.size() != 0))
+        return 1;
+
+    vertexBytes.resize(_geom.size());
+    indexBytes.resize(_geom.size());
+    for (uint i = 0; i < _geom.size(); ++i)
+    {
+        int err = 0; //  _geom[i]->fillInVerticesAndIndices(step, indexBytes[i], vertexBytes[i], indexSize[i], vertexSize[i]);
+        if (err > 0)
+            return err;
+    }
+
     return 0;
+
+
+    /*
+    // 1 - Preliminaries //
+    // longitudinal //
+    uint long_n = std::floor(_length / step);
+    float long_d = _length / long_n;
+    // lateral ///
+    uint lat_n = std::floor(0.5 * _width / step);
+    float lat_d = 0.5 * _width / lat_n;
+
+
+
+    // 2 -
+    vertexSize = (long_n+1) * (lat_n * 2 + 2); // numOfVertices
+    vertexBytes.resize(3 * vertexSize * static_cast<int>(sizeof(float))); // bufferBytes
+    float *positions = reinterpret_cast<float*>(vertexBytes.data());
+
+    for (uint i = 0; i < long_n+1; ++i)
+    {
+        arr2 p_io = getPointAfterDistance(p)
+        arr3 p_io = road.pointAfterDistance(long_d * i);
+        arr3 l_io = {p_io[0] - 0.5f * road.width * road.no()[0],
+                     p_io[1] - 0.5f * road.width * road.no()[1],
+                     p_io[2] - 0.5f * road.width * road.no()[2]};
+
+        for (uint j = 0; j < 2 * lat_n + 1; ++j)
+        {
+            *positions++ = static_cast<float>(l_io[0] + j * lat_d * road.no()[0]);
+            *positions++ = static_cast<float>(l_io[1] + j * lat_d * road.no()[1]);
+            *positions++ = static_cast<float>(l_io[2] + j * lat_d * road.no()[2]);
+        }
+    }
+
+    */
 }
 
 #endif

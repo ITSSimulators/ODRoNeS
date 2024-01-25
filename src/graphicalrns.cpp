@@ -147,6 +147,9 @@ void graphicalRNS::setupRoadsAndLabels(const RNS &rns)
                 for (unsigned int k=0; k < qpp.size(); ++k)
                     _roads.push_back(qpp[k]);
             }
+            _leRoads.push_back(l->getEdgeQPainterPath(50, -1));
+            _reRoads.push_back(l->getEdgeQPainterPath(50, 1));
+
             laneNumber += 1;
         }
     }
@@ -187,6 +190,16 @@ void graphicalRNS::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QW
             if (!_ignore[i])
                 painter->drawPath(_roads[srNdx]);
             srNdx += 1;
+        }
+        if (!_ignore[i])
+        {
+            pen.setStyle(Qt::DotLine);
+            pen.setColor(Qt::red);
+            painter->setPen(pen);
+            painter->drawPath(_leRoads[i]);
+            pen.setColor(Qt::black);
+            painter->setPen(pen);
+            painter->drawPath(_reRoads[i]);
         }
     }
 

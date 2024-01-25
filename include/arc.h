@@ -44,6 +44,7 @@ public:
     void invert() override;
     bool isArc() const override {return true;}
     bool isNumerical() const override {return false;}
+    scalar sl0(scalar s) const override;
     bool pending() const {return _pending;}
 
     bool isPointHere(const arr2 &p) const override;
@@ -69,6 +70,7 @@ private:
     arr2 _centre; ///< arc; centre of the circle of the curved lane
     scalar _alpha; ///< arc; the angle subtended by the arc that is the curved lane
     scalar _radiusOfCurvature; ///< arc; the real radius of curvature rather than the lane zero one; signed.
+    scalar _odrRoOR; ///< arc; odr; radius of curvature of lane zero over the radius of curvature of this one.
     arr2 _co, _cd; ///< arc; unit vectors from the centre to the origin and destination
     bool _pending; ///< true when _origin and _dest have been set, but the configuration is not there yet.
 

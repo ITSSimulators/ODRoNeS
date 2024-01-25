@@ -321,6 +321,18 @@ public:
             if (!mvf::areSameValues(d,0)) return false;
             return true;
         }
+        bool inRange(scalar t) const
+        {
+            if (!seSet) return false;
+            if (lr == LR::RL)
+                return mvf::isInRangeLR(t, s, se, 0);
+            else if (lr == LR::L)
+                return mvf::isInRangeL(t, s, se, 0);
+            else if (lr == LR::R)
+                return mvf::isInRangeR(t, s, se, 0);
+            else
+                return mvf::isInRange0(t, s, se);
+        }
         static std::vector<offset> simplify(const std::vector<offset> &v);
         double a, b, c, d, s, se;
         LR lr; ///< whether to use L: [s, se), R: (s, se] or LR: [s, se]

@@ -28,7 +28,8 @@
 class vwStraight : public vwNumerical
 {
 public:
-    vwStraight(const Odr::geometry &odr, int sign, std::vector<Odr::offset> off, scalar so, scalar se, scalar roadSo, bool print);
+    vwStraight(const Odr::geometry &odr, int sign, std::vector<Odr::offset> vwWidth,
+               std::vector<Odr::offset> off, scalar so, scalar se, scalar roadSo, bool print);
     void printOut() const;
 
 private:

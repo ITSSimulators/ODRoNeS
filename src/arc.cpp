@@ -40,6 +40,7 @@ void arc::base()
     _cd = {0., 0.};
     _alpha = 0;
     _radiusOfCurvature = 0;
+    _odrRoOR = 1;
     _pending = false;
 }
 
@@ -75,10 +76,9 @@ arc::arc(const OneVersion::segment &sgm, scalar offset)
 
     mvf::boundingBoxForArc(_blc, _trc, _origin, _dest, _centre, mvf::distance(_origin, _centre), _shape);
 
+    _odrRoOR = 1;
+
     _ready = true;
-
-
-
 }
 
 arc::arc(const Odr::geometry &odg, int sign, scalar offsetA, scalar so, scalar se)
@@ -125,6 +125,7 @@ arc::arc(const Odr::geometry &odg, int sign, scalar offsetA, scalar so, scalar s
     if (_shape == mvf::shape::clockwise) _radiusOfCurvature = - _radiusOfCurvature;
     _length = std::abs(_alpha * _radiusOfCurvature);
 
+    _odrRoOR = 1. / (curv * std::fabs(_radiusOfCurvature));
 
     mvf::boundingBoxForArc(_blc, _trc, _origin, _dest, _centre, mvf::distance(_origin, _centre), _shape);
 
@@ -282,6 +283,7 @@ arc::arc(const arr2& origin, const arr2& dest)
     _origin = origin;
     _dest = dest;
     _ready = false;
+    _odrRoOR = 1;
     _pending = true;
 
 }
@@ -339,6 +341,8 @@ arc::arc(const arr2& origin, const arr2& dest, const arr2& centre, mvf::shape s)
     _o = _origin;
     _d = _dest;
 
+    _odrRoOR = 1;
+
     _ready = true;
 }
 
@@ -362,6 +366,7 @@ void arc::assignInputGeomToThis(const arc &a)
     _radiusOfCurvature = a._radiusOfCurvature;
     _co = a._co;
     _cd = a._cd;
+    _odrRoOR = a._odrRoOR;
     geometry::assignInputGeomToThis(a);
 }
 
@@ -404,7 +409,6 @@ void arc::invert()
 
 arc::arc(const arr2& origin, const arr2& dest, const arr2& to)
 {
-
     _origin = origin;
     _dest = dest;
     _to = to;
@@ -461,6 +465,8 @@ arc::arc(const arr2& origin, const arr2& dest, const arr2& to)
 
     _o = _origin;
     _d = _dest;
+
+    _odrRoOR = 1;
 
     _ready = true;
 
@@ -526,6 +532,10 @@ scalar arc::getCurvature([[maybe_unused]] const arr2 &p) const
     return 1./_radiusOfCurvature;
 }
 
+scalar arc::sl0(scalar s) const
+{
+    return s * _odrRoOR;
+}
 
 #ifdef QT_CORE_LIB
 QPainterPath arc::getQPainterPath(uint n) const

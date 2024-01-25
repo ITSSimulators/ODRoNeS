@@ -57,6 +57,8 @@ public:
 
     virtual bool isArc() const = 0; ///< return whether it is arc or not;
     virtual bool isNumerical() const = 0; ///< return true if it derives from numerical too;
+    virtual scalar sl0(scalar s) const; ///< return distance down the road on lane 0, given this distance down the road. Useful on openDRIVE lanes, where we need sl0 to calculate width, elevation and superelevation.
+
     virtual bool isPointHere(const arr2 &p) const = 0; ///< return true if p is exactly on this segment.
     virtual arr2 projectPointHere(const arr2 &p) const = 0; ///< project p onto this segment and return it.
     virtual arr2 getTangentInPoint(const arr2 &p) const = 0; ///< unsafely assuming that p is on geometry, calculate the tangent at p.

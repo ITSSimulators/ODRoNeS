@@ -56,6 +56,11 @@ void geometry::base()
     _ready = false;
 }
 
+scalar geometry::sl0(scalar s) const
+{
+    return s;
+}
+
 void geometry::assignInputGeomToThis(const geometry &g)
 {
     _origin = g._origin;

@@ -23,16 +23,15 @@ MainWindow::MainWindow(std::string iFile, bool identifyLanes, QWidget *parent)
     int minX, minY, maxX, maxY;
     _rns->getDimensions(minX, minY, maxX, maxY);
 
-    scalar density = 50; // points per metre
+    scalar step = 0.1; // approx step size in metres
     for (uint i=0; i < _rns->sectionsSize(); ++i)
     {
         for (uint j=0; j<_rns->sections(i).size(); ++j)
         {
             lane *l = _rns->sections(i)[j];
-            QByteArray indexBytes, vertexBytes;
-            int indexSize = 0; int vertexSize = 0;
-            uint n = l->getLength() * density;
-            l->fillInVerticesAndIndices(n, indexBytes, vertexBytes, indexSize, vertexSize);
+            std::vector<QByteArray> indexBytes, vertexBytes;
+            std::vector<int> indexSize, vertexSize;
+            l->fillInVerticesAndIndices(step, indexBytes, vertexBytes, indexSize, vertexSize);
         }
     }
 

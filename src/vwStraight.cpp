@@ -22,13 +22,15 @@
 
 #include "vwStraight.h"
 
-vwStraight::vwStraight(const Odr::geometry &odg, int sign, std::vector<Odr::offset> off, scalar so, scalar se, scalar roadSo, bool print)
+vwStraight::vwStraight(const Odr::geometry &odg, int sign, std::vector<Odr::offset> vwWidth,
+                       std::vector<Odr::offset> off, scalar so, scalar se, scalar roadSo, bool print)
 {
     vwNumerical::base();
 
     // Shape:
     _shape = mvf::shape::vwStraight;
-    _off = off;
+    _vwOff = off;
+    _vwWidth = vwWidth;
     _roadSo = roadSo;
     _print = print;
 

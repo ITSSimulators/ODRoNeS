@@ -33,12 +33,18 @@ public:
     vwNumerical();
     vwNumerical(const vwNumerical& vws);
     vwNumerical& operator=(const vwNumerical &vws);
+    virtual ~vwNumerical();
 
     void base() override;
     void assignInputGeomToThis(const vwNumerical &vws);
 
+    void allocateMemory(uint pSize);
+    void zeroPoints();
+    void clearMemory();
+
+
     bool setup(scalar ds);
-    void nSetupPointsXYUniformly(scalar ds) override;
+    void nSetupPointsXYUniformly(scalar ds) override; /// deprecated? We're now using fillInSPoints, which does S & points.
 
     void invert() override;
     bool isArc() const override {return false;}
@@ -51,11 +57,17 @@ public:
     bool getIntersectionPointFromOT(arr2 &p, const arr2 &o, const arr2 &t) const override;
     scalar getCurvature(const arr2 &p) const override;
 
+    scalar interpolateW(scalar d) const; ///< we will remove this.
+
 #ifdef QT_CORE_LIB
     QPainterPath getQPainterPath(uint n) const override;
 #endif
 
 protected:
+    scalar oWidth_a(scalar t) const;
+    scalar oWidth_b(scalar t) const;
+    std::function<scalar(scalar)> oWidth;
+
     scalar offset_a(scalar t) const; ///< return the value of offset(s) ahead
     scalar offset_b(scalar t) const; ///< return the value of offset(s) backwards
     std::function<scalar(scalar)> offset; ///< offset will store either offset_a or offset_b;
@@ -71,15 +83,16 @@ protected:
     //! Fill in the the array points (and S) with
     //!   points separated ds (and distance to the origin)
     //!   running small increment steps dt along curvexy(t) from _mint to _maxt
-    void fillInSPoints(std::vector<scalar> &S, std::vector<arr2> &points, scalar ds, scalar dt) const;
+    void fillInSPoints(std::vector<scalar> &W, std::vector<scalar> &S, std::vector<arr2> &points, scalar ds, scalar dt) const;
 protected:
     arr2 _no;
     scalar _l; ///< lane zero length;
     scalar _mint, _maxt; ///< vwNumerical could be also a parametric curve.
-    std::vector<Odr::offset> _off;
+    std::vector<Odr::offset> _vwOff;
+    std::vector<Odr::offset> _vwWidth;
+    scalar _roadSo; ///< duplicate - should that be here? or down to geometry? Currently, it's both here and in the derived geometry classes.
     bool _ahead; ///< auxilliary boolean to know whether we're using ahead _a or backwards _b functions.
-
-
+    scalar *_pointsW; ///< a series of widths down the local road that is consistent with _pointsX, _pointsY and _pointsS. To be purged.
 };
 
 

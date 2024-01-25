@@ -41,13 +41,16 @@ void vwParamPoly3::base()
     _pto = {0., 0.};
 }
 
-vwParamPoly3::vwParamPoly3(const Odr::geometry &odg, int sign, std::vector<Odr::offset> ioffset,
+vwParamPoly3::vwParamPoly3(const Odr::geometry &odg, int sign,
+                           std::vector<Odr::offset> vwWidth,
+                           std::vector<Odr::offset> ioffset,
                            scalar so, scalar se, scalar roadSo, bool geomPrint)
 {
     vwParamPoly3::base();
 
     _sign = sign;
-    _off = ioffset;
+    _vwOff = ioffset;
+    _vwWidth = vwWidth;
     _l = odg.length;
     _roadSo = roadSo;
 

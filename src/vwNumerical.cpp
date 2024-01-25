@@ -27,6 +27,11 @@ vwNumerical::vwNumerical()
     vwNumerical::base();
 }
 
+vwNumerical::~vwNumerical()
+{
+    clearMemory();
+}
+
 void vwNumerical::base()
 {
     geometry::base();
@@ -37,11 +42,33 @@ void vwNumerical::base()
     _mint = 0;
     _maxt = 0;
 
+    oWidth = std::bind(&vwNumerical::oWidth_a, this, std::placeholders::_1);
     offset = std::bind(&vwNumerical::offset_a, this, std::placeholders::_1);
     offsetP = std::bind(&vwNumerical::offsetP_a, this, std::placeholders::_1);
     curvexy = std::bind(&vwNumerical::curvexy_a, this, std::placeholders::_1);
 
     _ahead = true;
+
+    _pointsW = nullptr;
+}
+
+void vwNumerical::allocateMemory(uint pSize)
+{
+    _pointsW = new scalar[pSize]();
+}
+
+void vwNumerical::zeroPoints()
+{
+    std::fill(_pointsW, _pointsW + _pointsSize, 0);
+}
+
+void vwNumerical::clearMemory()
+{
+    if (_pointsSize > 0)
+    {
+        delete[] _pointsW;
+        vwNumerical::base();
+    }
 }
 
 vwNumerical::vwNumerical(const vwNumerical& vws)
@@ -55,23 +82,37 @@ void vwNumerical::assignInputGeomToThis(const vwNumerical &vws)
     _l = vws._l;
     _mint = vws._mint;
     _maxt = vws._maxt;
-    _off = vws._off;
+    _vwOff = vws._vwOff;
+    _vwWidth = vws._vwWidth;
 
     if (vws._ahead)
     {
+        oWidth = std::bind(&vwNumerical::oWidth_a, this, std::placeholders::_1);
         offset = std::bind(&vwNumerical::offset_a, this, std::placeholders::_1);
         curvexy = std::bind(&vwNumerical::curvexy_a, this, std::placeholders::_1);
     }
     else
     {
+        oWidth = std::bind(&vwNumerical::oWidth_b, this, std::placeholders::_1);
         offset = std::bind(&vwNumerical::offset_b, this, std::placeholders::_1);
         curvexy = std::bind(&vwNumerical::curvexy_b, this, std::placeholders::_1);
     }
     _ahead = vws._ahead;
 
+    if ((vws._pointsSize > 0) && (vws._pointsW))
+    {
+        allocateMemory(vws._pointsSize);
+        for (uint i = 0; i < vws._pointsSize; ++i)
+            _pointsW[i] = vws._pointsW[i];
+    }
+    else
+        _pointsW = nullptr;
+
     geometry::assignInputGeomToThis(vws);
     numerical::assignInputToThis(vws);
+
 }
+
 
 vwNumerical& vwNumerical::operator=(const vwNumerical &vws)
 {
@@ -81,49 +122,42 @@ vwNumerical& vwNumerical::operator=(const vwNumerical &vws)
 }
 
 
-
-scalar vwNumerical::offset_a(scalar t) const
+scalar vwNumerical::oWidth_a(scalar t) const
 {
-    /* The range to check is _off[x].s and _off[x].se */
-
-    scalar o = 0.;
-    bool set = false;
-    for (uint i = 0; i < _off.size(); ++i)
+    /* The range to check is _off[x].s and _off[x].se, margins included depending on lr */
+    scalar w = 0.;
+    for (uint i = 0; i < _vwWidth.size(); ++i)
     {
-        bool inRange = false;
-        if (_off[i].lr == Odr::offset::LR::RL)
-            inRange = mvf::isInRangeLR(t, _off[i].s, _off[i].se);
-        else if (_off[i].lr == Odr::offset::LR::L)
-            inRange = mvf::isInRangeL(t, _off[i].s, _off[i].se);
-        if (_off[i].lr == Odr::offset::LR::R)
-            inRange = mvf::isInRangeR(t, _off[i].s, _off[i].se);
-
-        if (inRange)
+        if (_vwWidth[i].inRange(t))
         {
-            scalar s = t - _off[i].s;
+            scalar s = t - _vwWidth[i].s;
             scalar s2 = s * s;
-            o += _off[i].a + _off[i].b * s + _off[i].c * s2 + _off[i].d * s * s2;
-            set = true;
+            w += _vwWidth[i].a + _vwWidth[i].b * s + _vwWidth[i].c * s2 + _vwWidth[i].d * s * s2;
         }
     }
 
-    if (!set)
+    return w;
+
+}
+
+
+scalar vwNumerical::oWidth_b(scalar t) const
+{
+    return oWidth_a(_l - t);
+}
+
+
+scalar vwNumerical::offset_a(scalar t) const
+{
+    /* The range to check is _off[x].s and _off[x].se, margins included depending on lr */
+    scalar o = 0.;
+    for (uint i = 0; i < _vwOff.size(); ++i)
     {
-        scalar d = 1e12;
-        for (uint i = 0; i < _off.size(); ++i)
+        if (_vwOff[i].inRange(t))
         {
-            scalar dio = std::fabs(t - _off[i].s);
-            if (dio < d)
-            {
-                o = _off[i].a + _off[i].b * _off[i].s + _off[i].c * _off[i].s * _off[i].s + _off[i].d * _off[i].s * _off[i].s * _off[i].s;
-                d = dio;
-            }
-            scalar die = std::fabs(t - _off[i].se);
-            if (die < d)
-            {
-                o = _off[i].a + _off[i].b * _off[i].se + _off[i].c * _off[i].se * _off[i].se + _off[i].d * _off[i].se * _off[i].se * _off[i].se;
-                d = die;
-            }
+            scalar s = t - _vwOff[i].s;
+            scalar s2 = s * s;
+            o += _vwOff[i].a + _vwOff[i].b * s + _vwOff[i].c * s2 + _vwOff[i].d * s * s2;
         }
     }
 
@@ -141,20 +175,12 @@ scalar vwNumerical::offsetP_a(scalar t) const
 
     scalar oP = 0.;
     bool set = false;
-    for (uint i = 0; i < _off.size(); ++i)
+    for (uint i = 0; i < _vwOff.size(); ++i)
     {
-        bool inRange = false;
-        if (_off[i].lr == Odr::offset::LR::RL)
-            inRange = mvf::isInRangeLR(t, _off[i].s, _off[i].se);
-        else if (_off[i].lr == Odr::offset::LR::L)
-            inRange = mvf::isInRangeL(t, _off[i].s, _off[i].se);
-        if (_off[i].lr == Odr::offset::LR::R)
-            inRange = mvf::isInRangeR(t, _off[i].s, _off[i].se);
-
-        if (inRange)
+        if (_vwOff[i].inRange(t))
         {
-            scalar s = t - _off[i].s;
-            oP += _off[i].b  + 2 * _off[i].c * s + 3 * _off[i].d * s * s;
+            scalar s = t - _vwOff[i].s;
+            oP += _vwOff[i].b  + 2 * _vwOff[i].c * s + 3 * _vwOff[i].d * s * s;
             set = true;
         }
     }
@@ -162,18 +188,18 @@ scalar vwNumerical::offsetP_a(scalar t) const
     if (!set)
     {
         scalar d = 1e12;
-        for (uint i = 0; i < _off.size(); ++i)
+        for (uint i = 0; i < _vwOff.size(); ++i)
         {
-            scalar dio = std::fabs(t - _off[i].s);
+            scalar dio = std::fabs(t - _vwOff[i].s);
             if (dio < d)
             {
-                oP = _off[i].b + 2 * _off[i].c * _off[i].s + 3 * _off[i].d * _off[i].s * _off[i].s;
+                oP = _vwOff[i].b + 2 * _vwOff[i].c * _vwOff[i].s + 3 * _vwOff[i].d * _vwOff[i].s * _vwOff[i].s;
                 d = dio;
             }
-            scalar die = std::fabs(t - _off[i].se);
+            scalar die = std::fabs(t - _vwOff[i].se);
             if (die < d)
             {
-                oP = _off[i].b + 2 * _off[i].c * _off[i].se + 3 * _off[i].d * _off[i].se * _off[i].se;
+                oP = _vwOff[i].b + 2 * _vwOff[i].c * _vwOff[i].se + 3 * _vwOff[i].d * _vwOff[i].se * _vwOff[i].se;
                 d = die;
             }
         }
@@ -202,9 +228,11 @@ arr2 vwNumerical::curvexy_b(scalar t) const
     return curvexy_a(_l - t);
 }
 
-void vwNumerical::fillInSPoints(std::vector<scalar> &S, std::vector<arr2> &points, scalar ds, scalar dt) const
+void vwNumerical::fillInSPoints(std::vector<scalar> &W, std::vector<scalar> &S, std::vector<arr2> &points,
+                                scalar ds, scalar dt) const
 {
     points.push_back(curvexy(_mint));
+    W.push_back(oWidth(_roadSo + _mint));
     S.push_back(0);
     scalar t = _mint;
     while (t < _maxt)
@@ -219,20 +247,22 @@ void vwNumerical::fillInSPoints(std::vector<scalar> &S, std::vector<arr2> &point
         }
         S.push_back(mvf::distance(ie, points.back()));
         points.push_back(ie);
+        W.push_back(oWidth(_roadSo + t - dt));
     }
     S.push_back(mvf::distance(curvexy(_maxt), points.back()));
     points.push_back(curvexy(_maxt));
+    W.push_back(oWidth(_maxt));
     return;
 }
 
 bool vwNumerical::setup(scalar ds)
 {
     bool success = true;
-    std::vector<scalar> S;
+    std::vector<scalar> S, W;
     std::vector<arr2> points;
     constexpr uint iParts = 10;
     scalar dt = ds / iParts;
-    fillInSPoints(S, points, ds, dt);
+    fillInSPoints(W, S, points, ds, dt);
     // Make sure there are enough points:
     if (points.size() < minPointsSize)
     {
@@ -240,7 +270,7 @@ bool vwNumerical::setup(scalar ds)
         dt = ds / iParts;
         S.clear();
         points.clear();
-        fillInSPoints(S, points, ds, dt);
+        fillInSPoints(W, S, points, ds, dt);
     }
     if (points.size() < minPointsSize)
     {
@@ -250,18 +280,56 @@ bool vwNumerical::setup(scalar ds)
 
     _pointsSize = static_cast<uint>(points.size());
     numerical::initialise(ds, _pointsSize);
+    vwNumerical::allocateMemory(_pointsSize);
+    vwNumerical::zeroPoints();
     _pointsX[0] = points[0][0];
     _pointsY[0] = points[0][1];
     _pointsS[0] = 0;
+    _pointsW[0] = W[0];
     for (uint i = 1; i < _pointsSize; ++i)
     {
         _pointsX[i] = points[i][0];
         _pointsY[i] = points[i][1];
         _pointsS[i] = S[i] + _pointsS[i - 1];
+        _pointsW[i] = W[i];
     }
     _approxDs = numerical::maxS() / (_pointsSize - 1); // now get a more accurate value for _pointsDs
 
     return success;
+}
+
+scalar vwNumerical::interpolateW(scalar d) const
+{
+    // Don't segfault, please:
+    if (d > maxS())
+    {
+        if (!mvf::areCloseEnough(d, maxS(), 1e-8))
+            std::cout << "numerical::interpolate got " << d << ", but maxs = " << maxS() << std::endl;
+        d = maxS();
+    }
+    else if (d < 0)
+    {
+        if (!mvf::areCloseEnough(d, 0, 1e-8))
+            std::cout << "numerical::interpolate got " << d << ", but s starts at 0!" << std::endl;
+        d = 0;
+    }
+
+    // Take a good initial guess for ndx:
+    uint ndx = std::floor((scalar) d / _approxDs);
+    if (ndx > _pointsSize -1) ndx = _pointsSize -1; // this can very rarely.
+    //  and now refine it:
+    while ( (ndx > 0) && (_pointsS[ndx] > d) )
+            ndx -= 1;
+    while ( (ndx < _pointsSize - 1) && (_pointsS[ndx + 1] < d) )
+            ndx += 1;
+
+
+    if (ndx == _pointsSize -1)
+        return _pointsW[_pointsSize - 1];
+
+    scalar frac = (d - _pointsS[ndx]) / (_pointsS[ndx + 1] - _pointsS[ndx]);
+    return _pointsW[ndx] * (1 - frac) + _pointsW[ndx+1] * frac;
+
 }
 
 
@@ -356,6 +424,8 @@ void vwNumerical::invert()
     _ahead = !_ahead;
 
     numerical::nInvert();
+
+    std::cerr << "[ Unable to invert ] because we'd need to fix _pointsW, and we're changing that" << std::endl;
 
     _to = numerical::nGetTangentInPoint(_origin);
 }
