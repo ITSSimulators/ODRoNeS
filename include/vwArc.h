@@ -43,7 +43,6 @@ private:
     scalar _radiusOfCurvature;
     arr2 _co;
     int _sign;
-    scalar _roadSo;
     bool _print;
 
 };

@@ -24,7 +24,7 @@
 
 geometry::geometry()
 {
-    base();
+    geometry::base();
     return;
 }
 
@@ -53,6 +53,7 @@ void geometry::base()
     _trc = {0., 0.};
     _o = {0., 0.};
     _d = {0., 0.};
+    _roadSo = 0;
     _ready = false;
 }
 
@@ -72,6 +73,7 @@ void geometry::assignInputGeomToThis(const geometry &g)
     _trc = g._trc;
     _o = g._o;
     _d = g._d;
+    _roadSo = g._roadSo;
     _ready = g._ready;
 }
 

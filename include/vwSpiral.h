@@ -55,7 +55,6 @@ private:
 private:
 
     G2lib::ClothoidCurve _clothoid;
-    scalar _roadSo; ///< the starting point down the road at which this geometry starts.
     int _sign;
 
 };

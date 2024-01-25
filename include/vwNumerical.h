@@ -90,7 +90,6 @@ protected:
     scalar _mint, _maxt; ///< vwNumerical could be also a parametric curve.
     std::vector<Odr::offset> _vwOff;
     std::vector<Odr::offset> _vwWidth;
-    scalar _roadSo; ///< duplicate - should that be here? or down to geometry? Currently, it's both here and in the derived geometry classes.
     bool _ahead; ///< auxilliary boolean to know whether we're using ahead _a or backwards _b functions.
     scalar *_pointsW; ///< a series of widths down the local road that is consistent with _pointsX, _pointsY and _pointsS. To be purged.
 };

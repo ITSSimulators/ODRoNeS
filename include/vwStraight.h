@@ -35,7 +35,6 @@ public:
 private:
     arr2 curvexy_a(scalar t) const override; ///< return the value of curvexy(s) ahead
 
-    scalar _roadSo; ///< the starting point down the road at which this geometry starts is needed to calculate the width(s).
     bool _print;
 
 

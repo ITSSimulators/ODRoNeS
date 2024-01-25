@@ -56,7 +56,6 @@ private:
     std::array<scalar, 4> _v; ///< vwParamPoly3; v[a, b, c, d];
     arr2 _po; ///< a private origin for the centre of the lane that is unchanged on inversion
     arr2 _pto; ///< a private to for the centre of the lane that is unchanged on inversion.
-    scalar _roadSo; ///< the starting point down the road at which this geometry starts.
     bool _normalised; ///< vwParamPoly3; whether _u and _v come normalised or at length.
     int _sign;
 

@@ -81,7 +81,9 @@ protected:
     arr2 _to; ///< unit tangent at origin.
     arr2 _blc, _trc; ///< bounding box bottom left corner and top right corner.
     arr2 _o, _d; ///< arc; origin and destination of the "lane 0", before the offset [opendrive].
+    scalar _roadSo; ///< odr; geometry needs to know that to return sl0(s). The starting point down the road at which this geometry starts.
     bool _ready; ///< whether the geometry is ready or not.
+
 
 };
 
