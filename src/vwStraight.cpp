@@ -76,6 +76,11 @@ arr2 vwStraight::curvexy_a(scalar t) const
     return {_o[0] + _to[0] * t + _no[0] * offset(_roadSo + t), _o[1] + _to[1] * t + _no[1] * offset(_roadSo + t)};
 }
 
+arr2 vwStraight::l0xy_a(scalar t) const
+{
+    return {_o[0] + _to[0] * t, _o[1] + _to[1] * t};
+}
+
 void vwStraight::printOut() const
 {
     geometry::printOut();

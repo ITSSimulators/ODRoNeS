@@ -51,6 +51,7 @@ void numerical::base()
     _pointsX = nullptr;
     _pointsY = nullptr;
     _pointsS = nullptr;
+    _pointsSo = nullptr;
 }
 
 void numerical::clearMemory()
@@ -60,6 +61,7 @@ void numerical::clearMemory()
         delete[] _pointsX;
         delete[] _pointsY;
         delete[] _pointsS;
+        delete[] _pointsSo;
         base();
     }
 }
@@ -96,6 +98,15 @@ std::vector<scalar> numerical::S() const
 
 }
 
+std::vector<scalar> numerical::So() const
+{
+    std::vector<scalar> so(_pointsSize);
+    for (uint i = 0; i < _pointsSize; ++i)
+        so[i] = _pointsSo[i];
+    return so;
+
+}
+
 void numerical::initialise(scalar ds, uint size)
 {
     _approxDs = ds;
@@ -113,6 +124,8 @@ uint numerical::setup()
         _pointsS[i] = _pointsS[i-1] +
                 mvf::distance({_pointsX[i], _pointsY[i]}, {_pointsX[i-1], _pointsY[i-1]});
 
+    _approxDs = _pointsS[_pointsSize-1]/(_pointsSize-1); // get a more accurate value for _approxDs.
+
     return err;
 
 }
@@ -123,6 +136,7 @@ void numerical::allocateMemory(uint pSize)
     _pointsX = new scalar[pSize]();
     _pointsY = new scalar[pSize]();
     _pointsS = new scalar[pSize]();
+    _pointsSo = new scalar[pSize]();
 }
 
 void numerical::zeroPoints()
@@ -130,6 +144,7 @@ void numerical::zeroPoints()
     std::fill(_pointsX, _pointsX + _pointsSize, 0);
     std::fill(_pointsY, _pointsY + _pointsSize, 0);
     std::fill(_pointsS, _pointsS + _pointsSize, 0);
+    std::fill(_pointsSo, _pointsSo + _pointsSize, 0);
 }
 
 void numerical::assignInputToThis(const numerical &n)
@@ -144,10 +159,11 @@ void numerical::assignInputToThis(const numerical &n)
             _pointsX[i] = n._pointsX[i];
             _pointsY[i] = n._pointsY[i];
             _pointsS[i] = n._pointsS[i];
+            _pointsSo[i] = n._pointsSo[i];
         }
     }
     else
-        _pointsX = _pointsY = _pointsS = nullptr;
+        _pointsX = _pointsY = _pointsS = _pointsSo = nullptr;
 }
 
 
@@ -157,30 +173,72 @@ void numerical::nInvert()
     scalar *tmpX = new scalar[_pointsSize];
     scalar *tmpY = new scalar[_pointsSize];
     scalar *tmpS = new scalar[_pointsSize];
+    scalar *tmpSo = new scalar[_pointsSize];
     tmpX[0] = _pointsX[_pointsSize - 1];
     tmpY[0] = _pointsY[_pointsSize - 1];
     tmpS[0] = 0;
+    tmpSo[0] = 0;
     for (uint i = 1; i < _pointsSize - 1; ++i)
     {
         arr2 p = interpolate(maxS() - i * _approxDs);
         tmpX[i] = p[0];
         tmpY[i] = p[1];
         tmpS[i] = tmpS[i-1] + mvf::distance({tmpX[i], tmpY[i]}, {tmpX[i-1], tmpY[i-1]});
+        tmpSo[i] = interpolateSo(maxS() -i * _approxDs);
     }
     tmpX[_pointsSize - 1] = _pointsX[0];
     tmpY[_pointsSize - 1] = _pointsY[0];
     tmpS[_pointsSize - 1] = tmpS[_pointsSize -2] +
             mvf::distance({tmpX[_pointsSize -1], tmpY[_pointsSize -1]},
                           {tmpX[_pointsSize -2], tmpY[_pointsSize -2]});
+    tmpSo[_pointsSize -1] = _pointsSo[0];
     // Copy the data back to _pointsX,Y to preserve locality:
     std::copy(tmpX, tmpX + _pointsSize, _pointsX);
     std::copy(tmpY, tmpY + _pointsSize, _pointsY);
     std::copy(tmpS, tmpS + _pointsSize, _pointsS);
+    std::copy(tmpSo, tmpSo + _pointsSize, _pointsSo);
 
     // Remove the arrays
     delete[] tmpX;
     delete[] tmpY;
     delete[] tmpS;
+    delete[] tmpSo;
+}
+
+void numerical::interpolateSCore(uint &ndx, scalar &frac, scalar s) const
+{
+    // Don't segfault, please:
+    if (s > maxS())
+    {
+        if (!mvf::areCloseEnough(s, maxS(), 1e-8))
+            std::cout << "numerical::interpolate got " << s << ", but maxs = " << maxS() << std::endl;
+        s = maxS();
+    }
+    else if (s < 0)
+    {
+        if (!mvf::areCloseEnough(s, 0, 1e-8))
+            std::cout << "numerical::interpolate got " << s << ", but s starts at 0!" << std::endl;
+        s = 0;
+    }
+
+
+    // Take a good initial guess for ndx:
+    ndx = std::floor((scalar) s / _approxDs);
+    if (ndx > _pointsSize -1) ndx = _pointsSize -1; // this can very rarely.
+    //  and now refine it:
+    while ( (ndx > 0) && (_pointsS[ndx] > s) )
+            ndx -= 1;
+    while ( (ndx < _pointsSize - 1) && (_pointsS[ndx + 1] < s) )
+            ndx += 1;
+
+
+    if (ndx == _pointsSize -1)
+        frac = 0;
+    else
+        frac = (s - _pointsS[ndx]) / (_pointsS[ndx + 1] - _pointsS[ndx]);
+
+    return;
+
 }
 
 bool numerical::interpolate(arr2 &p, scalar d) const
@@ -193,38 +251,19 @@ bool numerical::interpolate(arr2 &p, scalar d) const
 
 arr2 numerical::interpolate(scalar d) const
 {
-    // Don't segfault, please:
-    if (d > maxS())
-    {
-        if (!mvf::areCloseEnough(d, maxS(), 1e-8))
-            std::cout << "numerical::interpolate got " << d << ", but maxs = " << maxS() << std::endl;
-        d = maxS();
-    }
-    else if (d < 0)
-    {
-        if (!mvf::areCloseEnough(d, 0, 1e-8))
-            std::cout << "numerical::interpolate got " << d << ", but s starts at 0!" << std::endl;
-        d = 0;
-    }
-
-
-    // Take a good initial guess for ndx:
-    uint ndx = std::floor((scalar) d / _approxDs);
-    if (ndx > _pointsSize -1) ndx = _pointsSize -1; // this can very rarely.
-    //  and now refine it:
-    while ( (ndx > 0) && (_pointsS[ndx] > d) )
-            ndx -= 1;
-    while ( (ndx < _pointsSize - 1) && (_pointsS[ndx + 1] < d) )
-            ndx += 1;
-
-
-    if (ndx == _pointsSize -1)
-        return {_pointsX[_pointsSize - 1], _pointsY[_pointsSize - 1]};
-
-    scalar frac = (d - _pointsS[ndx]) / (_pointsS[ndx + 1] - _pointsS[ndx]);
+    uint ndx;
+    scalar frac;
+    interpolateSCore(ndx, frac, d);
     return {_pointsX[ndx] * (1 - frac) + _pointsX[ndx+1] * frac,
             _pointsY[ndx] * (1 - frac) + _pointsY[ndx+1] * frac};
+}
 
+scalar numerical::interpolateSo(scalar d) const
+{
+    uint ndx;
+    scalar frac;
+    interpolateSCore(ndx, frac, d);
+    return _pointsSo[ndx] * (1 - frac) + _pointsSo[ndx+1] * frac;
 }
 
 

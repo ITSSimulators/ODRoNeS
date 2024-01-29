@@ -59,7 +59,7 @@ void geometry::base()
 
 scalar geometry::sl0(scalar s) const
 {
-    return s;
+    return s + _roadSo;
 }
 
 void geometry::assignInputGeomToThis(const geometry &g)

@@ -49,6 +49,7 @@ public:
 
 private:
     arr2 curvexy_a(scalar t) const override; ///< normalised or not, here t is the distance in meters.
+    arr2 l0xy_a(scalar t) const override; ///< t is the distance in meters.
 
 private:
 

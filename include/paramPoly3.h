@@ -65,7 +65,7 @@ public:
 
     bool isArc() const override {return false;}
     bool isNumerical() const override {return true;}
-    // scalar sl0(scalar s) const override;
+    scalar sl0(scalar s) const override;
 
 #ifdef QT_CORE_LIB
     QPainterPath getQPainterPath(uint n) const override;

@@ -102,7 +102,6 @@ paramPoly3::paramPoly3(const Odr::geometry &odg, int sign, scalar offsetA, scala
     // and now use it to calculate the bounding box:
     nCalcBoundingBox(_blc, _trc);
 
-
     /*
     std::cout << "_origin: (" << _origin[0] << ", " << _origin[1] << ") "; // << std::endl;
     std::cout << "_to: (" << _to[0] << ", " << _to[1] << "), "; // << std::endl;
@@ -359,16 +358,51 @@ uint paramPoly3::rootPy(scalar &t1, scalar &t2) const
 void paramPoly3::nSetupPointsXYUniformly(scalar dl)
 {
    // Memory has already been allocated!
-
    _pointsX[0] = _origin[0];
    _pointsY[0] = _origin[1];
+   _pointsSo[0] = 0;
+   arr2 pl0o = clxy(_mint);
+   std::vector<scalar> vt(_pointsSize);
+
+   scalar dt = (_maxt - _mint) / _pointsSize;
+   scalar t = _mint + dt;
+   arr2 io = _origin;
+   uint ndx = 1;
+   while((t < _maxt) && (ndx < _pointsSize))
+   {
+       arr2 ie = paramPoly3::curvexy(t);
+       _pointsX[ndx] = ie[0];
+       _pointsY[ndx] = ie[1];
+       arr2 pl0i = clxy(t);
+       _pointsSo[ndx] = _pointsSo[ndx-1] + mvf::distance(pl0i, pl0o);
+       pl0o = pl0i;
+
+       t += dt;
+       ndx += 1;
+   }
+
+   while (ndx < _pointsSize) // If we missed points we'll fill in with dest.
+   {
+       _pointsX[ndx] = _dest[0];
+       _pointsY[ndx] = _dest[1];
+       arr2 pl0i = clxy(_maxt);
+       _pointsSo[ndx] = _pointsSo[ndx-1] + mvf::distance(pl0i, pl0o);
+       pl0o = pl0i;
+
+       ndx += 1;
+   }
+
+   // and make sure that the last point is dest:
+   _pointsX[_pointsSize -1] = _dest[0];
+   _pointsY[_pointsSize -1] = _dest[1];
+   arr2 pl0i = clxy(_maxt);
+   _pointsSo[_pointsSize -1] = _pointsSo[_pointsSize -2] + mvf::distance(pl0i, pl0o);
+
+
+   /*
 
    scalar l = dl;
    scalar integral = 0;
-   constexpr uint iParts = 10;
-   scalar dt = (_maxt - _mint) / (_pointsSize * iParts);
-   scalar t = _mint;
-   arr2 io = _origin;
    for (uint i = 1; i < _pointsSize; ++i)
    {
        if (l > _length) // we rounded a bit too far.
@@ -388,11 +422,19 @@ void paramPoly3::nSetupPointsXYUniformly(scalar dl)
        }
        _pointsX[i] = io[0];
        _pointsY[i] = io[1];
+       vt[i] = t;
+       arr2 pl0i = clxy(t);
+       _pointsSo[i] = _pointsSo[i-1] + mvf::distance(pl0i, pl0o);
+       pl0o = pl0i;
        l += dl;
    }
 
    _pointsX[_pointsSize -1] = _dest[0];
    _pointsY[_pointsSize -1] = _dest[1];
+   _pointsSo[_pointsSize -1] = _pointsSo[_pointsSize -2] +
+           mvf::distance(clxy(vt[_pointsSize -2]), clxy(_maxt));
+
+   */
 
    return;
 }
@@ -430,4 +472,9 @@ bool paramPoly3::getTGivenXY([[maybe_unused]] scalar &t, [[maybe_unused]] const 
     //     However, what will happen when we have variable widths?
     std::cerr << "Not implemented!" << std::endl;
     return false;
+}
+
+scalar paramPoly3::sl0(scalar s) const
+{
+    return interpolateSo(s) + _roadSo;
 }

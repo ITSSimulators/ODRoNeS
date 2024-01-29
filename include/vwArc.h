@@ -35,6 +35,7 @@ public:
 
 private:
     arr2 curvexy_a(scalar t) const override; ///< return the value of curvexy(s) ahead
+    arr2 l0xy_a(scalar t) const override;
 
 
 private:

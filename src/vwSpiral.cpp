@@ -84,31 +84,6 @@ vwSpiral::vwSpiral(const Odr::geometry &odg, int sign,
 }
 
 
-
-/*
-scalar vwSpiral::offsetP_a(scalar t) const
-{
-
-    scalar o = 0.;
-    for (uint i = 0; i < _off.size(); ++i)
-    {
-        if (mvf::isInRangeL(t, _off[i].s, _off[i].se))
-        {
-            scalar s = t - _off[i].s;
-            o += _off[i].b + 2 * _off[i].c * s + 3 * _off[i].d * s * s;
-        }
-    }
-
-    return o;
-}
-
-scalar vwSpiral::offsetP_b(scalar t) const
-{
-    return - offsetP_a(_l - t);
-}
-*/
-
-
 arr2 vwSpiral::clxy(scalar t) const
 {
     arr2 p;
@@ -135,6 +110,11 @@ arr2 vwSpiral::clP2xy(scalar t) const
 arr2 vwSpiral::curvexy_a(scalar t) const
 {
     return xy(t);
+}
+
+arr2 vwSpiral::l0xy_a(scalar t) const
+{
+    return clxy(t);
 }
 
 

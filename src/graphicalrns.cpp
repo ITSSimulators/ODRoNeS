@@ -194,10 +194,10 @@ void graphicalRNS::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QW
         if (!_ignore[i])
         {
             pen.setStyle(Qt::DotLine);
-            pen.setColor(Qt::red);
+            // pen.setColor(Qt::red);
             painter->setPen(pen);
             painter->drawPath(_leRoads[i]);
-            pen.setColor(Qt::black);
+            // pen.setColor(Qt::black);
             painter->setPen(pen);
             painter->drawPath(_reRoads[i]);
         }

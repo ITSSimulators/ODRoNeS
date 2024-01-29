@@ -23,7 +23,7 @@
 #include "lane.h"
 // DEBUG //
 #include <fstream>
-// #include <boost/format.hpp>
+#include <boost/format.hpp>
 
 // Static methods:
 std::string lane::tSignInfoString(tSignInfo s)
@@ -334,6 +334,14 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
         std::cout << "[ Error ] on " << getCSUID() << " in configuring numerical for the top class" << std::endl;
     }
 
+    scalar maxSo = _geom.back()->sl0(_length);
+    for (uint i = 0; i < _odrWidth.size(); ++i)
+    {
+        if ((_odrWidth[i].lr == Odr::offset::LR::RL) &&
+                (_odrWidth[i].se < maxSo))
+            _odrWidth[i].se = maxSo;
+    }
+
     calcBoundingBox();
 
 
@@ -350,7 +358,6 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
         std::replace(basename.begin(), basename.end(), ':', ';'); // we cannot have a filename with colons on Windows...
 #endif
 
-        /*
         f.open(basename);
         for (uint i = 0; i < _pointsSize; ++i)
         {
@@ -430,6 +437,11 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
                 p = static_cast<vwSpiral*>(_geom[i])->points();
                 s = static_cast<vwSpiral*>(_geom[i])->S();
             }
+            else if (_geom[i]->shape() == mvf::shape::paramPoly3)
+            {
+                p = static_cast<paramPoly3*>(_geom[i])->points();
+                s = static_cast<paramPoly3*>(_geom[i])->S();
+            }
 
             for (uint j = 0; j < p.size(); ++j)
                 f << boost::format("%12.3f %12.3f") %
@@ -440,7 +452,6 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
         }
         f.close();
         ff.close();
-        */
     }
 
     return;
@@ -530,6 +541,7 @@ bool lane::isOdrShapeSupported(mvf::shape s) const
 
 bool lane::flipBackwards()
 {
+
     bool isFwd = false; // I know, I know...
     if (isFwd == isOdrFwd()) return true;
 
@@ -1179,11 +1191,23 @@ std::vector<std::unique_ptr<geometry>> lane::getGeometries() const
             v.push_back(std::unique_ptr<geometry>(new vwSpiral(*(dynamic_cast<vwSpiral*>(_geom[i]))) ));
         else
             std::cout << "[ WARNING ] lane::getGeometries() - Unknown shape" << std::endl;
-
-
     }
     return v;
 
+}
+
+scalar lane::maxSo() const
+{
+    if (!isOpenDrive())
+        return _length;
+
+    scalar maxSo = _odrWidth.back().se;
+    for (uint i = 0; i < _odrWidth.size(); ++i)
+    {
+        if (maxSo < _odrWidth[i].se)
+            maxSo = _odrWidth[i].se;
+    }
+    return maxSo;
 }
 
 bool lane::isSet() const
@@ -1735,12 +1759,18 @@ scalar lane::getWidth() const
 
 scalar lane::getWidth(scalar d) const
 {
+    if (!isOpenDrive())
+        return _width;
+
+
     scalar w = 0;
     int ndx = getGeometryIndex(d);
     if (ndx < 0) return 0;
-    mvf::shape s = _geom[ndx]->shape();
-    if ( (s == mvf::shape::vwStraight) || (s == mvf::shape::vwArc) ||
-         (s == mvf::shape::vwParamPoly3) || (s == mvf::shape::vwSpiral))
+
+    /* Option 1 - Use _pointsW:
+    mvf::shape sh = _geom[ndx]->shape();
+    if ( (sh == mvf::shape::vwStraight) || (sh == mvf::shape::vwArc) ||
+         (sh == mvf::shape::vwParamPoly3) || (sh == mvf::shape::vwSpiral))
     {
         scalar lo = 0;
         for (int i = 0; i < ndx; ++i )
@@ -1749,20 +1779,33 @@ scalar lane::getWidth(scalar d) const
         vwNumerical *vwn = static_cast<vwNumerical*>(_geom[ndx]);
         w = vwn->interpolateW(d - lo);
     }
-    /* if (isOpenDrive())
-    {
-        scalar t = d;
-        if (!_odrFwd) t = _length - t;
-        for (uint i = 0; i < _odrWidth.size(); ++i)
-        {
-            if (!_odrWidth[i].inRange(t)) continue;
-            scalar s = t - _odrWidth[i].s;
-            scalar s2 = s * s;
-            w += _odrWidth[i].a + _odrWidth[i].b * s + _odrWidth[i].c * s2 + _odrWidth[i].d * s * s2;
-        }
-    } */
     else
         w = _width;
+    */
+
+    /* Option 2 - call so(s) and calculate it yourself: */
+    // scalar wip = w;
+    w = 0;
+    scalar lo = 0;
+    for (int i = 0; i < ndx; ++i )
+        lo += _geom[i]->length();
+
+    scalar t = _geom[ndx]->sl0(d - lo);
+    if (!_odrFwd) t = maxSo() - t; // you still need to do that if you've flipped.
+    for (uint i = 0; i < _odrWidth.size(); ++i)
+    {
+        if (!_odrWidth[i].inRange(t)) continue;
+        scalar s = t - _odrWidth[i].s;
+        scalar s2 = s * s;
+        w += _odrWidth[i].a + _odrWidth[i].b * s + _odrWidth[i].c * s2 + _odrWidth[i].d * s * s2;
+    }
+
+    /*
+    if (!mvf::areCloseEnough(w, wip, 1e-5))
+    {
+        std::cout << "wait!" << std::endl;
+    }
+    */
 
     return w;
 
@@ -2195,12 +2238,19 @@ QPainterPath lane::getEdgeQPainterPath(uint n, int e)
     for (uint i = 0; i < _geom.size(); ++i)
     {
         scalar si = 0;
-        uint ni = std::floor(_geom[i]->length() / appDs);
-        scalar dsi = _geom[i]->length() / ni;
-        for (uint j = 0; j <= ni; ++j)
+        uint qi = std::floor(_geom[i]->length() / appDs);
+        if (qi < 4) qi = 4;
+        scalar dsi = _geom[i]->length() / qi;
+        bool quit = false;
+        for (uint j = 0; j <= qi; ++j)
         {
             arr2 ci;
-            _geom[i]->getPointAfterDistance(ci, _geom[i]->origin(), si);
+            if (!_geom[i]->getPointAfterDistance(ci, _geom[i]->origin(), si))
+            {
+                ci = _geom[i]->dest();
+                si = _geom[i]->length();
+                quit = true;
+            }
             arr2 ti = _geom[i]->getTangentInPoint(ci);
             arr2 ni;
             if (e == -1) ni = {-ti[1], ti[0]};
@@ -2215,6 +2265,8 @@ QPainterPath lane::getEdgeQPainterPath(uint n, int e)
             else
                 qpp.lineTo(QPointF(ct::mToPix * pi[0], -ct::mToPix * pi[1]));
             si += dsi;
+            if (quit)
+                break;
         }
         s += _geom[i]->length();
     }

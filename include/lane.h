@@ -230,6 +230,7 @@ public:
     scalar getLength() const; ///< returns the length of the lane.
     uint getGeometrySize() const; ///< get the size of the _geom array.
     std::vector<std::unique_ptr<geometry>> getGeometries() const;
+    scalar maxSo() const; ///< odr; return the max So coordinate of lane 0.
 
     scalar getWidth() const;
     scalar getWidth(scalar d) const; ///< get the width at a certain distance down the lane.

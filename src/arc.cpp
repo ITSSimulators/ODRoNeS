@@ -534,7 +534,7 @@ scalar arc::getCurvature([[maybe_unused]] const arr2 &p) const
 
 scalar arc::sl0(scalar s) const
 {
-    return s * _odrRoOR;
+    return s * _odrRoOR + _roadSo;
 }
 
 #ifdef QT_CORE_LIB

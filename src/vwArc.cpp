@@ -104,6 +104,17 @@ arr2 vwArc::curvexy_a(scalar t) const
 
 }
 
+arr2 vwArc::l0xy_a(scalar t) const
+{
+    scalar angle = t / _radiusOfCurvature;
+    arr2 ci = _co;
+    mvf::rotateVectorByAngle(ci, angle);
+    return {_centre[0] + ci[0] * std::abs(_radiusOfCurvature),
+            _centre[1] + ci[1] * std::abs(_radiusOfCurvature)};
+
+}
+
+
 
 void vwArc::printOut() const
 {

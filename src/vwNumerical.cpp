@@ -46,6 +46,7 @@ void vwNumerical::base()
     offset = std::bind(&vwNumerical::offset_a, this, std::placeholders::_1);
     offsetP = std::bind(&vwNumerical::offsetP_a, this, std::placeholders::_1);
     curvexy = std::bind(&vwNumerical::curvexy_a, this, std::placeholders::_1);
+    l0xy = std::bind(&vwNumerical::l0xy_a, this, std::placeholders::_1);
 
     _ahead = true;
 
@@ -90,12 +91,14 @@ void vwNumerical::assignInputGeomToThis(const vwNumerical &vws)
         oWidth = std::bind(&vwNumerical::oWidth_a, this, std::placeholders::_1);
         offset = std::bind(&vwNumerical::offset_a, this, std::placeholders::_1);
         curvexy = std::bind(&vwNumerical::curvexy_a, this, std::placeholders::_1);
+        l0xy = std::bind(&vwNumerical::l0xy_a, this, std::placeholders::_1);
     }
     else
     {
         oWidth = std::bind(&vwNumerical::oWidth_b, this, std::placeholders::_1);
         offset = std::bind(&vwNumerical::offset_b, this, std::placeholders::_1);
         curvexy = std::bind(&vwNumerical::curvexy_b, this, std::placeholders::_1);
+        l0xy = std::bind(&vwNumerical::l0xy_b, this, std::placeholders::_1);
     }
     _ahead = vws._ahead;
 
@@ -208,19 +211,11 @@ scalar vwNumerical::offsetP_a(scalar t) const
     return oP;
 }
 
+
 scalar vwNumerical::offsetP_b(scalar t) const
 {
     return - offsetP_a(_l - t);
 }
-
-
-
-/*
-arr2 vwNumerical::curvexy_a(scalar t) const
-{
-    return {_o[0] + _to[0] * t + _no[0] * offset(t), _o[1] + _to[1] * t + _no[1] * offset(t)};
-}
-*/
 
 
 arr2 vwNumerical::curvexy_b(scalar t) const
@@ -228,13 +223,26 @@ arr2 vwNumerical::curvexy_b(scalar t) const
     return curvexy_a(_l - t);
 }
 
-void vwNumerical::fillInSPoints(std::vector<scalar> &W, std::vector<scalar> &S, std::vector<arr2> &points,
+arr2 vwNumerical::l0xy_b(scalar t) const
+{
+    return l0xy_b(_l - t);
+}
+
+scalar vwNumerical::sl0(scalar d) const
+{
+    return interpolateSo(d) + _roadSo;
+}
+
+
+void vwNumerical::fillInT(std::vector<scalar> &T, scalar &maxSo, scalar &maxS,
                                 scalar ds, scalar dt) const
 {
-    points.push_back(curvexy(_mint));
-    W.push_back(oWidth(_roadSo + _mint));
-    S.push_back(0);
     scalar t = _mint;
+    T.push_back(t);
+    arr2 io = curvexy(T.back());
+    maxS = 0;
+    maxSo = 0;
+    arr2 pl0o = l0xy(T.back());
     while (t < _maxt)
     {
         scalar ds_i = 0;
@@ -242,58 +250,89 @@ void vwNumerical::fillInSPoints(std::vector<scalar> &W, std::vector<scalar> &S, 
         while ((ds_i < ds) && (t < _maxt))
         {
            ie = curvexy(t);
-           ds_i += mvf::distance(points.back(), ie);
+           ds_i += mvf::distance(io, ie);
            t += dt;
         }
-        S.push_back(mvf::distance(ie, points.back()));
-        points.push_back(ie);
-        W.push_back(oWidth(_roadSo + t - dt));
+        T.push_back(t  - dt);
+        maxS += mvf::distance(io, ie);
+        io = ie;
+
+        arr2 pl0i = l0xy(T.back());
+        maxSo += mvf::distance(pl0i, pl0o);
+        pl0o = pl0i;
     }
-    S.push_back(mvf::distance(curvexy(_maxt), points.back()));
-    points.push_back(curvexy(_maxt));
-    W.push_back(oWidth(_maxt));
+    T.push_back(_maxt);
+    maxSo += mvf::distance(pl0o, l0xy(_maxt));
+    maxSo += mvf::distance(io, curvexy(_maxt));
+
     return;
 }
+
 
 bool vwNumerical::setup(scalar ds)
 {
     bool success = true;
-    std::vector<scalar> S, W;
-    std::vector<arr2> points;
+    std::vector<scalar> T;
     constexpr uint iParts = 10;
     scalar dt = ds / iParts;
-    fillInSPoints(W, S, points, ds, dt);
+    scalar maxSo, maxS;
+    fillInT(T, maxSo, maxS, ds, dt);
     // Make sure there are enough points:
-    if (points.size() < minPointsSize)
+    if (T.size() < minPointsSize)
     {
-        ds = S.back() / (minPointsSize - 1); // that should be enough
+        ds = maxS / (minPointsSize - 1); // that should be enough
         dt = ds / iParts;
-        S.clear();
-        points.clear();
-        fillInSPoints(W, S, points, ds, dt);
+        T.clear();
+        fillInT(T, maxSo, maxS, ds, dt);
     }
-    if (points.size() < minPointsSize)
+    if (T.size() < minPointsSize)
     {
         std::cout << "[ Error ] vwNumerical::setup did not fill in enough points" << std::endl;
         success = false;
     }
 
-    _pointsSize = static_cast<uint>(points.size());
+    _pointsSize = static_cast<uint>(T.size());
     numerical::initialise(ds, _pointsSize);
     vwNumerical::allocateMemory(_pointsSize);
     vwNumerical::zeroPoints();
-    _pointsX[0] = points[0][0];
-    _pointsY[0] = points[0][1];
+
+
+    // Fix the Odr::offset ranges, because RL ranges are the last ones.
+    for (uint i = 0; i < _vwOff.size(); ++i)
+    {
+        if ((_vwOff[i].lr == Odr::offset::LR::RL) &&
+                (_vwOff[i].se < maxSo))
+            _vwOff[i].se = maxSo;
+    }
+    for (uint i = 0; i < _vwWidth.size(); ++i)
+    {
+        if ((_vwWidth[i].lr == Odr::offset::LR::RL) &&
+                (_vwWidth[i].se < maxSo))
+            _vwWidth[i].se = maxSo;
+    }
+
+    arr2 io = curvexy(T[0]);
+    arr2 pl0o = l0xy(T[0]);
+    _pointsX[0] = io[0];
+    _pointsY[0] = io[1];
     _pointsS[0] = 0;
-    _pointsW[0] = W[0];
+    _pointsSo[0] = 0;
+    _pointsW[0] = oWidth(T[0]);
     for (uint i = 1; i < _pointsSize; ++i)
     {
-        _pointsX[i] = points[i][0];
-        _pointsY[i] = points[i][1];
-        _pointsS[i] = S[i] + _pointsS[i - 1];
-        _pointsW[i] = W[i];
+        arr2 ie = curvexy(T[i]);
+        arr2 pl0i = l0xy(T[i]);
+        _pointsX[i] = ie[0];
+        _pointsY[i] = ie[1];
+        _pointsS[i] = _pointsS[i-1] + mvf::distance(io, ie);
+        _pointsSo[i] = _pointsSo[i-1] + mvf::distance(pl0o, pl0i);
+        _pointsW[i] = oWidth(T[i]);
+        io = ie;
+        pl0o = pl0i;
     }
+
     _approxDs = numerical::maxS() / (_pointsSize - 1); // now get a more accurate value for _pointsDs
+
 
     return success;
 }

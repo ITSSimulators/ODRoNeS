@@ -61,6 +61,7 @@ public:
 
     arr2 interpolate(scalar d) const; ///< interpolate the value of the curve at 0 <= d <= n.
     bool interpolate(arr2 &p, scalar d) const; ///< interpolate safely;
+    scalar interpolateSo(scalar d) const;
     scalar nProjectPointHere(arr2 &p, const arr2 &o) const;
     scalar nDistanceToTheEoL(const arr2 &p) const;
     bool nGetPointAfterDistance(arr2 &p, const arr2 &o, scalar d) const;
@@ -79,14 +80,20 @@ public:
 
     scalar maxS() const;
     std::vector<scalar> S() const;
+    std::vector<scalar> So() const;
     std::vector<arr2> points() const;
     uint pointsSize() const;
+
+private:
+    void interpolateSCore(uint &ndx, scalar &frac, scalar s) const; ///< figure out the ndx and fraction so that you can interpolate _pointsX,Y and _pointsSo;
+
+
 
 protected:
     /*! Two arrays of points along the curve at a certain resolution, so that we can do some numerical geometry
      *   This seems rather horrible, but it works very well because we do bounding boxes all the time,
      *  which means finding min and max all the time */
-    scalar *_pointsX, *_pointsY, *_pointsS;
+    scalar *_pointsX, *_pointsY, *_pointsS, *_pointsSo;
     uint _pointsSize; ///< length of the arrays
     scalar _approxDs; ///< approximated distance between points.
 

@@ -321,15 +321,22 @@ public:
             if (!mvf::areSameValues(d,0)) return false;
             return true;
         }
-        bool inRange(scalar t) const
+        bool inRange(scalar t, scalar la = 0, scalar ra = 0) const ///< with left and right accuracies.
         {
             if (!seSet) return false;
             if (lr == LR::RL)
-                return mvf::isInRangeLR(t, s, se, 0);
+            {
+                if (mvf::isInRangeLR(t, s, se, 0))
+                    return true;
+                else if (mvf::areCloseEnough(t, se, ra))
+                    return true;
+                else
+                    return mvf::areCloseEnough(t, s, la);
+            }
             else if (lr == LR::L)
-                return mvf::isInRangeL(t, s, se, 0);
+                return mvf::isInRangeL(t, s, se, la);
             else if (lr == LR::R)
-                return mvf::isInRangeR(t, s, se, 0);
+                return mvf::isInRangeR(t, s, se, ra);
             else
                 return mvf::isInRange0(t, s, se);
         }

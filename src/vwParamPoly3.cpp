@@ -143,6 +143,13 @@ arr2 vwParamPoly3::curvexy_a(scalar t) const
     return vwpp3xy(tScale);
 }
 
+arr2 vwParamPoly3::l0xy_a(scalar t) const
+{
+    scalar tScale = t;
+    if (_normalised) tScale = t / _l;
+    return clxy(tScale);
+}
+
 
 arr2 vwParamPoly3::vwpp3xy(scalar t) const
 {

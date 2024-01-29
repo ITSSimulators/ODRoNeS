@@ -407,11 +407,11 @@ bool mvf::isPointOnArc(const arr2 &p, const arr2 &c, const arr2 &co, scalar R, s
     scalar angleTol = tol / fabs(R);
     if (alpha > 0)
     {
-        if ((angle >= 0) && (angle <= alpha + angleTol)) return true;
+        if (mvf::isInRangeLR(angle, 0, alpha, angleTol)) return true;
     }
     else
     {
-        if ((angle >= alpha - angleTol) && (angle <= 0)) return true;
+        if (mvf::isInRangeLR(angle, alpha, 0, angleTol)) return true;
     }
 
     return false;

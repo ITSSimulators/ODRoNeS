@@ -58,6 +58,7 @@ public:
     scalar getCurvature(const arr2 &p) const override;
 
     scalar interpolateW(scalar d) const; ///< we will remove this.
+    scalar sl0(scalar d) const override;
 
 #ifdef QT_CORE_LIB
     QPainterPath getQPainterPath(uint n) const override;
@@ -80,10 +81,15 @@ protected:
     arr2 curvexy_b(scalar t) const; ///< return the value of curvexy(s) backwards
     std::function<arr2(scalar)> curvexy; ///< curvexy will store either curvexy_a or curvexy_b
 
+    virtual arr2 l0xy_a(scalar t) const = 0;
+    arr2 l0xy_b(scalar t) const;
+    std::function<arr2(scalar)> l0xy;
+
     //! Fill in the the array points (and S) with
     //!   points separated ds (and distance to the origin)
     //!   running small increment steps dt along curvexy(t) from _mint to _maxt
-    void fillInSPoints(std::vector<scalar> &W, std::vector<scalar> &S, std::vector<arr2> &points, scalar ds, scalar dt) const;
+    // void fillInSPoints(std::vector<scalar> &W, std::vector<scalar> &S, std::vector<scalar> &So, std::vector<arr2> &points, scalar ds, scalar dt) const;
+    void fillInT(std::vector<scalar> &T, scalar &maxSo, scalar &maxS, scalar ds, scalar dt) const;
 protected:
     arr2 _no;
     scalar _l; ///< lane zero length;
