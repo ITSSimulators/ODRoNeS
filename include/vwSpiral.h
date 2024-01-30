@@ -32,8 +32,7 @@ class vwSpiral : public vwNumerical
 {
 public:
 
-    vwSpiral(const Odr::geometry &odr, int sign, std::vector<Odr::offset> vwWidth,
-             std::vector<Odr::offset> ioffset,
+    vwSpiral(const Odr::geometry &odr, int sign, std::vector<Odr::offset> ioffset,
              scalar so, scalar se, scalar roadSo, bool geomPrint);
 
     void base() override;

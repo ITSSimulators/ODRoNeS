@@ -34,16 +34,13 @@ void vwSpiral::base()
     offsetP = std::bind(&vwSpiral::offsetP_a, this, std::placeholders::_1);
 }
 
-vwSpiral::vwSpiral(const Odr::geometry &odg, int sign,
-                   std::vector<Odr::offset> vwWidth,
-                   std::vector<Odr::offset> ioffset,
+vwSpiral::vwSpiral(const Odr::geometry &odg, int sign, std::vector<Odr::offset> ioffset,
                            scalar so, scalar se, scalar roadSo, bool geomPrint)
 {
     vwSpiral::base();
 
     _sign = sign;
     _vwOff = ioffset;
-    _vwWidth = vwWidth;
     _l = odg.length;
     _roadSo = roadSo;
 

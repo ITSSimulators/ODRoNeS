@@ -291,7 +291,7 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
             else if (odrg[i].g == Odr::Attr::Geometry::paramPoly3)
                 _geom.push_back(new paramPoly3(odrg[i], getSignInt(), off[0].a, soi, sei));
             else if (odrg[i].g == Odr::Attr::Geometry::spiral)
-                _geom.push_back(new vwSpiral(odrg[i], getSignInt(), _odrWidth, off, soi, sei, roadSoi, geomPrint));
+                _geom.push_back(new vwSpiral(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
             else
             {
                 std::cerr << "[ Lane ] Unsupported shape! The code will crash quickly after this." << std::endl;
@@ -301,13 +301,13 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
         else
         {
             if (odrg[i].g == Odr::Attr::Geometry::line)
-                _geom.push_back(new vwStraight(odrg[i], getSignInt(), _odrWidth, off, soi, sei, roadSoi, geomPrint));
+                _geom.push_back(new vwStraight(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
             else if (odrg[i].g == Odr::Attr::Geometry::arc)
-                _geom.push_back(new vwArc(odrg[i], getSignInt(), _odrWidth, off, soi, sei, roadSoi, geomPrint));
+                _geom.push_back(new vwArc(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
             else if (odrg[i].g == Odr::Attr::Geometry::paramPoly3)
-                _geom.push_back(new vwParamPoly3(odrg[i], getSignInt(), _odrWidth, off, soi, sei, roadSoi, geomPrint));
+                _geom.push_back(new vwParamPoly3(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
             else if (odrg[i].g == Odr::Attr::Geometry::spiral)
-                _geom.push_back(new vwSpiral(odrg[i], getSignInt(), _odrWidth, off, soi, sei, roadSoi, geomPrint));
+                _geom.push_back(new vwSpiral(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
             else
             {
                 std::cerr << "[ Lane ] Unsupported shape! The code will crash quickly after this." << std::endl;
@@ -1762,29 +1762,11 @@ scalar lane::getWidth(scalar d) const
     if (!isOpenDrive())
         return _width;
 
-
     scalar w = 0;
     int ndx = getGeometryIndex(d);
     if (ndx < 0) return 0;
 
-    /* Option 1 - Use _pointsW:
-    mvf::shape sh = _geom[ndx]->shape();
-    if ( (sh == mvf::shape::vwStraight) || (sh == mvf::shape::vwArc) ||
-         (sh == mvf::shape::vwParamPoly3) || (sh == mvf::shape::vwSpiral))
-    {
-        scalar lo = 0;
-        for (int i = 0; i < ndx; ++i )
-            lo += _geom[i]->length();
-
-        vwNumerical *vwn = static_cast<vwNumerical*>(_geom[ndx]);
-        w = vwn->interpolateW(d - lo);
-    }
-    else
-        w = _width;
-    */
-
-    /* Option 2 - call so(s) and calculate it yourself: */
-    // scalar wip = w;
+    // Call so(s) and calculate it yourself:
     w = 0;
     scalar lo = 0;
     for (int i = 0; i < ndx; ++i )
@@ -1799,13 +1781,6 @@ scalar lane::getWidth(scalar d) const
         scalar s2 = s * s;
         w += _odrWidth[i].a + _odrWidth[i].b * s + _odrWidth[i].c * s2 + _odrWidth[i].d * s * s2;
     }
-
-    /*
-    if (!mvf::areCloseEnough(w, wip, 1e-5))
-    {
-        std::cout << "wait!" << std::endl;
-    }
-    */
 
     return w;
 

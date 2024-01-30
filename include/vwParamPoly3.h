@@ -31,8 +31,8 @@ class vwParamPoly3 : public vwNumerical
 {
 public:
 
-    vwParamPoly3(const Odr::geometry &odr, int sign, std::vector<Odr::offset> vwWidth,
-                 std::vector<Odr::offset> ioffset, scalar so, scalar se, scalar roadSo, bool geomPrint);
+    vwParamPoly3(const Odr::geometry &odr, int sign, std::vector<Odr::offset> ioffset,
+                 scalar so, scalar se, scalar roadSo, bool geomPrint);
 
     void base() override;
 

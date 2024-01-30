@@ -29,8 +29,8 @@
 class vwArc : public vwNumerical
 {
 public:
-    vwArc(const Odr::geometry &odr, int sign, std::vector<Odr::offset> vwWidth,
-          std::vector<Odr::offset> off, scalar so, scalar se, scalar roadSo, bool print);
+    vwArc(const Odr::geometry &odr, int sign, std::vector<Odr::offset> off,
+          scalar so, scalar se, scalar roadSo, bool print);
     void printOut() const;
 
 private:
