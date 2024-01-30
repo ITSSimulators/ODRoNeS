@@ -417,25 +417,14 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
             f << "#" << mvf::shapeString( _geom[i]->shape() ) << std::endl;
             std::vector<arr2> p;
             std::vector<scalar> s;
-            if (_geom[i]->shape() == mvf::shape::vwStraight)
+            if ((_geom[i]->shape() == mvf::shape::vwStraight) ||
+                (_geom[i]->shape() == mvf::shape::vwArc) ||
+                (_geom[i]->shape() == mvf::shape::vwParamPoly3) ||
+                (_geom[i]->shape() == mvf::shape::vwSpiral))
+
             {
-                p = static_cast<vwStraight*>(_geom[i])->points();
-                s = static_cast<vwStraight*>(_geom[i])->S();
-            }
-            else if (_geom[i]->shape() == mvf::shape::vwArc)
-            {
-                p = static_cast<vwArc*>(_geom[i])->points();
-                s = static_cast<vwArc*>(_geom[i])->S();
-            }
-            else if (_geom[i]->shape() == mvf::shape::vwParamPoly3)
-            {
-                p = static_cast<vwParamPoly3*>(_geom[i])->points();
-                s = static_cast<vwParamPoly3*>(_geom[i])->S();
-            }
-            else if (_geom[i]->shape() == mvf::shape::vwSpiral)
-            {
-                p = static_cast<vwSpiral*>(_geom[i])->points();
-                s = static_cast<vwSpiral*>(_geom[i])->S();
+                p = static_cast<vwNumerical*>(_geom[i])->points();
+                s = static_cast<vwNumerical*>(_geom[i])->S();
             }
             else if (_geom[i]->shape() == mvf::shape::paramPoly3)
             {
