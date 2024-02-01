@@ -3,7 +3,8 @@ ODRoNeS (OpenDRIVE Road Network System)
 The Road Network System `rns` is essentially an array of connected `sections` on a system 
  that will allow you to use both cartesian to road coordinates interchangeably.
 
-`sections`, are essentially a dynamic array of (roughly) parallel lanes,
+`sections`, are essentially a dynamic array of (roughly) parallel lanes
+ (matching OpenDRIVE laneSections)
  that can be accessed through operator[] and that can access lanes through operator[] 
  and they are the ODRoNeS equivalent to OpenDRIVE roads.
 
@@ -24,7 +25,8 @@ The Road Network System `rns` is essentially an array of connected `sections` on
 Thus, lanes calculate these things differently depending on whether their geometry,
   and the underlying maths belong to the `mvf` class.
 
-Ultimately, see the ` rns.h` and the `lane.h` headers to find out more.
+Ultimately, see the `rns.h` and the `lane.h` headers to find out more.
+
 
 
 Lanes
@@ -38,17 +40,32 @@ Next/Previous lanes:
  * and when calling setPrevLane, things get automatically set NextLanes,
  and viceversa.
 
-Obviously, two lanes diverging from (but not converging to) a point have to be kept 
+Two lanes diverging from (but not converging to) a point must be kept 
  in different sections.
 
-Every lane has also a vector of conflicts, such as crosswalks, or give-way. 
+Port/Starboard lanes:
+ * Lanes within a section have `port` and `starboard` lanes.
+
+Everylane has a vector of `geometries` defining its shape. 
+ Currently, ODRoNeS supports the OpenDRIVE shapes straight, arc,
+ paramPoly3 and spiral, together with Bezier curves.
+
+Unless otherwise specified, ` lane::foo(scalar s) ` is a function that 
+ depends on the distance travelled **down the lane** and does not correspond
+ to the `s` coordinate of the OpenDRIVE lane 0. 
+ Geometries can transform local distance to lane-zero distance 
+ via `geometry::sl0(scalar s)`, and exposing this from `lane` 
+ is straightforward.
+
+Every lane has a vector of conflicts, such as crosswalks, or give-way. 
  Conflict functionality is useful for simulation.
 
 
 ## Naming ##
 ODRoNeS uses a different convention to the one used OpenDRIVE. 
  Still, the original OpenDRIVE naming is preserved in  `lane::_odrID` for the lane
- and in `lane::_odrSectionID` for the road.
+ and in `lane::_odrSectionID` for the road,
+ and calling lane::getOdrSUID() will print the OpenDRIVE name.
 
 
 ## New geometries types ##
@@ -72,26 +89,13 @@ There are two virtual classes that will help in developing new geometries: param
   - parametric and numerical methods will never override geometry virtual methods.
 
 
-
 ## Memory management ##
 A lane keeps an array of lane pointers, ` lane** _nextLane ` and ` lane** _prevLane `, 
  and it will deallocate the array when the destructor is called.
 A section creates the lanes in a lane array (`lane*`) that the section itself will deallocate.
-The LRN allocates and sets an array of section (`section*`), that it will deallocate,
-Routes keep an array of section pointers stored in the LRN (`section**`) the array is
- responsibility of the route.
-The LRN allocates an array of routes (`route*`), the array responsibility of the LRN.
-Everything is kept consistent inside lrn. However, when copying lanes 
- the original pointers (addresses) are copied for stuff like next and prevLane.
- Thus, be careful that if the original lrn is deallocated, the pointers won't work anymore.
-
-
- [ POTENTIALLY ] we could add a fix in lrn::assignInputLRNToThis so that
-  for the incoming lrn we would check all the next, prev, starboard and port lanes,
-  and would re-link the lrn consistenly. 
-
-
-
+The RNS allocates and sets an array of section (`section*`), that it will deallocate,
+Everything is kept consistent inside lrn. When RNS is copied, 
+ new sectors and lanes are created and there is a rewiring process to link the lanes.
 
 
 ## Lane direction ##
@@ -99,17 +103,17 @@ OpenDrive lanes can be forward and backward.
   Read the code on lane::setOdrFwd.
   This could be extended easily to other types of lanes.
   Once a lane is defined as backwards, origin and destination are swapped,
-  next/prev lanes are also swapped, `_to` is recalculated, and 
-  the lane is kept as backwards.
+  next/prev lanes are also swapped, together with port/starboard lanes,
+  `_to` and everything needed is recalculated, and the lane is kept as backwards.
   
 When loading an OpenDrive map using SmartActors' lrn::makeOpenDriveRoads, 
   the direction of the lanes in sections with lanes in both directions
   can be deduced if the map is assumed to be left-hand or right-hand driving.
+  OpenDRIVE 1.7 may specify whether the map is left- or right-handed.
   
 The direction of those lanes belonging to sections with one single direction 
   is determined later, once the routes are defined, in routes::fixDirectionality, 
   which does not use lane::sings.
-
 
 
 ### Traffic Signs ###
@@ -138,14 +142,14 @@ Following the OpenDrive convention, lanes with the same sign on the same section
 
 ### laneSections ###
  - readOdr reads the "next" and "previous" lanes correctly from the link information.
- - information regarding the starting s is also stored.
+ - information regarding the starting s is stored in ` geometry::_roadSo`.
  - different laneSections within the same road may have a different number of lanes. 
  - Multiple sections are created per road, one per laneSection. This means that:
-    * we have different SA lanes in different sections with the repeated Odr indices.
-    * the current approach has not been tested when there's a OneSided laneSection. 
+    * we have different RNS lanes in different sections with the repeated Odr indices.
+    * OnseSided laneSections have not been tested.
 
 
-### variable width ###
+### Variable width ###
  The variable width is calculated using an array of Odr::offsets. 
    The raw data is read at readOdr and stored at Odr::smaL as arrays of widths and borders,
    as well as in smaS as arrays of lane offsets (loffset). 
@@ -163,6 +167,10 @@ Following the OpenDrive convention, lanes with the same sign on the same section
       ds restarts at zero for each element. The absolute position of a width value is calculated as follows:
          s = ssection + offsetstart + ds
 
+Conveniently, `lane::getWidth(scalar s)` returns the width of the lane 
+  at a certain travelled distance (that is different to the s coordinate of lane 0). 
+
+
  In order to calculate the total offset, each geometry needs a consistent set of Odr::offsets.
  This is set in in section::setOdrRoad, so that for each lane:
    - the lane offset for the section is stored as an array
@@ -174,9 +182,9 @@ Following the OpenDrive convention, lanes with the same sign on the same section
 
  This set of consistent information is then passed onto every lane so that it can be passed 
    on of its geometries. 
-  Finally, every geometry will need to know the starting point of the lane, so that 
-   they can calculate their offset. 
-
+  Finally, every geometry 
+    receives and keeps the starting coordinate s of the geometry:
+    ` _roadSo `, where the lane-section starts.
 
 
 ## Conflicts ## 
@@ -214,13 +222,10 @@ Some conflicts are too close to other conflicts to be solved on their own,
 A conflict can be uniquely identified with a pair of values composed of
  the lane that holds the conflict and the distance s at which this conflict is found.
 
-Conflicts will be linked IF:
- - they belong to the same crosswalk lane... until pedestrian isles are introduced.
- - they are too close, i e, if c2.so - c1.se < 2 * car.length.
+Conflicts will be linked IF... 
 
 
-
-## Ancillary Classes ##
+## Ancillary Classes for geometry ##
  There are three Ancillary Classes to help out with geometries: parametric, numerical and vwNumerical.
 
 ### parametric ### 
@@ -239,8 +244,8 @@ Conflicts will be linked IF:
  - new class to help out with variable width numerical geometries.
  - vwNumerical implements ` scalar offset(s) `,
  - the deriving class needs to:
-    1. implement `curvexy_a(scalar s)`
-    2. obtain and keep the starting coordinate s of the geometry: ` _roadSo `.
+    1. implement `curvexy_a(scalar s)`, a function of the distance-down-the-lane0-road, in this lane-section
+    2. implement `l0xy_a(scalar s)`, return the xy values of lane 0, as a function of the distance-down-the-lane0-road.
     3. start with a call `vwNumerical::base()`
     4. always call `offset(s)` as `offset(t + _roadSo)`, so that the call uses the absolute s value
     5. Include the following bit of code:
@@ -262,8 +267,3 @@ OneVersion is an internal format that ODRoNeS supports (temporarily?) though not
  and headers from OneVersion should never be imported directly in ODRoNeS.
  
  
-
-
-
-
-
