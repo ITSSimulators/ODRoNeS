@@ -58,13 +58,13 @@ Details on the structure of the library can be found in ` doc `.
 
 OpenDRIVE Support
 -----------------
-The coverage of the standard is not yet complete, and it is still missing:
+The coverage of the standard is not yet complete, and missing bits include:
+
  * Elevation and superelevation.
  * Variable speed.
  * Several traffic signs.
  * Poly3 geometry (though it is deprecated).
  * Rail and railway stations.   
-and possibly more. 
 
 While there's still work to be done, the library is now strong enough to go public. 
 
