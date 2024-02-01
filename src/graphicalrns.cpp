@@ -191,16 +191,14 @@ void graphicalRNS::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QW
                 painter->drawPath(_roads[srNdx]);
             srNdx += 1;
         }
-        if (!_ignore[i])
+        /* if (!_ignore[i]) // Draw the edges 
         {
             pen.setStyle(Qt::DotLine);
-            // pen.setColor(Qt::red);
             painter->setPen(pen);
             painter->drawPath(_leRoads[i]);
-            // pen.setColor(Qt::black);
             painter->setPen(pen);
             painter->drawPath(_reRoads[i]);
-        }
+        } */
     }
 
     for (uint i = 0; i < _tSigns.size(); ++i)
