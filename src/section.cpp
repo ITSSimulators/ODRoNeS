@@ -560,6 +560,16 @@ OneVersion::OVID section::ovID() const
     return _ovID;
 }
 
+void section::setOdrID(uint id)
+{
+    _odrID = id;
+}
+
+void section::setOVID(OneVersion::OVID id)
+{
+    _ovID = id;
+}
+
 
 
 bool section::flipBackwards()

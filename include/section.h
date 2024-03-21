@@ -94,7 +94,9 @@ public:
     /*! store the input data and all the lanes for this OneVersion laneGroup */
     void setOneVersionRoad(const OneVersion::smaS &sec, uint lgID);
 
+    void setOdrID(uint id);
     uint odrID() const;
+    void setOVID(OneVersion::OVID id);
     OneVersion::OVID ovID() const;
     void lockOdrFlippable(); // set _odrFlippable to false for every lane in the section;
     bool flipBackwards(); ///< change the direction of every lane as backwards.
