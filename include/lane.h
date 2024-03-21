@@ -366,6 +366,7 @@ public:
     int getID() const;
     int odrID() const;
     OneVersion::OVID ovID() const;
+    void setOVID(OneVersion::OVID id);
     void setID(int id);
     void setSectionID(int id);
     void setOdrSectionID(int id);

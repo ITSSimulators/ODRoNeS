@@ -1222,6 +1222,11 @@ OneVersion::OVID lane::ovID() const
     return _ovID;
 }
 
+void lane::setOVID(OneVersion::OVID id)
+{
+    _ovID = id;
+}
+
 void lane::setID(int id)
 {
     _id = id;
