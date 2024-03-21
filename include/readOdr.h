@@ -179,6 +179,34 @@ public:
             aV = 0; bV = 0; cV = 0; dV = 0;
             pRange = Attr::ParamPoly3Range::none;
         }
+
+        void print()
+        {
+            if (g == Attr::Geometry::line)
+                std::cout << "line: " << std::endl;
+            if (g == Attr::Geometry::arc)
+                std::cout << "arc: " << std::endl;
+            if (g == Attr::Geometry::spiral)
+                std::cout << "spial: " << std::endl;
+            if (g == Attr::Geometry::paramPoly3)
+                std::cout << "paramPoly3: " << std::endl;
+            std::cout << "s: " << s << ", x: " << x << ", y: " << y << std::endl;
+            std::cout << "hdg: " << hdg << ", length: " << length << std::endl;
+            if (g == Attr::Geometry::arc)
+                std::cout << "curvature: " << curvature << std::endl;
+            else if (g == Attr::Geometry::spiral)
+                std::cout << "curvStart: " << curvStart	 << ", curvEnd: " << curvEnd << std::endl;
+            else if (g == Attr::Geometry::paramPoly3)
+            {
+                std::cout << "aU: " << aU << ", bU: " << bU << ", cU: " << cU << ", dU: " << dU << std::endl;
+                std::cout << "aV: " << aV << ", bV: " << bV << ", cV: " << cV << ", dV: " << dV << std::endl;
+                if (pRange == Attr::ParamPoly3Range::arcLength)
+                    std::cout << "pRange: arcLength" << std::endl;
+                if (pRange == Attr::ParamPoly3Range::normalized)
+                    std::cout << "pRange: normalised" << std::endl;
+            }
+
+        }
     public:
         Attr::Geometry g; ///< shape
         double s;      ///< initial s
