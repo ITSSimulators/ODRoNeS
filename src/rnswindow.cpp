@@ -25,10 +25,10 @@
 #include "rnswindow.h"
 #include "ui_rnswindow.h"
 
-RNSWindow::RNSWindow(std::string iFile, bool identifyLanes, QWidget *parent) :
+// RNSWindow::RNSWindow(std::string iFile, bool identifyLanes, QWidget *parent) :
+RNSWindow::RNSWindow(RNS *rns, bool identifyLanes, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::RNSWindow),
-    _rns(nullptr),
     _grns(nullptr),
     _gzoom(nullptr),
     _scene(nullptr)
@@ -37,15 +37,15 @@ RNSWindow::RNSWindow(std::string iFile, bool identifyLanes, QWidget *parent) :
     setWindowTitle(tr("ODRoNeS"));
     ui->centralwidget->setLayout(ui->verticalLayout);
 
-    _rns = new RNS(iFile, concepts::drivingSide::leftHand, true);
-    if (!_rns->ready())
+    // rns = new RNS(iFile, concepts::drivingSide::leftHand, true);
+    if (!rns->ready())
     {
         std::cout << "[ Error ] Something went wrong loading the Road Network System" << std::endl;
         return;
     }
-    _rns->printLanes();
+    rns->printLanes();
     int minX, minY, maxX, maxY;
-    _rns->getDimensions(minX, minY, maxX, maxY);
+    rns->getDimensions(minX, minY, maxX, maxY);
 
     // Create a Scene, in a rectangle given by (x, y, width, height)
     _scene = new QGraphicsScene();
@@ -55,7 +55,7 @@ RNSWindow::RNSWindow(std::string iFile, bool identifyLanes, QWidget *parent) :
     // This is the appropriate indexing method if you're adding and removing objects.
     _scene->setItemIndexMethod(QGraphicsScene::NoIndex); // CHANGE THIS
 
-    _grns = new graphicalRNS(*_rns, identifyLanes);
+    _grns = new graphicalRNS(*rns, identifyLanes);
     _scene->addItem(_grns);
 
 
@@ -70,10 +70,10 @@ RNSWindow::RNSWindow(std::string iFile, bool identifyLanes, QWidget *parent) :
     _gzoom = new GraphicalZoom(ui->graphicsView);
     _gzoom->set_modifiers(Qt::NoModifier);
 
-    if ((_rns->sectionsSize()) && (_rns[0].lanesSize()))
+    if ((rns->sectionsSize()) && (rns[0].lanesSize()))
     {
         arr2 blc, trc;
-        _rns[0][0].getBoundingBox(blc, trc);
+        rns[0][0].getBoundingBox(blc, trc);
         ui->graphicsView->setSceneRect(blc[0], blc[1], trc[0] - blc[0], trc[1] - blc[1]);
     }
 
@@ -91,7 +91,7 @@ RNSWindow::~RNSWindow()
     if (_gzoom) delete _gzoom;
     delete ui;
     if (_grns) delete _grns;
-    if (_rns) delete _rns;
+    // if (rns) delete rns;
     if (_scene) delete _scene;
 }
 

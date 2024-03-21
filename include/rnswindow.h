@@ -40,13 +40,14 @@ class RNSWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit RNSWindow(std::string iFile, bool identifyLanes, QWidget *parent = nullptr);
+    // explicit RNSWindow(std::string iFile, bool identifyLanes, QWidget *parent = nullptr);
+    explicit RNSWindow(RNS *rns, bool identifyLanes, QWidget *parent = nullptr);
     ~RNSWindow();
 
 private:
     Ui::RNSWindow *ui;
 
-    RNS *_rns;
+    // RNS *_rns;
     graphicalRNS *_grns;
     GraphicalZoom *_gzoom;
     QGraphicsScene *_scene;

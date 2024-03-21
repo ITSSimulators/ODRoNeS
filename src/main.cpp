@@ -124,7 +124,8 @@ int main(int argc, char *argv[])
 
 #ifdef QT_CORE_LIB
     QApplication app(argc, argv);
-    RNSWindow rw(iFile, identifyLanes);
+    RNS *rns = new RNS(iFile, concepts::drivingSide::leftHand, true);
+    RNSWindow rw(rns, identifyLanes);
     rw.show();
     return app.exec();
 #else
