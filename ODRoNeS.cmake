@@ -28,6 +28,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (NOT DEFINED RNS_DIR)
    set( RNS_DIR ${PROJECT_SOURCE_DIR} )
 endif (NOT DEFINED RNS_DIR)
+if (NOT DEFINED RNS_INSTALL)
+   set( RNS_INSTALL ON )
+endif (NOT DEFINED RNS_INSTALL)
 
 # Our own headers:
 include_directories(${RNS_DIR}/include)
@@ -138,10 +141,14 @@ if (USE_QT)
       ${RNS_DIR}/src/mainwindow.cpp ${RNS_DIR}/include/mainwindow.h)
   target_link_libraries(rns3d PRIVATE rns Qt6::Widgets Qt6::3DCore Qt6::3DRender Qt6::3DExtras)
 
-  install (TARGETS rnscheck RUNTIME DESTINATION bin)
+  if (RNS_INSTALL)
+     install (TARGETS rnscheck RUNTIME DESTINATION bin)
+  endif (RNS_INSTALL)
 endif (USE_QT)
 
-install (TARGETS rns DESTINATION lib)
-install (DIRECTORY ${RNS_DIR}/include DESTINATION ${CMAKE_INSTALL_PREFIX})
+if (RNS_INSTALL)
+   install (TARGETS rns DESTINATION lib)
+   install (DIRECTORY ${RNS_DIR}/include/odrones DESTINATION ${CMAKE_INSTALL_PREFIX})
+endif (RNS_INSTALL)
                          
 
