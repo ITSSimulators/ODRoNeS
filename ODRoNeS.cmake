@@ -48,7 +48,7 @@ include_directories(${RNS_DIR}/3rdParty/tinyxml2)
 # Qt graphical interface:
 option(USE_QT "Build ODRoNeS with a graphical interface" ON)
 if (USE_QT)
-  find_package(Qt6 COMPONENTS Core Gui Widgets 3DCore 3DRender 3DExtras)
+  find_package(Qt6 COMPONENTS Core Gui Widgets) # 3DCore 3DRender 3DExtras)
   if (NOT ${Qt6_FOUND})
       message(FATAL_ERROR "You could also try compiling without Qt support using -DUSE_QT=OFF")
   endif (NOT ${Qt6_FOUND})
@@ -136,10 +136,10 @@ if (USE_QT)
   )
   target_link_libraries(rnscheck rns ${QT_LIBRARIES})
 
-  qt_add_executable(rns3d 
-      ${RNS_DIR}/src/mainQt3D.cpp 
-      ${RNS_DIR}/src/mainwindow.cpp ${RNS_DIR}/include/mainwindow.h)
-  target_link_libraries(rns3d PRIVATE rns Qt6::Widgets Qt6::3DCore Qt6::3DRender Qt6::3DExtras)
+  # qt_add_executable(rns3d 
+      # ${RNS_DIR}/src/mainQt3D.cpp 
+      # ${RNS_DIR}/src/mainwindow.cpp ${RNS_DIR}/include/mainwindow.h)
+  # target_link_libraries(rns3d PRIVATE rns Qt6::Widgets Qt6::3DCore Qt6::3DRender Qt6::3DExtras)
 
   if (RNS_INSTALL)
      install (TARGETS rnscheck RUNTIME DESTINATION bin)
