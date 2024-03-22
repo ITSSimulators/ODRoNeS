@@ -20,8 +20,8 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef LANE_H
-#define LANE_H
+#ifndef ODRONES_LANE_H
+#define ODRONES_LANE_H
 
 #include <vector>
 #include <limits>
@@ -467,4 +467,4 @@ private:
 
 }
 
-#endif // LANE_H
+#endif // ODRONES_LANE_H

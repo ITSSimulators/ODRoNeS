@@ -20,8 +20,8 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef GEOMETRY_H
-#define GEOMETRY_H
+#ifndef ODRONES_GEOMETRY_H
+#define ODRONES_GEOMETRY_H
 
 #include <iostream>
 #include "matvec.h"
@@ -94,4 +94,4 @@ protected:
 } // namespace odrones;
 
 
-#endif // GEOMETRY_H
+#endif // ODRONES_GEOMETRY_H

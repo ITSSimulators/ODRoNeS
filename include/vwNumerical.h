@@ -24,8 +24,8 @@
 #include "numerical.h"
 #include <functional>
 
-#ifndef VWNUMERICAL_H
-#define VWNUMERICAL_H
+#ifndef ODRONES_VWNUMERICAL_H
+#define ODRONES_VWNUMERICAL_H
 
 namespace odrones
 {
@@ -92,4 +92,4 @@ protected:
 
 } // namespace odrones;
 
-#endif // VWNUMERICAL_H
+#endif // ODRONES_VWNUMERICAL_H

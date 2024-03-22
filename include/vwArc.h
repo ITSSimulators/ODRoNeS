@@ -23,8 +23,8 @@
 #include "vwNumerical.h"
 #include "arc.h"
 
-#ifndef VWARC_H
-#define VWARC_H
+#ifndef ODRONES_VWARC_H
+#define ODRONES_VWARC_H
 
 namespace odrones
 {
@@ -53,4 +53,4 @@ private:
 
 }
 
-#endif // VWARC_H
+#endif // ODRONES_VWARC_H

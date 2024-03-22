@@ -20,8 +20,8 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
+#ifndef ODRONES_CONSTANTS_H
+#define ODRONES_CONSTANTS_H
 
 #include <limits>
 
@@ -239,4 +239,4 @@ namespace ct = constants;
 
 } // namespace odrones
 
-#endif // CONSTANTS_H
+#endif // ODRONES_CONSTANTS_H

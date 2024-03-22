@@ -22,8 +22,8 @@
 
 #include "bezier.h"
 
-#ifndef BEZIER2_H
-#define BEZIER2_H
+#ifndef ODRONES_BEZIER2_H
+#define ODRONES_BEZIER2_H
 
 namespace odrones
 {
@@ -74,4 +74,4 @@ public:
 
 } // namespace odrones;
 
-#endif // BEZIER2_H
+#endif // ODRONES_BEZIER2_H

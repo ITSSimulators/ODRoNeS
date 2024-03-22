@@ -20,8 +20,8 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef ODRONES_MAINWINDOW_H
+#define ODRONES_MAINWINDOW_H
 
 #include <QMainWindow>
 #include <Qt3DCore/Qt3DCore>
@@ -58,4 +58,4 @@ private:
 };
 
 } // namespace odrones;
-#endif // MAINWINDOW_H
+#endif // ODRONES_MAINWINDOW_H

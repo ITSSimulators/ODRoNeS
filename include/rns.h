@@ -20,8 +20,8 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef RNS_H
-#define RNS_H
+#ifndef ODRONES_RNS_H
+#define ODRONES_RNS_H
 
 #include <filesystem>
 #include "rnsconcepts.h"
@@ -154,4 +154,4 @@ private:
 
 }
 
-#endif // RNS_H
+#endif // ODRONES_RNS_H

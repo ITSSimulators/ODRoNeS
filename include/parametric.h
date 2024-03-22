@@ -20,8 +20,8 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef PARAMETRIC_H
-#define PARAMETRIC_H
+#ifndef ODRONES_PARAMETRIC_H
+#define ODRONES_PARAMETRIC_H
 
 #include "geometry.h"
 
@@ -85,4 +85,4 @@ protected:
 
 
 
-#endif // PARAMETRIC_H
+#endif // ODRONES_PARAMETRIC_H

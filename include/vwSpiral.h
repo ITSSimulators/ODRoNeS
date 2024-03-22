@@ -25,8 +25,8 @@
 #include "vwNumerical.h"
 #include "Clothoid.hh"
 
-#ifndef VWSPIRAL_H
-#define VWSPIRAL_H
+#ifndef ODRONES_VWSPIRAL_H
+#define ODRONES_VWSPIRAL_H
 
 namespace odrones
 {
@@ -65,4 +65,4 @@ private:
 } // namespace odrones;
 
 
-#endif // VWSPIRAL_H
+#endif // ODRONES_VWSPIRAL_H

@@ -22,8 +22,8 @@
 
 #include "geometry.h"
 
-#ifndef STRAIGHT_H
-#define STRAIGHT_H
+#ifndef ODRONES_STRAIGHT_H
+#define ODRONES_STRAIGHT_H
 
 namespace odrones
 {
@@ -55,4 +55,4 @@ public:
 
 } // namespace odrones
 
-#endif // STRAIGHT_H
+#endif // ODRONES_STRAIGHT_H

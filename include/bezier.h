@@ -20,8 +20,8 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef LANEBEZIER_H
-#define LANEBEZIER_H
+#ifndef ODRONES_LANEBEZIER_H
+#define ODRONES_LANEBEZIER_H
 
 #include <vector>
 #include <limits>
@@ -138,4 +138,4 @@ protected:
 } // namespace odrones;
 
 
-#endif // LANEBEZIER_H
+#endif // ODRONES_LANEBEZIER_H

@@ -22,8 +22,8 @@
 
 #include "geometry.h"
 
-#ifndef ARC_H
-#define ARC_H
+#ifndef ODRONES_ARC_H
+#define ODRONES_ARC_H
 
 namespace odrones
 {
@@ -82,4 +82,4 @@ private:
 
 }
 
-#endif // ARC_H
+#endif // ODRONES_ARC_H

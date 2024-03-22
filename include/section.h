@@ -20,8 +20,8 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef SECTION_H
-#define SECTION_H
+#ifndef ODRONES_SECTION_H
+#define ODRONES_SECTION_H
 
 #include <vector>
 #include <limits>
@@ -137,4 +137,4 @@ private:
 
 
 
-#endif // SECTION_H
+#endif // ODRONES_SECTION_H

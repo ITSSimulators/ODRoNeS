@@ -20,8 +20,8 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef RNSCONCEPTS_H
-#define RNSCONCEPTS_H
+#ifndef ODRONES_RNSCONCEPTS_H
+#define ODRONES_RNSCONCEPTS_H
 
 #include <string>
 
@@ -43,4 +43,4 @@ typedef rnsConcepts concepts;
 
 } // namespace odrones;
 
-#endif // RNSCONCEPTS
+#endif // ODRONES_RNSCONCEPTS

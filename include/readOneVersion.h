@@ -20,8 +20,8 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef READONEVERSION_H
-#define READONEVERSION_H
+#ifndef ODRONES_READONEVERSION_H
+#define ODRONES_READONEVERSION_H
 
 // Only System and ODRoNeS headers should be here.
 #include <iostream>
@@ -295,4 +295,4 @@ private:
 
 } // namespace odrones
 
-#endif // READONEVERSION_H
+#endif // ODRONES_READONEVERSION_H

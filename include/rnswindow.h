@@ -20,8 +20,8 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef RNSWINDOW_H
-#define RNSWINDOW_H
+#ifndef ODRONES_RNSWINDOW_H
+#define ODRONES_RNSWINDOW_H
 
 #ifdef QT_CORE_LIB
 
@@ -59,4 +59,4 @@ private:
 }
 #endif // QT_CORE_LIB
 
-#endif // RNSWINDOW_H
+#endif // ODRONES_RNSWINDOW_H

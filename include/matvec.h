@@ -20,8 +20,8 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef MATVEC_H
-#define MATVEC_H
+#ifndef ODRONES_MATVEC_H
+#define ODRONES_MATVEC_H
 
 
 #include "constants.h"
@@ -166,4 +166,4 @@ public:
 } // namespace odrones
 
 
-#endif // MATVEC_H
+#endif //  ODRONES_MATVEC_H

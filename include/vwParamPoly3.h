@@ -24,8 +24,8 @@
 #include <functional>
 #include "vwNumerical.h"
 
-#ifndef VWPARAMPOLY3_H
-#define VWPARAMPOLY3_H
+#ifndef ODRONES_VWPARAMPOLY3_H
+#define ODRONES_VWPARAMPOLY3_H
 
 namespace odrones
 {
@@ -67,4 +67,4 @@ private:
 
 } // namespace odrones;
 
-#endif // VWPARAMPOLY3_H
+#endif // ODRONES_VWPARAMPOLY3_H

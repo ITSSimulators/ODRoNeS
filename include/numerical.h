@@ -20,8 +20,8 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef NUMERIC_H
-#define NUMERIC_H
+#ifndef ODRONES_NUMERIC_H
+#define ODRONES_NUMERIC_H
 
 #include <iostream>
 #include "matvec.h"
@@ -108,4 +108,4 @@ protected:
 } // namespace odrones;
 
 
-#endif // NUMERIC_H
+#endif // ODRONES_NUMERIC_H

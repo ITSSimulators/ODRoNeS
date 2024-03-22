@@ -24,8 +24,8 @@
 #include "parametric.h"
 #include "numerical.h"
 
-#ifndef PARAMPOLY3_H
-#define PARAMPOLY3_H
+#ifndef ODRONES_PARAMPOLY3_H
+#define ODRONES_PARAMPOLY3_H
 
 namespace odrones
 {
@@ -89,4 +89,4 @@ private:
 } // namespace odrones;
 
 
-#endif // PARAMPOLY3_H
+#endif // ODRONES_PARAMPOLY3_H

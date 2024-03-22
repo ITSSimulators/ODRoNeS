@@ -20,8 +20,8 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef GRAPHICALRNS_H
-#define GRAPHICALRNS_H
+#ifndef ODRONES_GRAPHICALRNS_H
+#define ODRONES_GRAPHICALRNS_H
 
 #ifdef QT_CORE_LIB
 
@@ -93,4 +93,4 @@ private:
 }
 
 #endif // QT_CORE_LIB
-#endif // GRAPHICALRNS_H
+#endif // ODRONES_GRAPHICALRNS_H

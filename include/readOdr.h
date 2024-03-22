@@ -20,8 +20,8 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef READODR_H
-#define READODR_H
+#ifndef ODRONES_READODR_H
+#define ODRONES_READODR_H
 
 #include <iostream>
 #include <string>
@@ -524,4 +524,4 @@ private:
 
 } // namespace odrones;
 
-#endif // READODR_H
+#endif // ODRONES_READODR_H

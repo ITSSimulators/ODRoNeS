@@ -20,8 +20,8 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef GRAPHICALZOOM_H
-#define GRAPHICALZOOM_H
+#ifndef ODRONES_GRAPHICALZOOM_H
+#define ODRONES_GRAPHICALZOOM_H
 
 #ifdef QT_CORE_LIB
 #include <QObject>
@@ -78,4 +78,4 @@ signals:
 
 #endif // QT_CORE_LIB
 
-#endif // GRAPHICALZOOM_H
+#endif // ODRONES_GRAPHICALZOOM_H
