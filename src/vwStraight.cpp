@@ -21,6 +21,7 @@
 //
 
 #include "vwStraight.h"
+using namespace odrones;
 
 vwStraight::vwStraight(const Odr::geometry &odg, int sign, std::vector<Odr::offset> off,
                        scalar so, scalar se, scalar roadSo, bool print)

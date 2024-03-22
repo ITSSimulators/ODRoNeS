@@ -21,6 +21,7 @@
 //
 
 #include "parametric.h"
+using namespace odrones;
 
 parametric::parametric() :
     _mint(0),

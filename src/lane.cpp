@@ -24,6 +24,7 @@
 // DEBUG //
 #include <fstream>
 #include <boost/format.hpp>
+using namespace odrones;
 
 // Static methods:
 std::string lane::tSignInfoString(tSignInfo s)

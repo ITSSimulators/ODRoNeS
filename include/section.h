@@ -39,6 +39,8 @@
 
 
 
+namespace odrones
+{
 /*! A section is a bundle of lanes that run parallel (roughly).
  *  Lanes are kept in a vector that cannot be resized,
  *  because this could mean that the pointers to lanes
@@ -131,6 +133,7 @@ private:
     OneVersion::OVID _ovID;
 };
 
+} // namespace odrones
 
 
 

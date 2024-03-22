@@ -27,6 +27,9 @@
 #ifndef VWPARAMPOLY3_H
 #define VWPARAMPOLY3_H
 
+namespace odrones
+{
+
 class vwParamPoly3 : public vwNumerical
 {
 public:
@@ -62,5 +65,6 @@ private:
 
 };
 
+} // namespace odrones;
 
 #endif // VWPARAMPOLY3_H

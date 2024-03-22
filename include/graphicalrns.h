@@ -32,6 +32,8 @@
 #include "rns.h"
 #include "constants.h"
 
+namespace odrones {
+
 class graphicalRNS : public QGraphicsItem
 {
     struct Label
@@ -87,6 +89,8 @@ private:
     std::vector<arr2> crossingPoints; ///< DEBUG!
 
 };
+
+}
 
 #endif // QT_CORE_LIB
 #endif // GRAPHICALRNS_H

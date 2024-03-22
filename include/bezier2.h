@@ -25,6 +25,9 @@
 #ifndef BEZIER2_H
 #define BEZIER2_H
 
+namespace odrones
+{
+
 class bezier2 : public bezier
 {
 public:
@@ -69,5 +72,6 @@ public:
 
 };
 
+} // namespace odrones;
 
 #endif // BEZIER2_H

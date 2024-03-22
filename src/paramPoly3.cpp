@@ -21,6 +21,7 @@
 //
 
 #include "paramPoly3.h"
+using namespace odrones;
 
 
 paramPoly3::paramPoly3(const paramPoly3 &p)

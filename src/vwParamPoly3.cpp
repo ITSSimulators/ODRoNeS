@@ -21,6 +21,7 @@
 //
 
 #include "vwParamPoly3.h"
+using namespace odrones;
 
 
 void vwParamPoly3::base()

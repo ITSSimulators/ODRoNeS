@@ -21,6 +21,7 @@
 //
 
 #include "readOdr.h"
+using namespace odrones;
 
 
 const char* Odr::Elem::OpenDrive = "OpenDRIVE";

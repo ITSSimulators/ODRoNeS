@@ -21,6 +21,7 @@
 //
 
 #include "vwNumerical.h"
+using namespace odrones;
 
 vwNumerical::vwNumerical()
 {

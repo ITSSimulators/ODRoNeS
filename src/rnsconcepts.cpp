@@ -21,7 +21,7 @@
 //
 
 #include "rnsconcepts.h"
-
+using namespace odrones;
 
 std::string rnsConcepts::actorString(actor a)
 {

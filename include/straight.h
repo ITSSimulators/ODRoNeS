@@ -25,6 +25,9 @@
 #ifndef STRAIGHT_H
 #define STRAIGHT_H
 
+namespace odrones
+{
+
 class straight : public geometry
 {
 public:
@@ -50,5 +53,6 @@ public:
 
 };
 
+} // namespace odrones
 
 #endif // STRAIGHT_H

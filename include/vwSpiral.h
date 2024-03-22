@@ -28,6 +28,9 @@
 #ifndef VWSPIRAL_H
 #define VWSPIRAL_H
 
+namespace odrones
+{
+
 class vwSpiral : public vwNumerical
 {
 public:
@@ -58,6 +61,8 @@ private:
     int _sign;
 
 };
+
+} // namespace odrones;
 
 
 #endif // VWSPIRAL_H

@@ -25,6 +25,8 @@
 #include "readOneVersion.h"
 #endif // USE_ONEVERSION
 
+using namespace odrones;
+
 RNS::RNS()
 {
     initialise();

@@ -25,6 +25,9 @@
 
 #include "geometry.h"
 
+namespace odrones
+{
+
 class parametric : public geometry
 {
 public:
@@ -78,6 +81,7 @@ protected:
 };
 
 
+} // namespace odrones;
 
 
 

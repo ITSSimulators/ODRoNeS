@@ -34,6 +34,9 @@
 #include <QPainterPath>
 #endif
 
+namespace odrones
+{
+
 class bezier : public parametric
 {
 public:
@@ -132,7 +135,7 @@ protected:
 };
 
 
-
+} // namespace odrones;
 
 
 #endif // LANEBEZIER_H

@@ -51,6 +51,8 @@
 #include <QPainterPath>
 #endif
 
+namespace odrones {
+
 class section;
 class lane;
 
@@ -463,5 +465,6 @@ private:
 
 };
 
+}
 
 #endif // LANE_H

@@ -24,6 +24,7 @@
 
 #include "rnswindow.h"
 #include "ui_rnswindow.h"
+using namespace odrones;
 
 // RNSWindow::RNSWindow(std::string iFile, bool identifyLanes, QWidget *parent) :
 RNSWindow::RNSWindow(RNS *rns, bool identifyLanes, QWidget *parent) :

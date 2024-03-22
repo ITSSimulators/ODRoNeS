@@ -25,6 +25,9 @@
 
 #include <string>
 
+namespace odrones
+{
+
 class rnsConcepts
 {
 public:
@@ -37,5 +40,7 @@ public:
 };
 
 typedef rnsConcepts concepts;
+
+} // namespace odrones;
 
 #endif // RNSCONCEPTS

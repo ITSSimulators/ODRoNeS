@@ -27,6 +27,8 @@
 #ifndef PARAMPOLY3_H
 #define PARAMPOLY3_H
 
+namespace odrones
+{
 class paramPoly3 : public parametric, public numerical
 {
 public:
@@ -83,6 +85,8 @@ private:
     scalar _odrLength; ///< paramPoly3; the length of the reference lane (0).
 
 };
+
+} // namespace odrones;
 
 
 #endif // PARAMPOLY3_H

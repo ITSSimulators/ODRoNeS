@@ -32,6 +32,9 @@
 #include <algorithm>
 #include <string>
 
+namespace odrones
+{
+
 typedef std::array<scalar, 2> arr2;
 // typedef std::array<scalar, 3> arr3;
 
@@ -158,6 +161,9 @@ public:
     static scalar minimumTimeForDx(scalar Dx, scalar vo, scalar vmax, scalar a);
     static scalar minimumTimeForDxVoNonNeg(scalar Dx, scalar vo, scalar vmax, scalar a);
 };
+
+
+} // namespace odrones
 
 
 #endif // MATVEC_H

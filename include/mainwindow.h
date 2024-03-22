@@ -33,6 +33,9 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
+namespace odrones
+{
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -53,4 +56,6 @@ private:
     RNS *_rns;
 
 };
+
+} // namespace odrones;
 #endif // MAINWINDOW_H

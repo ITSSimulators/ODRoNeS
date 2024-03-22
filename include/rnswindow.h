@@ -35,6 +35,9 @@ namespace Ui {
 class RNSWindow;
 }
 
+namespace odrones
+{
+
 class RNSWindow : public QMainWindow
 {
     Q_OBJECT
@@ -53,6 +56,7 @@ private:
     QGraphicsScene *_scene;
 };
 
+}
 #endif // QT_CORE_LIB
 
 #endif // RNSWINDOW_H

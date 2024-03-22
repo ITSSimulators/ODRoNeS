@@ -30,6 +30,9 @@
 #include <QPainterPath>
 #endif // QT_CORE_LIB
 
+namespace odrones
+{
+
 class numerical
 {
 public:
@@ -102,6 +105,7 @@ protected:
 
 };
 
+} // namespace odrones;
 
 
 #endif // NUMERIC_H

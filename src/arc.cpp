@@ -21,6 +21,7 @@
 //
 
 #include "arc.h"
+using namespace odrones;
 
 arc::arc()
 {

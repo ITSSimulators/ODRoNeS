@@ -21,6 +21,7 @@
 //
 
 #include "section.h"
+using namespace odrones;
 
 section::section() :
    _id(-1),

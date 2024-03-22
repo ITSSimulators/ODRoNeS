@@ -25,6 +25,9 @@
 #ifndef VWSTRAIGHT_H
 #define VWSTRAIGHT_H
 
+namespace odrones
+{
+
 class vwStraight : public vwNumerical
 {
 public:
@@ -41,5 +44,6 @@ private:
 
 };
 
+} // namespace odrones;
 
 #endif // VWSTRAIGHT_H

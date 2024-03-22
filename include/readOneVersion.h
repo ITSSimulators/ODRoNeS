@@ -29,6 +29,9 @@
 #include <vector>
 #include <array>
 
+namespace odrones
+{
+
 typedef unsigned int uint;
 
 
@@ -289,5 +292,7 @@ public:
 private:
     bool _ready;
 };
+
+} // namespace odrones
 
 #endif // READONEVERSION_H

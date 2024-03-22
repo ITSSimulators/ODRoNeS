@@ -27,6 +27,8 @@
 #include "rnsconcepts.h"
 #include "section.h"
 
+namespace odrones {
+
 ///! The Road Network System:
 class RNS
 {
@@ -150,5 +152,6 @@ private:
 
 };
 
+}
 
 #endif // RNS_H

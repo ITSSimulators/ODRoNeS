@@ -21,6 +21,7 @@
 //
 
 #include "geometry.h"
+using namespace odrones;
 
 geometry::geometry()
 {

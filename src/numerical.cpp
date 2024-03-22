@@ -21,6 +21,7 @@
 //
 
 #include "numerical.h"
+using namespace odrones;
 
 numerical::numerical()
 {

@@ -22,6 +22,7 @@
 
 
 #include "matvec.h"
+using namespace odrones;
 
 ////////////////////////////////////////
 // -1 - Auxilliary functions         ///

@@ -32,6 +32,9 @@
 #include "tinyxml2.h"
 #include "matvec.h"
 
+namespace odrones
+{
+
 class Odr
 {
 public:
@@ -519,5 +522,6 @@ private:
 
 };
 
+} // namespace odrones;
 
 #endif // READODR_H

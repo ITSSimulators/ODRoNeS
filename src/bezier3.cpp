@@ -21,6 +21,7 @@
 //
 
 #include <bezier3.h>
+using namespace odrones;
 
 bezier3::bezier3()
 {

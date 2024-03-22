@@ -24,6 +24,7 @@
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
+using namespace odrones;
 
 MainWindow::MainWindow(std::string iFile, bool identifyLanes, QWidget *parent)
     : QMainWindow(parent)

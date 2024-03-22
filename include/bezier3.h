@@ -25,6 +25,9 @@
 #ifndef BEZIER3_H
 #define BEZIER3_H
 
+namespace odrones
+{
+
 class bezier3 : public bezier
 {
 public:
@@ -69,5 +72,7 @@ public:
 
 };
 
+
+}
 
 #endif // BEZIER3_H

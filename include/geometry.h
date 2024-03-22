@@ -32,6 +32,9 @@
 #include <QPainterPath>
 #endif
 
+namespace odrones
+{
+
 class geometry
 {
 public:
@@ -87,6 +90,8 @@ protected:
 
 };
 
+
+} // namespace odrones;
 
 
 #endif // GEOMETRY_H

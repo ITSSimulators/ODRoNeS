@@ -23,6 +23,7 @@
 #ifdef QT_CORE_LIB
 
 #include "graphicalrns.h"
+using namespace odrones;
 
 graphicalRNS::graphicalRNS()
 {

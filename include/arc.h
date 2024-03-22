@@ -25,6 +25,9 @@
 #ifndef ARC_H
 #define ARC_H
 
+namespace odrones
+{
+
 class arc : public geometry
 {
 public:
@@ -77,5 +80,6 @@ private:
 
 };
 
+}
 
 #endif // ARC_H

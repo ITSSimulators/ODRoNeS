@@ -21,6 +21,7 @@
 //
 
 #include "straight.h"
+using namespace odrones;
 
 straight::straight(const straight& s)
 {

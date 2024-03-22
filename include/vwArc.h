@@ -26,6 +26,9 @@
 #ifndef VWARC_H
 #define VWARC_H
 
+namespace odrones
+{
+
 class vwArc : public vwNumerical
 {
 public:
@@ -48,5 +51,6 @@ private:
 
 };
 
+}
 
 #endif // VWARC_H

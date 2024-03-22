@@ -27,6 +27,9 @@
 #ifndef VWNUMERICAL_H
 #define VWNUMERICAL_H
 
+namespace odrones
+{
+
 class vwNumerical : public geometry, public numerical
 {
 public:
@@ -87,5 +90,6 @@ protected:
     bool _ahead; ///< auxilliary boolean to know whether we're using ahead _a or backwards _b functions.
 };
 
+} // namespace odrones;
 
 #endif // VWNUMERICAL_H
