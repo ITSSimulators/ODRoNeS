@@ -48,6 +48,8 @@ add_library( clothoids
 	${CLOTHOIDS_DIR}/src/PolyLine.cc
 	${CLOTHOIDS_DIR}/src/Triangle2D.cc )
 
+set_property( TARGET clothoids PROPERTY POSITION_INDEPENDENT_CODE ON )
+
 
 # add_executable(cteb ${CLOTHOIDS_DIR}/main.cpp)
 # target_link_libraries(cteb clothoids)
