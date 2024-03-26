@@ -45,12 +45,14 @@ void paramPoly3::base()
     _pto = {0., 0.};
 }
 
-paramPoly3::paramPoly3(const Odr::geometry &odg, int sign, scalar offsetA, scalar so, scalar se)
+paramPoly3::paramPoly3(const Odr::geometry &odg, int sign, scalar offsetA, scalar so, scalar se, scalar roadSo)
 {
     _shape = mvf::shape::paramPoly3;
     _sign = sign;
     _offset = offsetA;
     _odrLength = odg.length;
+    _roadSo = roadSo;
+    _roadSe = roadSo + se - so;
 
     _u[0] = odg.aU;
     _u[1] = odg.bU;

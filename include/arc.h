@@ -32,7 +32,7 @@ class arc : public geometry
 {
 public:
     arc();
-    arc(const Odr::geometry &odr, int sign, scalar offsetA, scalar so, scalar se);
+    arc(const Odr::geometry &odr, int sign, scalar offsetA, scalar so, scalar se, scalar roadSo);
     arc(const OneVersion::segment &sgm, scalar offset);
     arc(const arr2& origin, const arr2& dest, const arr2& centre, mvf::shape s);
     arc(const arr2& origin, const arr2& dest, const arr2& to);

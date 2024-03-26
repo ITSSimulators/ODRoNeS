@@ -33,7 +33,7 @@ class paramPoly3 : public parametric, public numerical
 {
 public:
 
-    paramPoly3(const Odr::geometry &odr, int sign, scalar offsetA, scalar so, scalar se);
+    paramPoly3(const Odr::geometry &odr, int sign, scalar offsetA, scalar so, scalar se, scalar roadSo);
     paramPoly3(const paramPoly3& p3);
     paramPoly3& operator=(const paramPoly3& p3);
     void assignInputGeomToThis(const paramPoly3& p3);

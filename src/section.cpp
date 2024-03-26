@@ -874,3 +874,7 @@ bool section::isTransitable()
 }
 
 
+bool section::isInOdrRange(scalar s) const
+{
+    return (_lanes[0].isInOdrRange(s));
+}

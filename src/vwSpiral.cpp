@@ -44,6 +44,7 @@ vwSpiral::vwSpiral(const Odr::geometry &odg, int sign, std::vector<Odr::offset> 
     _vwOff = ioffset;
     _l = odg.length;
     _roadSo = roadSo;
+    _roadSe = roadSo + se - so;
 
     _o = {odg.x, odg.y};
     _to = {std::cos(odg.hdg), std::sin(odg.hdg)};

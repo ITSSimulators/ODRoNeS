@@ -286,11 +286,11 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
         if ((off.size() == 1) && (off[0].isConstant()))
         {
             if (odrg[i].g == Odr::Attr::Geometry::line)
-                _geom.push_back(new straight(odrg[i], getSignInt(), off[0].a, soi, sei));
+                _geom.push_back(new straight(odrg[i], getSignInt(), off[0].a, soi, sei, roadSoi));
             else if (odrg[i].g == Odr::Attr::Geometry::arc)
-                _geom.push_back(new arc(odrg[i], getSignInt(), off[0].a, soi, sei));
+                _geom.push_back(new arc(odrg[i], getSignInt(), off[0].a, soi, sei, roadSoi));
             else if (odrg[i].g == Odr::Attr::Geometry::paramPoly3)
-                _geom.push_back(new paramPoly3(odrg[i], getSignInt(), off[0].a, soi, sei));
+                _geom.push_back(new paramPoly3(odrg[i], getSignInt(), off[0].a, soi, sei, roadSoi));
             else if (odrg[i].g == Odr::Attr::Geometry::spiral)
                 _geom.push_back(new vwSpiral(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
             else
@@ -1507,7 +1507,7 @@ scalar lane::unsafeDistanceFromTheBoL(const arr2 &p) const
 
 
 // TEST
-void lane::getPointWithOffset(arr2 &p, arr2 &o, scalar loff) const
+void lane::getPointWithOffset(arr2 &p, const arr2 &o, scalar loff) const
 {
     arr2 v = getTangentInPoint(o);
     scalar angle = 0.5 * ct::pi;
@@ -2148,6 +2148,11 @@ bool lane::isToMerge() const
     for (uint i = 0; i < _conflicts.size(); ++i)
         if (conflict::isMerge(_conflicts[i].k)) return true;
     return false;
+}
+
+bool lane::isInOdrRange(scalar s) const
+{
+    return mvf::isInRangeLR(s, _odrSo, _geom.back()->roadSe());
 }
 
 bool lane::actorsSupport(lane::kind k) const

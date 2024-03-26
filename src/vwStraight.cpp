@@ -32,6 +32,7 @@ vwStraight::vwStraight(const Odr::geometry &odg, int sign, std::vector<Odr::offs
     _shape = mvf::shape::vwStraight;
     _vwOff = off;
     _roadSo = roadSo;
+    _roadSe = roadSo + se - so;
     _print = print;
 
     // First the initial directions:

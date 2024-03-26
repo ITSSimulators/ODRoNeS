@@ -50,6 +50,8 @@ public:
     arr2 trc() const {return _trc;}
     scalar length() const {return _length;}
     mvf::shape shape() const {return _shape;}
+    scalar roadSo() const {return _roadSo;}
+    scalar roadSe() const {return _roadSe;}
     bool ready() const {return _ready;}
 
 
@@ -85,6 +87,7 @@ protected:
     arr2 _blc, _trc; ///< bounding box bottom left corner and top right corner.
     arr2 _o, _d; ///< arc; origin and destination of the "lane 0", before the offset [opendrive].
     scalar _roadSo; ///< odr; geometry needs to know that to return sl0(s). The starting point down the road at which this geometry starts.
+    scalar _roadSe; ///< odr; we'll need to keep that too.
     bool _ready; ///< whether the geometry is ready or not.
 
 

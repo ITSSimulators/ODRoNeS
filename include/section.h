@@ -89,6 +89,7 @@ public:
     bool isCrosswalk() const;
 
     bool isTransitable(); ///< i. e., it has at least one transitable road
+    bool isInOdrRange(scalar s) const; ///< true if s within the range of this section (aka laneGroup).
 
     /*! store the input data, and add all the lanes for this laneSection ID */
     void setOdrRoad(const Odr::smaS &sec, uint lsID);
@@ -119,6 +120,8 @@ public:
 
     void addUpBoundingBoxes(); ///< on  set the box to the sum of all the boxes
     void updateBoundingBox(const arr2 &blc, const arr2 &trc); ///< update the bounding box defined by _bbblc, bbtrc with the input box;
+
+
 private:
     void updateBoundingBox(uint ndx); ///< update the bounding box defined by _bbblc, bbtrc with the box of lane _sections[ndx];
 

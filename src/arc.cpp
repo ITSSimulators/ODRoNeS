@@ -82,7 +82,7 @@ arc::arc(const OneVersion::segment &sgm, scalar offset)
     _ready = true;
 }
 
-arc::arc(const Odr::geometry &odg, int sign, scalar offsetA, scalar so, scalar se)
+arc::arc(const Odr::geometry &odg, int sign, scalar offsetA, scalar so, scalar se, scalar roadSo)
 {
     arr2 ti = {std::cos(odg.hdg), std::sin(odg.hdg)};
     _o = {odg.x, odg.y};
@@ -129,6 +129,9 @@ arc::arc(const Odr::geometry &odg, int sign, scalar offsetA, scalar so, scalar s
     _odrRoOR = 1. / (curv * std::fabs(_radiusOfCurvature));
 
     mvf::boundingBoxForArc(_blc, _trc, _origin, _dest, _centre, mvf::distance(_origin, _centre), _shape);
+
+    _roadSo = roadSo;
+    _roadSe = roadSo + se - so;
 
     _ready = true;
 

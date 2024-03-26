@@ -51,6 +51,7 @@ vwParamPoly3::vwParamPoly3(const Odr::geometry &odg, int sign, std::vector<Odr::
     _vwOff = ioffset;
     _l = odg.length;
     _roadSo = roadSo;
+    _roadSe = roadSo + se - so;
 
     _u[0] = odg.aU;
     _u[1] = odg.bU;

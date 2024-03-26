@@ -59,7 +59,7 @@ straight::straight(const OneVersion::segment &sgm, scalar offset)
      _shape = mvf::shape::straight;
 }
 
-straight::straight(const Odr::geometry &odg, int sign, scalar offsetA, scalar so, scalar se)
+straight::straight(const Odr::geometry &odg, int sign, scalar offsetA, scalar so, scalar se, scalar roadSo)
 {
     // Firstly make sure that so and se fall in range:
     if (!mvf::isInRangeLR(so, 0, odg.length))
@@ -83,6 +83,9 @@ straight::straight(const Odr::geometry &odg, int sign, scalar offsetA, scalar so
 
     _shape = mvf::shape::straight;
     mvf::boundingBoxFromTwoPoints(_blc, _trc, _origin, _dest);
+
+    _roadSo = roadSo;
+    _roadSe = roadSo + se - so;
 
     _ready = true;
 }
