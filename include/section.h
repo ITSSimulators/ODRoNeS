@@ -105,7 +105,8 @@ public:
     bool flipBackwards(); ///< change the direction of every lane as backwards.
 
     lane* operator[](size_t index); ///< get a lane
-    lane* getLane(size_t index) const; ///< get the same bloody lane
+    const lane* getLane(size_t index) const; ///< get a constant lane
+    lane* zero(); ///< get the reference lane.
     bool isSameSection(const section *s) const; ///< true if *s == this
     bool isConnected(const section &s) const; ///< true if any lane in *s is connected to any lane of this.
     size_t size() const; ///< return the amount of stuff stored
@@ -121,6 +122,8 @@ public:
     void addUpBoundingBoxes(); ///< on  set the box to the sum of all the boxes
     void updateBoundingBox(const arr2 &blc, const arr2 &trc); ///< update the bounding box defined by _bbblc, bbtrc with the input box;
 
+    bool setZero(const std::vector<Odr::geometry> &g, scalar so, scalar se); ///< return false if it was already configured.
+
 
 private:
     void updateBoundingBox(uint ndx); ///< update the bounding box defined by _bbblc, bbtrc with the box of lane _sections[ndx];
@@ -129,6 +132,7 @@ private:
 private:
     int _id;
     lane* _lanes; ///< a dynamic array of lanes;
+    lane _zero; ///< the reference or '0' lane that is needed for road coordinates.
     size_t _writtenSize;
     size_t _allocSize;
     arr2 _bbblc, _bbtrc; ///< bounding box bottom left corner, bounding box top right corner.

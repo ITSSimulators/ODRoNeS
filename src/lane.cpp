@@ -242,7 +242,6 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
                const std::vector<Odr::offset> &width, const Odr::smaL &odrL, scalar endingS)
 {
     _odrID = odrL.odrID;
-    _length = odrL.length; ///< that's a good estimate, but it's not the real length of the lane; just the length of the section at tis centre.
 
     lane::sign s = lane::sign::o;
     if (odrL.sign == -1) s = lane::sign::n;
@@ -254,6 +253,8 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
         _kind = kind::tarmac;
     else if (odrL.kind.compare(Odr::Kind::Sidewalk) == 0)
         _kind = kind::pavement;
+    else if (odrL.kind.compare(Odr::Kind::None) == 0)
+        _kind = kind::none;
     else
         _kind = kind::unknown;
 
@@ -710,6 +711,8 @@ void lane::clearMemory()
 
     _conflicts.clear();
     _tSigns.clear();
+
+    base();
 }
 
 

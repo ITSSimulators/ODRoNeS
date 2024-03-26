@@ -44,12 +44,15 @@ void section::set(size_t size)
         _lanes[i].setSectionID(_id);
         _lanes[i].setSection(*this);
     }
+    _zero.setSection(*this);
+    _zero.setSectionID(_id);
 }
 
 
 section::~section()
 {
     if (_allocSize > 0) delete[] _lanes;
+    _zero.clearMemory();
 }
 
 
@@ -86,6 +89,8 @@ void section::assignInputSectionToThis(const section &s)
             _lanes[i] = s._lanes[i];
     }
     else _lanes = nullptr;
+
+    _zero = s._zero;
 
     _bbblc = {s._bbblc[0], s._bbblc[1]};
     _bbtrc = {s._bbtrc[0], s._bbtrc[1]};
@@ -475,18 +480,10 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
         }
     }
 
-    // Once all the lanes have been created we can the traffic signs to each lane.
-    // First make a laneZero l0 to do the calculations:
-    // std::vector<Odr::tsign> ts = sec.tsigns;
-    lane* l0 = nullptr;
-    if ((sec.tsigns.size()) && (validLane >= 0))
-    {
-        l0 = new lane();
-        Odr::smaL odrl0 = sec.lanes[validLane];
-        odrl0.sign = 1;
-        l0->set(sec.geom, {Odr::offset(0.,0.,0.,0.,so,se)}, {Odr::offset(0.,0.,0.,0.,so,se)},
-                sec.lanes[validLane], se);
-    }
+    // Now we need to configure a laneZero in _zero if it has not happened yet:
+    if ((_zero.getSign() == lane::sign::o) && (_zero.getKind() != lane::kind::none))
+        setZero(sec.geom, so, se);
+
     // Now use getPointWithOffset(p, d, offset) to get the xy
     //   and calculate st's/
     for (uint i = 0; i < sec.tsigns.size(); ++i)
@@ -494,7 +491,7 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
         if (!mvf::isInRangeLR(sec.tsigns[i].s, so, se)) continue;
 
         lane::tSign lts;
-        l0->getPointWithOffset(lts.pos, static_cast<scalar>(sec.tsigns[i].s - so),
+        _zero.getPointWithOffset(lts.pos, static_cast<scalar>(sec.tsigns[i].s - so),
                                         static_cast<scalar>(sec.tsigns[i].t));
         lts.section = getID();
 
@@ -517,10 +514,27 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
         }
     }
 
-    if (l0) delete l0;
-
-
     return;
+}
+
+bool section::setZero(const std::vector<Odr::geometry> &g, scalar so, scalar se)
+{
+    if ((_zero.getSign() != lane::sign::o) || (_zero.getKind() != lane::kind::unknown))
+        return false;
+
+    _zero.setID(-1); ///< I hope this doesn't cause havoc.
+    _zero.setOdrSectionID(_odrID);
+
+    Odr::smaL odrl0;
+    odrl0.startingS = so;
+    odrl0.sign = 1;
+    odrl0.speed = 0;
+    odrl0.odrID = 0;
+    odrl0.kind = Odr::Kind::None;
+    _zero.set(g, {Odr::offset(0.,0.,0.,0.,so,se)},
+              {Odr::offset(0.,0.,0.,0.,so,se)}, odrl0, se);
+
+    return true;
 }
 
 
@@ -590,9 +604,14 @@ lane* section::operator[](size_t index)
     return &(_lanes[index]);
 }
 
-lane* section::getLane(size_t index) const
+const lane* section::getLane(size_t index) const
 {
     return &(_lanes[index]);
+}
+
+lane* section::zero()
+{
+    return &_zero;
 }
 
 size_t section::size() const

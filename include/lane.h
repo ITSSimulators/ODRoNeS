@@ -124,7 +124,7 @@ public:
 
     enum class sign {n, o, p};
     static std::string signString(sign s);
-    enum class kind { tarmac, pavement, roundabout, crosswalk, unknown };
+    enum class kind { tarmac, pavement, roundabout, crosswalk, none, unknown };
 
 
     // traffic signs:

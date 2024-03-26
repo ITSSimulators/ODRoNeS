@@ -623,6 +623,16 @@ std::vector<uint> RNS::getSectionIDsWithOVNodeId(int nID) const
     return s;
 }
 
+int RNS::getSectionIDWithODRIDWithRoadCoord(uint rID, scalar s) const
+{
+    for (uint i = 0; i < _sectionsSize; ++i)
+    {
+        if ((_sections[i].odrID() == rID) && (_sections[i].isInOdrRange(s)))
+            return i;
+    }
+    return -1;
+}
+
 
 int RNS::findPortAndStarboardLanes(lane* &port, lane* &starboard, lane *l1, lane *l2, scalar dToEoL1, scalar dToEoL2) const
 {
@@ -710,6 +720,26 @@ lane::lCoord RNS::getLaneCoordsForPoint(const arr2 &o, scalar tol) const
     }
 
     return lcoo;
+}
+
+arr2 RNS::getPosForLaneCoords(const lane::lCoord &lc) const
+{
+    arr2 p;
+    lc.l->getPointWithOffset(p, lc.pos, lc.loff);
+    return p;
+}
+
+
+arr2 RNS::getPosForRoadCoords(uint rID, scalar s, scalar offset, scalar height) const
+{
+    arr2 p = {0., 0.};
+    int sID = getSectionIDWithODRIDWithRoadCoord(rID, s);
+    if (sID == -1)
+        return p;
+    _sections[sID].zero()->getPointWithOffset(p, s, offset);
+    return p;
+
+
 }
 
 
