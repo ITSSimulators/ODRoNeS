@@ -25,8 +25,7 @@
 
 
 #include "constants.h"
-#include <tuple>
-#include <complex>
+#include <cmath>
 #include <array>
 #include <vector>
 #include <algorithm>
@@ -35,6 +34,7 @@
 namespace odrones
 {
 
+typedef odrones::scalar scalar;
 typedef std::array<scalar, 2> arr2;
 // typedef std::array<scalar, 3> arr3;
 
@@ -54,7 +54,6 @@ public:
     static bool isInRangeR(scalar a, scalar lower, scalar higher, scalar absPrec = 0); ///< true if a > lower and a < higher within a range
     static bool isInRange0(scalar a, scalar lower, scalar higher);
     static int round(scalar a);
-    static scalar sqr(scalar a); ///< will return the square value of a.
     /*! Will return min(a,b) that is greater than zero, or a negative number (a or b) if both are negative */
     static scalar minPositive(scalar a, scalar b);
     static scalar positiveZero(scalar a); ///< return 0 if a is closeEnough to zero;
@@ -77,7 +76,7 @@ public:
     static scalar sqrMagnitude(const arr2 &v);
     static void normalise(arr2 &v);
     static void resize(arr2 &v, scalar m);
-    static void max(arr2 &v);
+    // static void max(arr2 &v);
 
     // 2 - Basic two vector operations:
     //! distance between a and b:
@@ -159,7 +158,7 @@ public:
 
     // 4 - Kinematics:
     static scalar minimumTimeForDx(scalar Dx, scalar vo, scalar vmax, scalar a);
-    static scalar minimumTimeForDxVoNonNeg(scalar Dx, scalar vo, scalar vmax, scalar a);
+    // static scalar minimumTimeForDxVoNonNeg(scalar Dx, scalar vo, scalar vmax, scalar a);
 };
 
 

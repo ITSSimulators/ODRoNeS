@@ -28,7 +28,7 @@
 namespace odrones
 {
 
-class rnsConcepts
+class concepts
 {
 public:
     enum class actor {car, meeple, none};
@@ -39,8 +39,7 @@ public:
     static std::string drivingString(drivingSide d);
 };
 
-typedef rnsConcepts concepts;
 
 } // namespace odrones;
 
-#endif // ODRONES_RNSCONCEPTS
+#endif // ODRONES_RNSCONCEPTS_H

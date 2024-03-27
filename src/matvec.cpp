@@ -122,11 +122,6 @@ bool mvf::isInRange0(scalar a, scalar lower, scalar higher)
     return false;
 }
 
-scalar mvf::sqr(scalar a)
-{
-    return a*a;
-}
-
 int mvf::round(scalar a)
 {
     return static_cast<int>(std::round(a));
@@ -267,11 +262,13 @@ void mvf::resize(arr2 &v, scalar m)
     v[1] = v[1] * m;
 }
 
+/*
 void mvf::max(arr2 &v)
 {
     v[0] = std::numeric_limits<scalar>::max();
     v[1] = std::numeric_limits<scalar>::max();
 }
+*/
 
 int mvf::quadrant(const arr2 &v)
 {

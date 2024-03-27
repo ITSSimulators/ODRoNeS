@@ -1161,6 +1161,7 @@ uint lane::getGeometrySize() const
     return static_cast<uint>(_geom.size());
 }
 
+/*
 std::vector<std::unique_ptr<geometry>> lane::getGeometries() const
 {
     std::vector<std::unique_ptr<geometry>> v;
@@ -1188,6 +1189,7 @@ std::vector<std::unique_ptr<geometry>> lane::getGeometries() const
     return v;
 
 }
+*/
 
 scalar lane::maxSo() const
 {

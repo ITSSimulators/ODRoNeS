@@ -23,7 +23,7 @@
 #include "rnsconcepts.h"
 using namespace odrones;
 
-std::string rnsConcepts::actorString(actor a)
+std::string concepts::actorString(actor a)
 {
     switch(a)
     {
@@ -36,7 +36,7 @@ std::string rnsConcepts::actorString(actor a)
     }
 }
 
-std::string rnsConcepts::drivingString(drivingSide d)
+std::string concepts::drivingString(drivingSide d)
 {
     switch(d)
     {

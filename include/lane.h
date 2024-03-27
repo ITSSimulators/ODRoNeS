@@ -24,13 +24,8 @@
 #define ODRONES_LANE_H
 
 #include <vector>
-#include <limits>
-#include <iostream>
-#include <cstdarg>
 #include <tuple>
 #include <vector>
-#include <algorithm>
-#include <memory>
 #include "matvec.h"
 #include "geometry.h"
 #include "straight.h"
@@ -55,6 +50,17 @@ namespace odrones {
 
 class section;
 class lane;
+class conflict;
+
+typedef odrones::scalar scalar;
+typedef odrones::arr2 arr2;
+typedef odrones::mvf mvf;
+typedef odrones::Odr Odr;
+typedef odrones::bezier2 bezier2;
+typedef odrones::bezier3 bezier3;
+typedef odrones::conflict conflict;
+typedef odrones::OneVersion OneVersion;
+typedef odrones::lane lane;
 
 class conflict
 {
@@ -65,7 +71,7 @@ public:
 
     // opendrive static objects:
     enum class staticObjKind {crosswalk, unknown};
-    static std::string staticObjKindString(staticObjKind s);
+    // static std::string staticObjKindString(staticObjKind s);
     struct staticObj
     {
         arr2 pos; ///< the position of the object
@@ -116,6 +122,7 @@ public:
     static scalar fillInHPLanes(conflict &cnf, const lane* hpLane, scalar anticipationTime);
 
 };
+
 
 
 class lane : public numerical
@@ -231,7 +238,7 @@ public:
     scalar getCurvature(const arr2 &p) const; ///< returns the curvature (1/R) at one point.
     scalar getLength() const; ///< returns the length of the lane.
     uint getGeometrySize() const; ///< get the size of the _geom array.
-    std::vector<std::unique_ptr<geometry>> getGeometries() const;
+    // std::vector<std::unique_ptr<odrones::geometry>> getGeometries() const;
     scalar maxSo() const; ///< odr; return the max So coordinate of lane 0.
 
     scalar getWidth() const;
@@ -261,7 +268,7 @@ public:
     bool isToMerge() const;
     bool isInOdrRange(scalar s) const;
     bool actorsSupport(lane::kind k) const;
-    bool actorsSupport(concepts::actor k) const;
+    bool actorsSupport(odrones::concepts::actor k) const;
     // bool actorsOverlap(const lane *l) const;
 
 
@@ -270,7 +277,7 @@ public:
     std::vector<tSign> getTSigns() const;
     uint tSignsSize() const;
     bool hasTSigns() const;
-    tSign getTSign(uint i) const; ///< return a copy of the ith traffic sign.
+    // tSign getTSign(uint i) const; ///< return a copy of the ith traffic sign.
     tSignInfo getTSignInfo(uint i) const; ///< return the sign info of the ith sign.
     scalar getTSignSCoord(uint i) const; ///< return the distance from the begining of the lane of the ith traffic sign.
     void addStaticObj(conflict::staticObj so);
@@ -303,7 +310,7 @@ public:
     std::vector<conflict::cuid> getConflictLinks(uint i) const; ///< return a copy of the _conflicts[i].link vector;
     std::vector<conflict::cuid> getConflictLinks(scalar s) const; ///< return a copy of the _conflicts[ idx(s) ].link vector;
     void addConflictLink(uint i, conflict::cuid id);
-    uint getConflictLinksSize(uint i) const; ///< return the amount of conflicts linked to the ith conflict.
+    // uint getConflictLinksSize(uint i) const; ///< return the amount of conflicts linked to the ith conflict.
     conflict::kind getConflictKind(uint i) const; ///< return the kind of conflict that this one is
     conflict::kind getConflictKind(scalar s) const; ///< return the kind of conflict that has conflict at s.
     void setConflictKind(uint i, conflict::kind k); ///< set the kind of conflict to the ith conflict.
@@ -448,7 +455,7 @@ private:
 
     mvf::shape _shape; ///< shape of the lane
 
-    std::vector<geometry*> _geom; ///< composed geometry for OpenDRIVE lanes.
+    std::vector<odrones::geometry*> _geom; ///< composed geometry for OpenDRIVE lanes.
 
     bool _isPermanent; ///< whether this lane is permanent or is a lcPath.
 
