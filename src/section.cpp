@@ -519,7 +519,7 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
 
 bool section::setZero(const std::vector<Odr::geometry> &g, scalar so, scalar se)
 {
-    if ((_zero.getSign() != lane::sign::o) || (_zero.getKind() != lane::kind::unknown))
+    if ((_zero.getSign() != lane::sign::o) && (_zero.getKind() != lane::kind::unknown))
         return false;
 
     _zero.setID(-1); ///< I hope this doesn't cause havoc.
