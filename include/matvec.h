@@ -57,6 +57,7 @@ public:
     /*! Will return min(a,b) that is greater than zero, or a negative number (a or b) if both are negative */
     static scalar minPositive(scalar a, scalar b);
     static scalar positiveZero(scalar a); ///< return 0 if a is closeEnough to zero;
+    static scalar sqr(scalar a); ///< returns a*a;
 
     /*! solves a*x**2 + b*x + c */
     static bool solve2ndOrderEq(scalar &x1, scalar &x2, scalar a, scalar b, scalar c);

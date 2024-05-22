@@ -147,6 +147,12 @@ scalar mvf::positiveZero(scalar a)
     return a;
 }
 
+
+scalar mvf::sqr(scalar a)
+{
+    return a*a;
+}
+
 bool mvf::solve2ndOrderEq(scalar &x1, scalar &x2, scalar a, scalar b, scalar c)
 {
     if (mvf::areSameValues(a, 0))
