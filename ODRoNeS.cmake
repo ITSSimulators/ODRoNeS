@@ -46,8 +46,8 @@ include_directories(${RNS_DIR}/3rdParty/tinyxml2)
 
 
 # Qt graphical interface:
-option(USE_QT "Build ODRoNeS with a graphical interface" ON)
-if (USE_QT)
+option(ODRONES_USE_QT "Build ODRoNeS with a graphical interface" ON)
+if (ODRONES_USE_QT)
   find_package(Qt6 COMPONENTS Core Gui Widgets) # 3DCore 3DRender 3DExtras)
   if (NOT ${Qt6_FOUND})
       message(FATAL_ERROR "You could also try compiling without Qt support using -DUSE_QT=OFF")
@@ -56,11 +56,11 @@ if (USE_QT)
   set(CMAKE_AUTOUIC ON)
   set(CMAKE_AUTOMOC ON)
   set(CMAKE_AUTORCC ON)
-endif(USE_QT)
+endif(ODRONES_USE_QT)
 
 # OneVersion interface:
-option(USE_ONEVERSION "Add support for OneVersion maps" OFF)
-if(USE_ONEVERSION)
+option(ODRONES_USE_ONEVERSION "[ Deprecated ] Add support for OneVersion maps" OFF)
+if(ODRONES_USE_ONEVERSION)
   # Find the headers:
   find_path(ONEVERSION_INCLUDE_DIR NAMES sim/Car.h
           HINTS ${ONEVERSION_HOME}/Simulator3/include
@@ -87,7 +87,7 @@ if(USE_ONEVERSION)
   # Add an extra definition
   add_definitions(-DUSE_ONEVERSION)
 
-endif(USE_ONEVERSION)
+endif(ODRONES_USE_ONEVERSION)
 
 # Build the RNS library:
 add_library(rns
