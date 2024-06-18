@@ -120,6 +120,8 @@ public:
     bool swapConflictPriority(lane *l, scalar s); ///< overload
 
 
+    void linkLanesGeometrically(scalar tol = lane::odrTol); ///< Go over all the section pairs, and link all the lanes if in range
+
 private:
     //! Given two lanes l1 and l2, take a point on each one that is at a fraction (scalar between 0 and 1)
     //!    of their length. Knowing the direction of the lanes in this points,

@@ -493,6 +493,16 @@ void RNS::printLanes() const
 
 }
 
+void RNS::linkLanesGeometrically(scalar tol)
+{
+    for (uint i = 0; i < sectionsSize(); ++i)
+    {
+        for (uint j = i + 1; j < sectionsSize(); ++j)
+            linkLanesInSections(_sections[i], _sections[j], tol);
+    }
+    return;
+}
+
 
 void RNS::linkLanesIfInRange(lane *li, lane *lj, scalar tol)
 {
