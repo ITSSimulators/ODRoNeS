@@ -123,9 +123,9 @@ add_library(rns
 )
 target_link_libraries(rns clothoids ${QT_LIBRARIES})
 
-if (USE_ONEVERSION)
+if (ODRONES_USE_ONEVERSION)
     target_link_libraries(rns ${ONEVERSION_LIBRARY} ${SIMDEPS_LIBRARIES})
-endif (USE_ONEVERSION)
+endif (ODRONES_USE_ONEVERSION)
 
 
 # Build the Graphical representations, provided you have Qt available
