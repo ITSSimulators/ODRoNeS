@@ -74,6 +74,9 @@ public:
     bool makeOneVersionRoads(std::string mapFile);
     void printLanes() const; ///< print sections and lanes
 
+    void setPortAndStarboard(concepts::drivingSide drivingSide);
+    void setPortAndStarboard(); ///< it uses _drivingSide
+
     /*! establish the priorities, essentially through the methods below: */
     bool makePriorities(scalar anticipationTime);
 

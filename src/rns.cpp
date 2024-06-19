@@ -452,6 +452,24 @@ bool RNS::makeOpenDRIVERoads(std::string odrMap, concepts::drivingSide drivingSi
 }
 
 
+void RNS::setPortAndStarboard(concepts::drivingSide drivingSide)
+{
+
+    // Set port and starboard lanes, and assume left hand driving:
+    for (uint i = 0; i < _sectionsSize; ++i)
+    {
+        if (!_sections[i].isTransitable()) continue;
+        _sections[i].setPortAndStarboard(drivingSide); // true, false);
+    }
+
+}
+
+void RNS::setPortAndStarboard()
+{
+    return setPortAndStarboard(_drivingSide);
+}
+
+
 void RNS::printLanes() const
 {
 
