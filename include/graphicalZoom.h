@@ -72,8 +72,6 @@ private:
   QPointF target_scene_pos, target_viewport_pos;
   bool eventFilter(QObject* object, QEvent* event);
 
-signals:
-  void zoomed();
 };
 
 #endif // QT_CORE_LIB
