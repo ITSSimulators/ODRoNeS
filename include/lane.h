@@ -129,12 +129,14 @@ class lane : public numerical
 {
 public:
 
+    // SUBCLASSES //
+    // 1 - Enums
     enum class sign {n, o, p};
     static std::string signString(sign s);
     enum class kind { tarmac, pavement, roundabout, crosswalk, none, unknown };
 
 
-    // traffic signs:
+    // 2 - Traffic signs:
     enum class tSignInfo {giveWay, stop, unknown};
     static std::string tSignInfoString(tSignInfo s);
     class tSign
@@ -157,7 +159,7 @@ public:
     };
 
 
-
+    // 3 - Logical coordinates.
     struct lCoord
     {
         lane *l;
