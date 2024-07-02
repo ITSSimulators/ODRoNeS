@@ -771,7 +771,7 @@ arr2 RNS::getPosForRoadCoords(uint rID, scalar s, scalar offset, scalar height) 
 }
 
 
-lane* RNS::getLaneWithPoint(const arr2 &p, scalar tol) const
+const lane* RNS::getLaneWithPoint(const arr2 &p, scalar tol) const
 {
     lane::lCoord lcoo = getLaneCoordsForPoint(p, tol);
     if (lcoo.loff < tol) return lcoo.l;

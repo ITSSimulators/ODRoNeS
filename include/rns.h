@@ -132,7 +132,7 @@ private:
     int findPortAndStarboardLanes(lane* &port, lane* &starboard, lane* l1, lane* l2, scalar dToEoL1, scalar dToEoL2) const;
 
     //! Currently unused...
-    lane* getLaneWithPoint(const arr2 &p, scalar tol = mvf::absolutePrecision) const;
+    const lane* getLaneWithPoint(const arr2 &p, scalar tol = mvf::absolutePrecision) const;
 
     //! Assign li as nextLane to lj or lj as nextLane to li, and set the corresponding prevLanes,
     //!   as long as the end / start of li and lj are closer than tol.

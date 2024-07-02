@@ -162,7 +162,7 @@ public:
     // 3 - Logical coordinates.
     struct lCoord
     {
-        lane *l;
+        const lane *l;
         arr2 pos;
         scalar loff;
     };
