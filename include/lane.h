@@ -160,12 +160,18 @@ public:
 
 
     // 3 - Logical coordinates.
-    struct lCoord
+    class lCoord
     {
+    public:
         const lane *l;    ///< the lane it's on.
         arr2 pos;         ///< position projected onto the center of the lane
         scalar s;         ///< distance down the lane
         scalar loff;      ///< lateral offset, positive to the right in the direction of the lane (starboard).
+        scalar toEOL()    ///< return the distance to the end of the lane; -1 if no lane.
+        {
+            if (!l) return -1;
+            return l->getLength() - s;
+        }
     };
 
     static constexpr scalar odrTol = 1e-2;
