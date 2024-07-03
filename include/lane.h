@@ -162,9 +162,10 @@ public:
     // 3 - Logical coordinates.
     struct lCoord
     {
-        const lane *l;
-        arr2 pos;
-        scalar loff;
+        const lane *l;    ///< the lane it's on.
+        arr2 pos;         ///< position projected onto the center of the lane
+        scalar s;         ///< distance down the lane
+        scalar loff;      ///< lateral offset, positive to the right in the direction of the lane (starboard).
     };
 
     static constexpr scalar odrTol = 1e-2;

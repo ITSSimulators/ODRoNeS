@@ -80,7 +80,7 @@ public:
     /*! establish the priorities, essentially through the methods below: */
     bool makePriorities(scalar anticipationTime);
 
-    //! Given the point o, find the set of lane coordinates l, p (projected point) and loff (lateral offset)
+    //! Given the point o, find the set of lane coordinates l, p (projected point), s, and loff (lateral offset)
     //!   that is not farther from o than tol. lCoord.l will be nullptr if nothing was found closer than tol.
     lane::lCoord getLaneCoordsForPoint(const arr2 &o, scalar tol) const;
 
