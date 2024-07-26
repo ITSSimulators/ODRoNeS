@@ -574,6 +574,20 @@ lane* RNS::getLaneWithSUID(int sID, int lID) const
     return nullptr;
 }
 
+const lane* RNS::getCLaneWithODRIds(uint rID, int lID) const
+{
+    for (uint i = 0; i < _sectionsSize; ++i)
+    {
+        if (_sections[i].odrID() != rID) continue;
+        for (uint j = 0; j < _sections[i].size(); ++j)
+        {
+            if (_sections[i][j]->odrID() == lID) return _sections[i][j];
+        }
+    }
+
+    return nullptr;
+}
+
 lane* RNS::getLaneWithODRIds(uint rID, int lID) const
 {
     for (uint i = 0; i < _sectionsSize; ++i)
