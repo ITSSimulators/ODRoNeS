@@ -109,6 +109,12 @@ void graphicalRNS::setupRoadsAndLabels(const RNS &rns)
     _ignore = new bool[_numberOfLanes];
     std::fill_n(_ignore, _numberOfLanes, false);
 
+
+    // random numbers to slightly move the road id name:
+    std::minstd_rand rg(1659);
+    std::uniform_real_distribution<scalar> u01(0, 1);
+
+
     uint laneNumber = 0;
     for (unsigned int i=0; i<rns.sectionsSize(); ++i)
     {
@@ -128,9 +134,8 @@ void graphicalRNS::setupRoadsAndLabels(const RNS &rns)
 
             if (_identifyLanes) // put an ID to every lane:
             {
-                arr2 o = l->getOrigin();
                 arr2 halfway;
-                l->getPointAfterDistance(halfway, o, 0.5*l->getLength() + l->getID());
+                l->getPointAfterDistance(halfway, l->getOrigin(), 0.5*l->getLength() + u01(rg)); //  + l->getID());
                 _labels[laneNumber].pos = {ct::mToPix * halfway[0], - ct::mToPix * halfway[1]};
                 std::string laneID = l->getCSUID();
                 _labels[laneNumber].id = laneID.c_str();
