@@ -1899,6 +1899,8 @@ void lane::addConflict(const conflict &cf)
         }
         if (!insertion) _conflicts[0] = cf;
     }
+
+    // std::cout << " new conflict added to " << getCSUID() << std::endl << cf.print() << std::endl;
 }
 
 bool lane::hasConflicts() const
@@ -2501,3 +2503,26 @@ scalar conflict::fillInHPLanes(conflict &cnf, const lane *hpLane, scalar anticip
     // std::cout << "anticipation arrives to: " << ant_i << " seconds" << std::endl;
     return ant_i;
 }
+
+std::string conflict::print() const
+{
+    std::stringstream ss;
+    ss << "Conflict of kind " << kindString(k) << " in s:" << s << ", so/se: (" << so << ", " << se << ") ";
+    if (hpLane.size())
+    {
+        if (hpLane.size() == 1)
+            ss << " with hpLane:" << std::endl;
+        else
+            ss << " with hpLanes:" << std::endl;
+        for (uint i = 0; i < hpLane.size(); ++i)
+            ss << " - " << hpLane[i]->getCSUID() << std::endl;
+    }
+    if (links.size())
+    {
+        ss << " with links in: " << std::endl;
+        for (uint i = 0; i < links.size(); ++i)
+            ss << links[i].l->getCSUID() << " s: " << links[i].s << std::endl;
+    }
+    return ss.str();
+}
+

@@ -26,6 +26,7 @@
 #include <vector>
 #include <tuple>
 #include <vector>
+#include <sstream>
 #include "matvec.h"
 #include "geometry.h"
 #include "straight.h"
@@ -82,6 +83,7 @@ public:
         int section;
         int lane;
     };
+    std::string print() const;
 
 
 public:
