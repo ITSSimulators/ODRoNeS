@@ -97,8 +97,9 @@ public:
     //! the shape of a segment:
     enum class shape {straight, vwStraight, clockwise, counterclockwise, vwArc, bezier2, bezier3, paramPoly3, vwParamPoly3, vwSpiral, opendrive, oneversion, unknown};
     static std::string shapeString(shape s);
-    enum class side {port, bow, starboard};
+    enum class side {port, bow, starboard, unknown};
     static std::string sideString(side s);
+    static side parseSide(const char* str);
     enum class intersectionToSegment {none, forward, backward};
     //! whether point p on the segment determined by a---b.
     static bool isPointOnSegment(const arr2 &p, const arr2 &a, const arr2 &b);

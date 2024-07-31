@@ -22,6 +22,9 @@
 
 
 #include "matvec.h"
+
+#include <cstring>
+
 using namespace odrones;
 
 ////////////////////////////////////////
@@ -74,6 +77,24 @@ std::string mvf::sideString(mvf::side s)
     default:
         return "clueless!";
     }
+}
+
+odrones::mvf::side odrones::mvf::parseSide(const char* str)
+{
+    if (std::strcmp(str, "port") == 0)
+    {
+        return side::port;
+    }
+    else if (std::strcmp(str, "bow") == 0)
+    {
+        return side::bow;
+    }
+    else if (std::strcmp(str, "starboard") == 0)
+    {
+        return side::starboard;
+    }
+
+    return side::unknown;
 }
 
 
