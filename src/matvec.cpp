@@ -97,8 +97,6 @@ odrones::mvf::side odrones::mvf::parseSide(const char* str)
     return side::unknown;
 }
 
-
-
 ////////////////////////////////////////
 // 0 - Operations with scalars        //
 ////////////////////////////////////////
