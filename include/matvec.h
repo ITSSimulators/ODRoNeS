@@ -99,11 +99,7 @@ public:
     static std::string shapeString(shape s);
     enum class side {port, bow, starboard, unknown};
     static std::string sideString(side s);
-<<<<<<< HEAD
     static side parseSide(const char* str);
-=======
-    static side parseSide(const char*);
->>>>>>> b778eac1a389eee8cd9a89f6fdd7de87d312f63b
     enum class intersectionToSegment {none, forward, backward};
     //! whether point p on the segment determined by a---b.
     static bool isPointOnSegment(const arr2 &p, const arr2 &a, const arr2 &b);
