@@ -1037,10 +1037,25 @@ const lane* lane::getPortLane() const
     return _portLane;
 }
 
+const lane* lane::getPortLaneSameDirection() const
+{
+    if (!_portLane) return nullptr;
+    if (isSameSign(_portLane)) return _portLane;
+    return nullptr;
+}
+
 const lane* lane::getStarboardLane() const
 {
     return _starboardLane;
 }
+
+const lane* lane::getStarboardLaneSameDirection() const
+{
+    if (!_starboardLane) return nullptr;
+    if (isSameSign(_starboardLane)) return _starboardLane;
+    return nullptr;
+}
+
 
 mvf::side lane::getMergeSide() const
 {

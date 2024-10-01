@@ -230,7 +230,9 @@ public:
     size_t getPrevLaneSize() const; ///< returns the number lanes that end at the beginning of this one.
 
     const lane* getPortLane() const; ///< returns a pointer to the Port (left) lane
+    const lane* getPortLaneSameDirection() const; ///< return a pointer to the Port (left) lane if it's meant to be travelled on the same direction.
     const lane* getStarboardLane() const; ///< returns a pointer to the Starboard (right) lane.
+    const lane* getStarboardLaneSameDirection() const; ///< return a pointer to the Starboard (right) lane if it's meant to be travelled on the same direction.
     mvf::side getMergeSide() const; ///< returns the side towards this is merging.
     const lane* getMergeLane() const; ///< returns port, starboard, or null depending on the _mergeSide;
 

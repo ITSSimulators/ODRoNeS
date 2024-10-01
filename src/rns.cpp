@@ -1039,13 +1039,13 @@ void RNS::makePrioritiesSameSectionMergeLanes()
             if (!_sections[i][li]->hasNextLane())
             {
                 // Preferably, merge towards the starboard (on a leftHand scenario);
-                if ((_drivingSide == concepts::drivingSide::leftHand) && ((_sections[i][li]->getStarboardLane()) && (_sections[i][li]->getStarboardLane()->hasNextLane())) )
+                if ((_drivingSide == concepts::drivingSide::leftHand) && ((_sections[i][li]->getStarboardLaneSameDirection()) && (_sections[i][li]->getStarboardLaneSameDirection()->hasNextLane())) )
                     _sections[i][li]->addConflict(conflict::createMergeConflict(_sections[i][li], mvf::side::starboard));
 
-                else if ((_sections[i][li]->getPortLane()) && (_sections[i][li]->getPortLane()->hasNextLane()))
+                else if ((_sections[i][li]->getPortLaneSameDirection()) && (_sections[i][li]->getPortLaneSameDirection()->hasNextLane()))
                     _sections[i][li]->addConflict(conflict::createMergeConflict(_sections[i][li], mvf::side::port));
 
-                else if ((_drivingSide == concepts::drivingSide::rightHand) && ((_sections[i][li]->getStarboardLane()) && (_sections[i][li]->getStarboardLane()->hasNextLane())) )
+                else if ((_drivingSide == concepts::drivingSide::rightHand) && ((_sections[i][li]->getStarboardLaneSameDirection()) && (_sections[i][li]->getStarboardLaneSameDirection()->hasNextLane())) )
                     _sections[i][li]->addConflict(conflict::createMergeConflict(_sections[i][li], mvf::side::starboard));
 
 
@@ -1061,8 +1061,8 @@ void RNS::makePrioritiesSameSectionMergeLanes()
                 if (!mvf::areCloseEnough( _sections[i][li]->getDestination(), _sections[i][lj]->getDestination(), lane::odrTol ) )
                     continue;
 
-                if ( ((_drivingSide == concepts::drivingSide::rightHand) && (_sections[i][li]->getPortLane() == _sections[i][lj])) ||
-                     ((_drivingSide == concepts::drivingSide::leftHand) && (_sections[i][li]->getStarboardLane() == _sections[i][lj])) )
+                if ( ((_drivingSide == concepts::drivingSide::rightHand) && (_sections[i][li]->getPortLaneSameDirection() == _sections[i][lj])) ||
+                     ((_drivingSide == concepts::drivingSide::leftHand) && (_sections[i][li]->getStarboardLaneSameDirection() == _sections[i][lj])) )
                 {
                     std::cout << "[ lrn ] assigning merge to " << _sections[i][li]->getSUID()
                               << " giving higher priority to " << _sections[i][lj]->getSUID() << std::endl;
@@ -1070,8 +1070,8 @@ void RNS::makePrioritiesSameSectionMergeLanes()
                     // _sections[i][lj]->setStopMargin(calcStopMargin(_sections[i][lj], _sections[i][li]));
                 }
 
-                else if ( ((_drivingSide == concepts::drivingSide::rightHand) && (_sections[i][li]->getStarboardLane() == _sections[i][lj])) ||
-                          ((_drivingSide == concepts::drivingSide::leftHand) && (_sections[i][li]->getPortLane() == _sections[i][lj])) )
+                else if ( ((_drivingSide == concepts::drivingSide::rightHand) && (_sections[i][li]->getStarboardLaneSameDirection() == _sections[i][lj])) ||
+                          ((_drivingSide == concepts::drivingSide::leftHand) && (_sections[i][li]->getPortLaneSameDirection() == _sections[i][lj])) )
                 {
                     std::cout << "[ lrn ] assigning merge to " << _sections[i][lj]->getSUID()
                               << " giving higher priority to " << _sections[i][li]->getSUID() << std::endl;

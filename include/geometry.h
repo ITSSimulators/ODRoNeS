@@ -66,7 +66,7 @@ public:
 
     virtual bool isPointHere(const arr2 &p) const = 0; ///< return true if p is exactly on this segment.
     virtual arr2 projectPointHere(const arr2 &p) const = 0; ///< project p onto this segment and return it.
-    virtual arr2 getTangentInPoint(const arr2 &p) const = 0; ///< unsafely assuming that p is on geometry, calculate the tangent at p.
+    virtual arr2 getTangentInPoint(const arr2 &p) const = 0; ///< unsafely assuming that p is on geometry, calculate the tangent at p as a unit vector.
     virtual scalar distanceToTheEoL(const arr2 &p) const = 0;
     //! unsafely assuming that o is on geometry, it returns a point that is d metres after o, and true if it is on this same lane.
     virtual bool getPointAfterDistance(arr2& p, const arr2 &o, scalar d) const = 0;

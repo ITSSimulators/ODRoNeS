@@ -679,7 +679,7 @@ bool section::isCrosswalk() const
 }
 
 // We'll move to the left (port) most lane, and then walk rightwards (starboard-wards)
-//  setting port/starboard pairs if the lanes have the same sign.
+//  setting port/starboard pairs if the lanes have the same type.
 // We cannot use Origin or Destination as they may be points shared by several lanes within the same section.
 //   Therefore we use a point that's slightly ahead.
 void section::setPortAndStarboard(bool assumeLeftHandDriving, bool assumeRightHandDriving)
@@ -693,17 +693,12 @@ void section::setPortAndStarboard(bool assumeLeftHandDriving, bool assumeRightHa
     if (_lanes[0].getLength() < ahead) ahead = 0.5 * _lanes[0].getLength();
 
     arr2 o;
-    // _lanes[0].getPointAfterDistance(o, _lanes[0].getOrigin(), ahead);
     if (!_lanes[0].getPointAtDistance(o, ahead))
     {
         std::cerr << "[ Error ] lrn failed in determining port/starboard lanes " << _lanes[0].getCSUID() << std::endl;
     }
     arr2 to = _lanes[0].getTangentInPoint(o);
-    if (!mvf::areCloseEnough(1, mvf::magnitude(to), mvf::absolutePrecision))
-    {
-        std::cout << "[ ERROR ] unable to configure section " << _id << std::endl;
-        return;
-    }
+
     int leftMost = 0; // if we don't find anything, it means it's Zero:
     // For each lane, check whether it is on the left, and if it is, take it:
     for (int j = 1; j < static_cast<int>(size()); ++j)
@@ -766,11 +761,6 @@ void section::setPortAndStarboard(bool assumeLeftHandDriving, bool assumeRightHa
 
             arr2 oj;
             _lanes[j].getPointAtDistance(oj, ahead);
-            /* if (!_lanes[j].getPointAfterDistance(oj, _lanes[j].getOrigin(), ahead))
-                {
-                    std::cerr << "[ Error ] lrn failed in determining port/starboard lanes " << _lanes[j].getSUID() << std::endl;
-                    // return false;
-                } */
             arr2 no = {oj[0] - o[0], oj[1] - o[1]}; // now;
             scalar dj = mvf::magnitude(no);
             no = {no[0] / dj, no[1] / dj }; // normalise
@@ -785,8 +775,7 @@ void section::setPortAndStarboard(bool assumeLeftHandDriving, bool assumeRightHa
             }
         }
 
-        // if ((nextRight != leftMost) && (_lanes[leftMost].isSameSign(_lanes[nextRight])))
-        if ((possible) && (_lanes[leftMost].isSameSign(&(_lanes[nextRight])))) // just equivalent, if slightly cheaper?
+        if ((possible) && (_lanes[leftMost].getKind() == _lanes[nextRight].getKind()))
         {
             _lanes[nextRight].setPortLane(&(_lanes[leftMost]));
             _lanes[leftMost].setStarboardLane(&(_lanes[nextRight]));

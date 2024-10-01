@@ -45,6 +45,9 @@ Two lanes diverging from (but not converging to) a point must be kept
 
 Port/Starboard lanes:
  * Lanes within a section have `port` and `starboard` lanes.
+ * `port` and `starboard` lanes are of the same kind, i e,
+   they're all `driving` or `walking` but they can be meant to travel
+   in different directions.
 
 Everylane has a vector of `geometries` defining its shape. 
  Currently, ODRoNeS supports the OpenDRIVE shapes straight, arc,
