@@ -1037,7 +1037,7 @@ const lane* lane::getPortLane() const
     return _portLane;
 }
 
-const lane* lane::getPortLaneSameDirection() const
+const lane* lane::getPortLaneSD() const
 {
     if (!_portLane) return nullptr;
     if (isSameSign(_portLane)) return _portLane;
@@ -1049,7 +1049,7 @@ const lane* lane::getStarboardLane() const
     return _starboardLane;
 }
 
-const lane* lane::getStarboardLaneSameDirection() const
+const lane* lane::getStarboardLaneSD() const
 {
     if (!_starboardLane) return nullptr;
     if (isSameSign(_starboardLane)) return _starboardLane;
