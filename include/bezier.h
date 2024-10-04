@@ -95,6 +95,8 @@ public:
     //!    The base class provides a valid implementation, individual classes may provide higher accuracy ones.
     virtual bool getPointAfterDistance(arr2& p, const arr2 &o, scalar d) const override;
 
+    bool getPointAtDistance(arr2 &p, scalar d) const override;
+
     //! return the top left corner, length and height of the rectangle that aligned to the x,y axis bounds the curve.
     virtual void getBoundingBox(arr2& blc, arr2& trc) const = 0;
 

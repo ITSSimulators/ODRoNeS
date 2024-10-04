@@ -229,6 +229,11 @@ bool paramPoly3::getPointAfterDistance(arr2 &p, const arr2 &o, scalar d) const
     return nGetPointAfterDistance(p, o, d);
 }
 
+bool paramPoly3::getPointAtDistance(arr2 &p, scalar d) const
+{
+    return interpolate(p, d);
+}
+
 bool paramPoly3::getIntersectionPointFromOT(arr2 &p, const arr2 &o, const arr2 &t) const
 {
     return nGetIntersectionPointFromOT(p, o, t);

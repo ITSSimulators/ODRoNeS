@@ -70,6 +70,7 @@ public:
     virtual scalar distanceToTheEoL(const arr2 &p) const = 0;
     //! unsafely assuming that o is on geometry, it returns a point that is d metres after o, and true if it is on this same lane.
     virtual bool getPointAfterDistance(arr2& p, const arr2 &o, scalar d) const = 0;
+    virtual bool getPointAtDistance(arr2& p, scalar d) const = 0;
     //! returns true and sets the destination intersection point between arr2 origin and arr2 tangent if there is some intersection, false otherwise
     virtual bool getIntersectionPointFromOT(arr2 &p, const arr2 &o, const arr2 &t) const = 0;
     virtual scalar getCurvature(const arr2 &p) const = 0; ///< unsafely assuming that p is on geometry, get the curvature at p.

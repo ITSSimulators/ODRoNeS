@@ -507,6 +507,20 @@ scalar arc::distanceToTheEoL(const arr2 &p) const
 
 }
 
+bool arc::getPointAtDistance(arr2 &p, scalar d) const
+{
+    if (d > _length) return false;
+
+    scalar beta = d / _radiusOfCurvature;
+    arr2 ci = _co;
+    mvf::rotateVectorByAngle(ci, beta);
+
+    p[0] = _centre[0] + fabs(_radiusOfCurvature) * ci[0];
+    p[1] = _centre[1] + fabs(_radiusOfCurvature) * ci[1];
+
+    return true;
+}
+
 bool arc::getPointAfterDistance(arr2 &p, const arr2 &o, scalar d) const
 {
     if (d > _length) return false; // there's nothing to do, if d is too big.

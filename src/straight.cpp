@@ -136,6 +136,14 @@ bool straight::getPointAfterDistance(arr2 &p, const arr2 &o, scalar d) const
     return false;
 }
 
+bool straight::getPointAtDistance(arr2 &p, scalar d) const
+{
+    if (d > _length) return false;
+    p[0] = _origin[0] + d * _to[0];
+    p[1] = _origin[1] + d * _to[1];
+    return true;
+}
+
 bool straight::getIntersectionPointFromOT(arr2 &p, const arr2 &o, const arr2 &t) const
 {
     return mvf::getIntersectionPointToSegment(p, o, t, _origin, _to, _length);

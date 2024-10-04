@@ -48,6 +48,7 @@ public:
     arr2 getTangentInPoint(const arr2 &p) const override;  ///< parametric
     scalar distanceToTheEoL(const arr2 &p) const override; ///< numerical
     bool getPointAfterDistance(arr2 &p, const arr2 &o, scalar d) const override; ///< numerical
+    bool getPointAtDistance(arr2 &p, scalar d) const override; ///< numerical
     bool getIntersectionPointFromOT(arr2 &p, const arr2 &o, const arr2 &t) const override; ///< numerical
     scalar getCurvature(const arr2 &p) const override;     ///< numerial
 

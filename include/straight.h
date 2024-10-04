@@ -45,6 +45,7 @@ public:
     arr2 getTangentInPoint(const arr2 &p) const override;
     scalar distanceToTheEoL(const arr2 &p) const override;
     bool getPointAfterDistance(arr2 &p, const arr2 &o, scalar d) const override;
+    bool getPointAtDistance(arr2 &p, scalar d) const override;
     bool getIntersectionPointFromOT(arr2 &p, const arr2 &o, const arr2 &t) const override;
     scalar getCurvature(const arr2 &p) const override;
 #ifdef QT_CORE_LIB

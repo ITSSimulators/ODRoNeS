@@ -274,9 +274,23 @@ bool bezier::getPointAfterDistance(arr2 &p, const arr2 &o, scalar d) const
     scalar so = distanceFromTheBoL(to);
     if (so + d > _length) return false; // that means the point would be after the end of this line.
 
+    return getPointAtDistance(p, so + d);
+}
+
+
+bool bezier::getPointAtDistance(arr2 &p, scalar d) const
+{
+    if (d > _length) return false;
+
+    if (mvf::areSameValues(d, 0))
+    {
+        p = origin();
+        return true;
+    }
+
     // get the parametre t (te) after d:
     scalar te = 0;
-    if (!getTgivenD(te, so + d)) return false; // and if false, then it was too long.
+    if (!getTgivenD(te, d)) return false; // and if false, then it was too long.
 
     p = curvexy(te);
     return true;
