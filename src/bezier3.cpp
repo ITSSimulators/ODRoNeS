@@ -28,10 +28,10 @@ bezier3::bezier3()
 
 }
 
-/* bezier3::bezier3(const arr2 &p0, const arr2 &p1, const arr2 &p2, const arr2 &p3)
+bezier3::bezier3(const arr2 &p0, const arr2 &p1, const arr2 &p2, const arr2 &p3)
 {
     set(p0, p1, p2, p3);
-}*/
+}
 
 
 bezier3::bezier3(const bezier3& b)
@@ -223,6 +223,17 @@ bezier3 bezier3::getEndingPart(scalar t) const
 
 bool bezier3::getTGivenXY(scalar &t, const arr2 &xy) const
 {
+    if (mvf::areSamePoints(xy, _origin))
+    {
+        t = 0;
+        return true;
+    }
+    else if (mvf::areSamePoints(xy, _dest))
+    {
+        t = _maxt;
+        return true;
+    }
+
     // The Bezier equation can be written in this form:
     // B(t) = (w[3] - 3w[2] + 3w[1] - w[0])t**3 + 3(w[2] - 2w[1] + w[0])t**2 + 3(w[1] - w[0])t + w[0]
     // and so we solve for B(t) - x = 0, and find t1, t2 & t3, and then for B(t) - y = 0 and find t4, t5, & t6.

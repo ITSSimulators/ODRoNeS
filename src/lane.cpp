@@ -1565,7 +1565,7 @@ void lane::nSetupPointsXYUniformly(scalar ds)
                 p = nm->interpolate(s);
             }
             else // if ( (_geom[i]->isArc()) || (shp == mvf::shape::straight))
-                _geom[i]->getPointAfterDistance(p, _geom[i]->origin(), s);
+                _geom[i]->getPointAtDistance(p, s); // _geom[i]->getPointAfterDistance(p, _geom[i]->origin(), s);
 
             _pointsX[ndx] = p[0];
             _pointsY[ndx] = p[1];
