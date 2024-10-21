@@ -30,6 +30,7 @@
 #include <vector>
 #include <algorithm>
 #include <string>
+#include <tuple>
 
 namespace odrones
 {
