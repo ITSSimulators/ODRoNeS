@@ -336,7 +336,7 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
         std::cout << "[ Error ] on " << getCSUID() << " in configuring numerical for the top class" << std::endl;
     }
 
-    scalar maxSo = _geom.back()->sl0(_length);
+    scalar maxSo = _geom.back()->sl0(_geom.back()->length());
     for (uint i = 0; i < _odrWidth.size(); ++i)
     {
         if ((_odrWidth[i].lr == Odr::offset::LR::RL) &&
