@@ -44,7 +44,7 @@ class RNS
 
 public:
     RNS();
-    RNS(std::string odrMap, concepts::drivingSide drivingSide, bool loadSidewalk);
+    RNS(std::string odrMap, concepts::drivingSide drivingSide, bool loadSidewalk, bool verbose = true);
     RNS(const RNS &r); ///< copy construct
     RNS& operator=(RNS& r); ///< copy assign
     ~RNS();
@@ -65,6 +65,9 @@ public:
 
     bool ready() const; /*! return true if _sections are ready */
     void ready(bool r); ///< manually set _ready to r.
+
+    bool verbose() const { return _verbose; }
+    void verbose(bool v) { _verbose = v; }
 
     concepts::drivingSide drivingSide() const; ///< return the driving side.
     void drivingSide(concepts::drivingSide side); ///< manually set the driving side.
@@ -170,6 +173,7 @@ private:
     // std::vector<conflict::staticObj> _sObjects; ///< a convenience vector with
 
     bool _ready; ///< whether the RNS is ready or not.
+    bool _verbose; ///< whether to print out to std::out or not.
 
 
 };

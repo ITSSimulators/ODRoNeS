@@ -37,6 +37,7 @@ void RNS::initialise()
 {
     _sections = nullptr;
     _sectionsSize = 0;
+    _verbose = true;
     _ready = false;
 }
 
@@ -58,9 +59,10 @@ RNS::RNS(const RNS& r)
 }
 
 
-RNS::RNS(std::string mapFile, concepts::drivingSide drivingSide, bool loadSidewalk)
+RNS::RNS(std::string mapFile, concepts::drivingSide drivingSide, bool loadSidewalk, bool verbose)
 {
     initialise();
+    _verbose = verbose;
     _ready = makeRoads(mapFile, drivingSide, loadSidewalk);
     return;
 }
@@ -293,7 +295,7 @@ bool RNS::makeOneVersionRoads(std::string mapFile)
             section *si = getSectionWithOVId(ovID);
             if (!si)
             {
-                std::cout << "[ Error ] No section for: " << i << ", ovID: "
+                std::cerr << "[ Error ] No section for: " << i << ", ovID: "
                           << read.sections[i].ovID.to_string() << std::endl;
             }
 
@@ -339,7 +341,8 @@ bool RNS::makeOpenDRIVERoads(std::string odrMap, concepts::drivingSide drivingSi
 
 
 
-    std::cout << "[ Warning ] work in progress; ignoring loadSidewalk value: " << loadSidewalk << std::endl;
+    if (verbose())
+        std::cout << "[ Warning ] work in progress; ignoring loadSidewalk value: " << loadSidewalk << std::endl;
 
     bool isOdrFile = false;
     if ((odrMap.length() < 255) && (std::filesystem::exists(odrMap)))
@@ -370,7 +373,7 @@ bool RNS::makeOpenDRIVERoads(std::string odrMap, concepts::drivingSide drivingSi
         }
         if (static_cast<uint>(read.sections[i].id) != i)
         {
-            std::cout << "PANIC!" << std::endl;
+            std::cerr << "PANIC!" << std::endl;
             return false;
         }
 
@@ -399,9 +402,8 @@ bool RNS::makeOpenDRIVERoads(std::string odrMap, concepts::drivingSide drivingSi
         for (uint j = 0; j < read.sections[i].lanes.size(); ++j)
         {
             lane* lij = getLaneWithODRIds(read.sections[i].odrID, read.sections[i].lanes[j].odrID);
-            // std::cout << "lane: " << lij->getCSUID() << std::endl;
             if (!lij)
-               std::cout << "[ Error ] No lane for: " << i << ", " << j << ", segfault on the way... " << std::endl;
+               std::cerr << "[ Error ] No lane for: " << i << ", " << j << ", segfault on the way... " << std::endl;
             for (uint k = 0; k < read.sections[i].lanes[j].nextLane.size(); ++k)
             {
                 Odr::smaL *sml = read.sections[i].lanes[j].nextLane[k];
@@ -681,12 +683,12 @@ int RNS::findPortAndStarboardLanes(lane* &port, lane* &starboard, lane *l1, lane
     port = nullptr;
     if (dToEoL1 > l1->getLength())
     {
-        std::cout << "[ ERROR ] getPortLane cannot be used with a dToEoL larger than the length of " << l1->getSUID() << std::endl;
+        std::cerr << "[ ERROR ] getPortLane cannot be used with a dToEoL larger than the length of " << l1->getSUID() << std::endl;
         return 2;
     }
     else if (dToEoL2 > l2->getLength())
     {
-        std::cout << "[ ERROR ] getPortLane cannot be used with a dToEoL larger than the length of " << l2->getSUID() << std::endl;
+        std::cerr << "[ ERROR ] getPortLane cannot be used with a dToEoL larger than the length of " << l2->getSUID() << std::endl;
         return 3;
     }
     arr2 o1, o2;
@@ -912,7 +914,7 @@ void RNS::getDimensions(scalar &minX, scalar &minY, scalar &maxX, scalar &maxY) 
         {
             if (!_sections[i][j]->getBoundingBox(bli, tri))
             {
-                std::cout << "[ ERROR ] lrn could not get the bounding box for lane "
+                std::cerr << "[ ERROR ] lrn could not get the bounding box for lane "
                           << _sections[i][j]->getSUID() << std::endl;
             }
             mvf::increaseBoxWithBox(blc, trc, bli, tri);
@@ -996,14 +998,17 @@ bool RNS::makePrioritiesSameEndingDifferentSectionLanes(scalar anticipationTime)
                     }
                     else
                     {
-                        std::cout << "nonsense!" << std::endl;
+                        std::cerr << "nonsense!" << std::endl;
                         return false; // continue;
                     }
 
                     // create a conflict and assign it to the lower priority lane:
                     conflict lpCnf = conflict::createEoLConflict(lpLane, hpLane, anticipationTime);
-                    for (uint pk = 0; pk < lpCnf.hpLane.size(); ++pk)
-                        std::cout << "lane: " << lpCnf.hpLane[pk]->getSUID() << " has priority over " << lpLane->getSUID() << std::endl;
+                    if (verbose())
+                    {
+                        for (uint pk = 0; pk < lpCnf.hpLane.size(); ++pk)
+                            std::cout << "lane: " << lpCnf.hpLane[pk]->getSUID() << " has priority over " << lpLane->getSUID() << std::endl;
+                    }
                     lpLane->addConflict(lpCnf);
 
                     //   and inform the higher priority lane:
@@ -1064,19 +1069,21 @@ void RNS::makePrioritiesSameSectionMergeLanes()
                 if ( ((_drivingSide == concepts::drivingSide::rightHand) && (_sections[i][li]->getPortLaneSD() == _sections[i][lj])) ||
                      ((_drivingSide == concepts::drivingSide::leftHand) && (_sections[i][li]->getStarboardLaneSD() == _sections[i][lj])) )
                 {
-                    std::cout << "[ lrn ] assigning merge to " << _sections[i][li]->getSUID()
-                              << " giving higher priority to " << _sections[i][lj]->getSUID() << std::endl;
                     _sections[i][li]->addConflict(conflict::createMergeConflict(_sections[i][li], mvf::side::port));
                     // _sections[i][lj]->setStopMargin(calcStopMargin(_sections[i][lj], _sections[i][li]));
+                    if (verbose())
+                        std::cout << "[ lrn ] assigning merge to " << _sections[i][li]->getSUID()
+                                  << " giving higher priority to " << _sections[i][lj]->getSUID() << std::endl;
                 }
 
                 else if ( ((_drivingSide == concepts::drivingSide::rightHand) && (_sections[i][li]->getStarboardLaneSD() == _sections[i][lj])) ||
                           ((_drivingSide == concepts::drivingSide::leftHand) && (_sections[i][li]->getPortLaneSD() == _sections[i][lj])) )
                 {
-                    std::cout << "[ lrn ] assigning merge to " << _sections[i][lj]->getSUID()
-                              << " giving higher priority to " << _sections[i][li]->getSUID() << std::endl;
                     _sections[i][li]->addConflict(conflict::createMergeConflict(_sections[i][li], mvf::side::starboard));
                     // _sections[i][li]->setStopMargin(calcStopMargin(_sections[i][li], _sections[i][lj]));
+                    if (verbose())
+                        std::cout << "[ lrn ] assigning merge to " << _sections[i][lj]->getSUID()
+                                  << " giving higher priority to " << _sections[i][li]->getSUID() << std::endl;
                 }
 
                 else std::cerr << "[ ERROR ] lanes: " << _sections[i][li]->getSUID() << " and " << _sections[i][lj]->getSUID()
@@ -1145,32 +1152,35 @@ void RNS::makePrioritiesDifferentEndingDifferentSectionCrossingLanes(scalar anti
                     if (v.size() == 0) continue;
 
                     // Print out the intersections:
-                    std::cout << "lanes: " << _sections[i][li]->getCSUID() << ", and " << _sections[j][lj]->getCSUID()
-                              << " intersect in " << v.size() << " point";
-                    if (v.size() > 1) std::cout << "s; these are: ";
-                    else std::cout << ", in: ";
-                    std::cout << "(" << v[0][0] << ", " << v[0][1] << ")";
-                    for (uint vk = 1; vk < v.size(); ++vk)
+                    if (verbose())
                     {
-                        std::cout << ", (" << v[vk][0] << ", " << v[vk][1] << ")";
+                        std::cout << "lanes: " << _sections[i][li]->getCSUID() << ", and " << _sections[j][lj]->getCSUID()
+                                  << " intersect in " << v.size() << " point";
+                        if (v.size() > 1) std::cout << "s; these are: ";
+                        else std::cout << ", in: ";
+                        std::cout << "(" << v[0][0] << ", " << v[0][1] << ")";
+                        for (uint vk = 1; vk < v.size(); ++vk)
+                        {
+                            std::cout << ", (" << v[vk][0] << ", " << v[vk][1] << ")";
+                        }
+                        std::cout << " where the curvature of " << _sections[i][li]->getCSUID() << " and "
+                                  << _sections[j][lj]->getCSUID() << " is: " << _sections[i][li]->getCurvature(v[0])
+                                << " and " << _sections[j][lj]->getCurvature(v[0]);
+                        for (uint vk = 1; vk < v.size(); ++vk)
+                        {
+                            std::cout << ", " << _sections[i][li]->getCurvature(v[vk])
+                                      << " and " << _sections[j][lj]->getCurvature(v[vk]);
+                        }
+                        std::cout << " and where the angle they form is " <<
+                                     mvf::subtendedAngle(_sections[i][li]->getTangentInPoint(v[0]),
+                                _sections[j][lj]->getTangentInPoint(v[0])) * ct::rad2deg;
+                        for (uint vk = 1; vk < v.size(); ++vk)
+                        {
+                            std::cout << ", " << mvf::subtendedAngle(_sections[i][li]->getTangentInPoint(v[vk]),
+                                                                     _sections[j][lj]->getTangentInPoint(v[vk])) * ct::rad2deg;
+                        }
+                        std::cout << " degrees" << std::endl;
                     }
-                    std::cout << " where the curvature of " << _sections[i][li]->getCSUID() << " and "
-                              << _sections[j][lj]->getCSUID() << " is: " << _sections[i][li]->getCurvature(v[0])
-                              << " and " << _sections[j][lj]->getCurvature(v[0]);
-                    for (uint vk = 1; vk < v.size(); ++vk)
-                    {
-                              std::cout << ", " << _sections[i][li]->getCurvature(v[vk])
-                              << " and " << _sections[j][lj]->getCurvature(v[vk]);
-                    }
-                    std::cout << " and where the angle they form is " <<
-                                 mvf::subtendedAngle(_sections[i][li]->getTangentInPoint(v[0]),
-                                                     _sections[j][lj]->getTangentInPoint(v[0])) * ct::rad2deg;
-                    for (uint vk = 1; vk < v.size(); ++vk)
-                    {
-                        std::cout << ", " << mvf::subtendedAngle(_sections[i][li]->getTangentInPoint(v[vk]),
-                                                                 _sections[j][lj]->getTangentInPoint(v[vk])) * ct::rad2deg;
-                    }
-                    std::cout << " degrees" << std::endl;
 
 
                     // And store them, so they're shown later by the graphicalLRN:
@@ -1206,7 +1216,7 @@ void RNS::makePrioritiesDifferentEndingDifferentSectionCrossingLanes(scalar anti
                         }
                         else
                         {
-                            std::cout << "nonsense!" << std::endl;
+                            std::cerr << "nonsense!" << std::endl;
                             continue;
                         }
 
@@ -1225,8 +1235,9 @@ void RNS::makePrioritiesDifferentEndingDifferentSectionCrossingLanes(scalar anti
                         }
 
 
-                        std::cout << " Lane " << lpLane->getSUID() << " has lower priority than " << hpLane->getSUID() <<
-                                         " at the intersection point (" << v[ck][0] << ", " << v[ck][1] << ")" << std::endl;
+                        if (verbose())
+                            std::cout << " Lane " << lpLane->getSUID() << " has lower priority than " << hpLane->getSUID()
+                                      << " at the intersection point (" << v[ck][0] << ", " << v[ck][1] << ")" << std::endl;
 
 
                         // Add the conflict to the low priority lane:
@@ -1298,7 +1309,7 @@ void RNS::crosslinkConflict(lane *l, scalar cSCoord, conflict::cuid cuid)
     int idx = l->getConflictIdx(cSCoord);
     if (idx < 0)
     {
-        std::cout << "unable to find a conflict in lane " << l->getSUID() << " at length " << cSCoord << std::endl;
+        std::cerr << "unable to find a conflict in lane " << l->getSUID() << " at length " << cSCoord << std::endl;
         return;
     }
     return crosslinkConflict(l, static_cast<uint>(idx), cuid);
@@ -1317,10 +1328,13 @@ bool RNS::swapConflictPriority(lane *l, uint ci)
         uint uck = static_cast<uint>(ick);
         l->setConflictKind(ci, cnf.hpLane[lj]->getConflictKind(uck));
         getLane(cnf.hpLane[lj])->setConflictKind(uck, ko);
-        std::cout << "swapped priorities and now: " << l->getSUID() << ":"
-                  << conflict::kindString(l->getConflictKind(ci))
-                  << " and " << cnf.hpLane[lj]->getSUID()
-                  << ":" << conflict::kindString(cnf.hpLane[lj]->getConflictKind(uck)) << std::endl;
+        if (verbose())
+        {
+            std::cout << "swapped priorities and now: " << l->getSUID() << ":"
+                      << conflict::kindString(l->getConflictKind(ci))
+                      << " and " << cnf.hpLane[lj]->getSUID()
+                      << ":" << conflict::kindString(cnf.hpLane[lj]->getConflictKind(uck)) << std::endl;
+        }
         swapped = true;
     }
     return swapped;
