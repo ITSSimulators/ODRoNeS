@@ -27,10 +27,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Defining RNS_DIR is convenient when you have ODRoNeS as a git submodule.
 if (NOT DEFINED RNS_DIR)
    set( RNS_DIR ${PROJECT_SOURCE_DIR} )
-endif (NOT DEFINED RNS_DIR)
-if (NOT DEFINED RNS_INSTALL)
-   set( RNS_INSTALL ON )
-endif (NOT DEFINED RNS_INSTALL)
+endif ()
+if (NOT DEFINED RNS_INSTALL_DEV)
+   set( RNS_INSTALL_DEV ON )
+endif ()
+if (NOT DEFINED RNS_INSTALL_DIR)
+	SET( RNS_INSTALL_DIR ${CMAKE_INSTALL_PREFIX} )
+endif ()
 
 # Our own headers:
 include_directories(${RNS_DIR}/include)
@@ -123,6 +126,32 @@ add_library(rns
 )
 target_link_libraries(rns clothoids ${QT_LIBRARIES})
 
+#How about Python bindings:
+option(ODRONES_PYTHON_BINDINGS "Build Python3 bindings for ODRoNeS" OFF)
+if (ODRONES_PYTHON_BINDINGS) 
+	find_package(Python 3.0 COMPONENTS Interpreter Development)
+	find_package(SWIG REQUIRED)
+	include(UseSWIG)
+	include_directories(${Python_INCLUDE_DIRS})
+	set(USE_SWIG_FLAGS "-py3")
+
+   set_source_files_properties(${RNS_DIR}/include/odrones.i PROPERTIES CPLUSPLUS ON)
+	set_property(SOURCE ${RNS_DIR}/include/odrones.i PROPERTY SWIG_FLAGS ${USE_SWIG_FLAGS})
+	swig_add_library(odrones TYPE SHARED LANGUAGE python
+                    SOURCES ${RNS_DIR}/include/odrones.i)
+	swig_link_libraries(odrones ${Python_LIBRARIES} rns clothoids)
+
+	message(STATUS "ODRoNeS: ${RNS_INSTALL_DIR}")
+	set(ODRONES_PYTHON_INSTALL_DIR 
+	    ${RNS_INSTALL_DIR}/lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages/odrones 
+		 CACHE INTERNAL "folder in which ODRoNeS will install the Python bindings" FORCE)
+	install (TARGETS odrones DESTINATION ${RNS_INSTALL_DIR}/${PYTHON_INSTALL_DIR})
+	install (FILES ${CMAKE_BINARY_DIR}/odrones.py DESTINATION ${RNS_INSTALL_DIR}/${PYTHON_INSTALL_DIR})
+endif()
+
+
+
+
 if (ODRONES_USE_ONEVERSION)
     target_link_libraries(rns ${ONEVERSION_LIBRARY} ${SIMDEPS_LIBRARIES})
 endif (ODRONES_USE_ONEVERSION)
@@ -141,14 +170,12 @@ if (USE_QT)
       # ${RNS_DIR}/src/mainwindow.cpp ${RNS_DIR}/include/mainwindow.h)
   # target_link_libraries(rns3d PRIVATE rns Qt6::Widgets Qt6::3DCore Qt6::3DRender Qt6::3DExtras)
 
-  if (RNS_INSTALL)
-     install (TARGETS rnscheck RUNTIME DESTINATION bin)
-  endif (RNS_INSTALL)
+  install (TARGETS rnscheck RUNTIME DESTINATION ${RNS_INSTALL_DIR}/bin)
 endif (USE_QT)
 
-if (RNS_INSTALL)
-   install (TARGETS rns DESTINATION lib)
-   install (DIRECTORY ${RNS_DIR}/include/odrones DESTINATION ${CMAKE_INSTALL_PREFIX})
-endif (RNS_INSTALL)
+if (RNS_INSTALL_DEV)
+   install (TARGETS rns DESTINATION ${RNS_INSTALL_DIR}/lib)
+   install (DIRECTORY ${RNS_DIR}/include DESTINATION ${RNS_INSTALL_DIR}/include/odrones)
+endif ()
                          
 
