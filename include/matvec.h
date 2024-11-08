@@ -35,7 +35,7 @@
 namespace odrones
 {
 
-typedef odrones::scalar scalar;
+// typedef odrones::scalar scalar;
 typedef std::array<scalar, 2> arr2;
 // typedef std::array<scalar, 3> arr3;
 
