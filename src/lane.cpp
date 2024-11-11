@@ -251,7 +251,7 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
 
     if (odrL.kind.compare(Odr::Kind::Driving) == 0)
         _kind = kind::tarmac;
-    else if (odrL.kind.compare(Odr::Kind::Sidewalk) == 0)
+    else if ((odrL.kind.compare(Odr::Kind::Sidewalk) == 0) || (odrL.kind.compare(Odr::Kind::Walking) == 0))
         _kind = kind::pavement;
     else if (odrL.kind.compare(Odr::Kind::None) == 0)
         _kind = kind::none;

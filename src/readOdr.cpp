@@ -126,6 +126,7 @@ const char* Odr::Kind::normalized = "normalized";
 
 const char* Odr::Kind::Driving = "driving";
 const char* Odr::Kind::Sidewalk = "sidewalk";
+const char* Odr::Kind::Walking = "walking";
 
 const char* Odr::Kind::Start = "start";
 const char* Odr::Kind::End = "end";
