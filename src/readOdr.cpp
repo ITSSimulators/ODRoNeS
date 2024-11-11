@@ -104,6 +104,15 @@ const char* Odr::Attr::cV = "cV";
 const char* Odr::Attr::dV = "dV";
 const char* Odr::Attr::pRange = "pRange";
 
+const char* Odr::Attr::bz0x = "bz0x";
+const char* Odr::Attr::bz0y = "bz0y";
+const char* Odr::Attr::bz1x = "bz1x";
+const char* Odr::Attr::bz1y = "bz1y";
+const char* Odr::Attr::bz2x = "bz2x";
+const char* Odr::Attr::bz2y = "bz2y";
+const char* Odr::Attr::bz3x = "bz3x";
+const char* Odr::Attr::bz3y = "bz3y";
+
 const char* Odr::Attr::Unit = "unit";
 
 const char* Odr::Attr::Dynamic = "dynamic";
@@ -188,6 +197,8 @@ std::string Odr::geomString(const Odr::Attr::Geometry &g)
         return "spiral";
     else if (g == Odr::Attr::Geometry::paramPoly3)
         return "paramPoly3";
+    else if (g == Odr::Attr::Geometry::bezier3)
+        return "bezier3";
     else if (g == Odr::Attr::Geometry::none)
         return "none";
     else
@@ -409,6 +420,11 @@ std::vector<Odr::geometry> ReadOdr::readGeometry(tinyxml2::XMLElement *pv)
                 {
                     shp = g->FirstChildElement(Odr::Elem::ParamPoly3);
                     if (shp) v.back().g = Odr::Attr::Geometry::paramPoly3;
+                    else
+                    {
+                        shp = g->FirstChildElement(Odr::Elem::Bezier3);
+                        if (shp) v.back().g = Odr::Attr::Geometry::bezier3;
+                    }
                 }
             }
         }
@@ -445,13 +461,24 @@ std::vector<Odr::geometry> ReadOdr::readGeometry(tinyxml2::XMLElement *pv)
                 v.back().pRange = Odr::Attr::ParamPoly3Range::normalized;
             else read = false;
         }
+        else if (v.back().g == Odr::Attr::Geometry::bezier3)
+        {
+            shp->QueryDoubleAttribute(Odr::Attr::bz0x, &v.back().bz0x);
+            shp->QueryDoubleAttribute(Odr::Attr::bz0y, &v.back().bz0y);
+            shp->QueryDoubleAttribute(Odr::Attr::bz1x, &v.back().bz1x);
+            shp->QueryDoubleAttribute(Odr::Attr::bz1y, &v.back().bz1y);
+            shp->QueryDoubleAttribute(Odr::Attr::bz2x, &v.back().bz2x);
+            shp->QueryDoubleAttribute(Odr::Attr::bz2y, &v.back().bz2y);
+            shp->QueryDoubleAttribute(Odr::Attr::bz3x, &v.back().bz3x);
+            shp->QueryDoubleAttribute(Odr::Attr::bz3y, &v.back().bz3y);
+            read = true;
+        }
 
         g = g->NextSiblingElement(Odr::Elem::Geometry);
         if (!read)
         {
             std::cerr << "[ Error ] Geometry could not be identified!" << std::endl;
         }
-
     }
 
     return v;

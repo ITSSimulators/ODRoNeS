@@ -66,6 +66,7 @@ namespace Odr
         static const char* Arc;
         static const char* Spiral;
         static const char* ParamPoly3;
+        static const char* Bezier3;
 
         static const char* Width;
         static const char* Speed;
@@ -114,7 +115,7 @@ namespace Odr
 
         static const char* Max;
 
-        enum class Geometry {line, spiral, arc, paramPoly3, none};
+        enum class Geometry {line, spiral, arc, paramPoly3, bezier3, none};
         enum class ParamPoly3Range {arcLength, normalized, none};
 
         static const char* aU;
@@ -126,6 +127,15 @@ namespace Odr
         static const char* cV;
         static const char* dV;
         static const char* pRange;
+
+        static const char* bz0x;
+        static const char* bz0y;
+        static const char* bz1x;
+        static const char* bz1y;
+        static const char* bz2x;
+        static const char* bz2y;
+        static const char* bz3x;
+        static const char* bz3y;
 
         static const char* Unit;
 
@@ -181,6 +191,8 @@ namespace Odr
             curvature = 0; curvStart = 0; curvEnd = 0;
             aU = 0; bU = 0; cU = 0; dU = 0;
             aV = 0; bV = 0; cV = 0; dV = 0;
+            bz0x = 0; bz0y = 0; bz1x = 0; bz1y = 0;
+            bz2x = 0; bz2y = 0; bz3x = 0; bz3y = 0;
             pRange = Attr::ParamPoly3Range::none;
         }
 
@@ -194,6 +206,8 @@ namespace Odr
                 std::cout << "spial: " << std::endl;
             if (g == Attr::Geometry::paramPoly3)
                 std::cout << "paramPoly3: " << std::endl;
+            if (g == Attr::Geometry::bezier3)
+                std::cout << "bezier3:" << std::endl;
             std::cout << "s: " << s << ", x: " << x << ", y: " << y << std::endl;
             std::cout << "hdg: " << hdg << ", length: " << length << std::endl;
             if (g == Attr::Geometry::arc)
@@ -208,6 +222,11 @@ namespace Odr
                     std::cout << "pRange: arcLength" << std::endl;
                 if (pRange == Attr::ParamPoly3Range::normalized)
                     std::cout << "pRange: normalised" << std::endl;
+            }
+            else if (g == Attr::Geometry::bezier3)
+            {
+                std::cout << "bz0x: " << bz0x << ", bz0y: " << bz0y << ", bz1x: " << bz1x << ", bz1y: " << bz1y << std::endl;
+                std::cout << "bz2x: " << bz2x << ", bz2y: " << bz2y << ", bz3x: " << bz3x << ", bz3y: " << bz3y << std::endl;
             }
 
         }
@@ -226,6 +245,9 @@ namespace Odr
 
         double aU, bU, cU, dU; ///< m, 1/m, 1/m^2, 1/m^3
         double aV, bV, cV, dV; ///< m, 1/m, 1/m^2, 1/m^3
+
+        double bz0x, bz0y, bz1x, bz1y; ///< metres for our extended version using Beizer3
+        double bz2x, bz2y, bz3x, bz3y; ///< metres for our extended version using Bezier3.
         Odr::Attr::ParamPoly3Range pRange; ///< range for the parameter of the parametric curve.
     };
 
