@@ -56,7 +56,7 @@ class conflict;
 typedef odrones::scalar scalar;
 typedef odrones::arr2 arr2;
 typedef odrones::mvf mvf;
-typedef odrones::Odr Odr;
+//typedef odrones::Odr Odr;
 typedef odrones::bezier2 bezier2;
 typedef odrones::bezier3 bezier3;
 typedef odrones::conflict conflict;

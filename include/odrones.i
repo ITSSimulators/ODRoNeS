@@ -1,30 +1,35 @@
 %module odrones
 
+%import readOdr.i
 %{
 #include <limits>
 #include "constants.h"
 #include "matvec.h"
+typedef odrones::scalar scalar;
+typedef odrones::arr2 arr2;
 #include "bezier.h"
 #include "bezier2.h"
 #include "bezier3.h"
+#include "rns.h"
 %}
 
-namespace odrones
-{
-   typedef unsigned int uint;
-   typedef double scalar;
-   typedef std::array<scalar, 2> arr2;
-}
+
+
+%include "std_array.i"
+%include "std_string.i"
+%include "stdint.i"
+typedef odrones::scalar scalar;
+typedef odrones::uint uint;
+%include "constants.h"
+%include "matvec.h"
+%template(arr2) std::array<odrones::scalar, 2>;
 
 %ignore odrones::geometry::operator=;
 %ignore odrones::bezier::operator=;
 
-%include "std_string.i"
-%include "stdint.i"
-%include "constants.h"
-%include "matvec.h"
 %include "geometry.h"
 %include "parametric.h"
 %include "bezier.h"
 %include "bezier2.h"
 %include "bezier3.h"
+%include "rns.h"

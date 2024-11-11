@@ -35,9 +35,9 @@
 namespace odrones
 {
 
-class Odr
+namespace Odr
 {
-public:
+
     class Elem
     {
     public:
@@ -150,6 +150,7 @@ public:
     public:
         static const char* Driving;
         static const char* Sidewalk;
+        static const char* Walking;
 
         static const char* Start;
         static const char* End;
@@ -455,8 +456,8 @@ public:
     };
 
 
-public:
-    static std::string geomString(const Odr::Attr::Geometry &g);
+// public:
+    extern std::string geomString(const Odr::Attr::Geometry &g);
 
 
 };

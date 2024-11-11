@@ -135,18 +135,24 @@ if (ODRONES_PYTHON_BINDINGS)
 	include_directories(${Python_INCLUDE_DIRS})
 	set(USE_SWIG_FLAGS "-py3")
 
-   set_source_files_properties(${RNS_DIR}/include/odrones.i PROPERTIES CPLUSPLUS ON)
-	set_property(SOURCE ${RNS_DIR}/include/odrones.i PROPERTY SWIG_FLAGS ${USE_SWIG_FLAGS})
+   set_source_files_properties(${RNS_DIR}/include/odrones.i ${RNS_DIR}/include/readOdr.i
+	             PROPERTIES CPLUSPLUS ON USE_SWIG_DEPENDENCIES ON)
+	set_property(SOURCE ${RNS_DIR}/include/odrones.i ${RNS_DIR}/include/readOdr.i
+	             PROPERTY SWIG_FLAGS ${USE_SWIG_FLAGS})
 	swig_add_library(odrones TYPE SHARED LANGUAGE python
                     SOURCES ${RNS_DIR}/include/odrones.i)
 	swig_link_libraries(odrones ${Python_LIBRARIES} rns clothoids)
+	swig_add_library(readOdr TYPE SHARED LANGUAGE python
+                    SOURCES ${RNS_DIR}/include/readOdr.i)
+	swig_link_libraries(readOdr ${Python_LIBRARIES} rns clothoids)
 
 	message(STATUS "ODRoNeS: ${RNS_INSTALL_DIR}")
 	set(ODRONES_PYTHON_INSTALL_DIR 
 	    ${RNS_INSTALL_DIR}/lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages/odrones 
 		 CACHE INTERNAL "folder in which ODRoNeS will install the Python bindings" FORCE)
-	install (TARGETS odrones DESTINATION ${ODRONES_PYTHON_INSTALL_DIR})
-	install (FILES ${CMAKE_BINARY_DIR}/odrones.py DESTINATION ${ODRONES_PYTHON_INSTALL_DIR})
+	install (TARGETS odrones readOdr DESTINATION ${ODRONES_PYTHON_INSTALL_DIR})
+	install (FILES ${CMAKE_BINARY_DIR}/odrones.py ${CMAKE_BINARY_DIR}/readOdr.py
+	         DESTINATION ${ODRONES_PYTHON_INSTALL_DIR})
 endif()
 
 

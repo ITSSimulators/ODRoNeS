@@ -47,7 +47,7 @@ typedef odrones::mvf mvf;
 typedef odrones::bezier2 bezier2;
 typedef odrones::bezier3 bezier3;
 typedef odrones::lane lane;
-typedef odrones::Odr Odr;
+// typedef odrones::Odr Odr;
 typedef odrones::OneVersion OneVersion;
 
 
