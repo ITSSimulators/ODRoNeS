@@ -130,7 +130,7 @@ target_link_libraries(rns clothoids ${QT_LIBRARIES})
 #How about Python bindings:
 option(ODRONES_PYTHON_BINDINGS "Build Python3 bindings for ODRoNeS" OFF)
 if (ODRONES_PYTHON_BINDINGS) 
-	find_package(Python 3.0 COMPONENTS Interpreter Development)
+	find_package(Python 3.0 COMPONENTS Interpreter Development REQUIRED)
 	find_package(SWIG REQUIRED)
 	include(UseSWIG)
 	include_directories(${Python_INCLUDE_DIRS})
