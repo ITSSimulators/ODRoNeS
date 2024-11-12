@@ -98,6 +98,7 @@ add_library(rns
     ${RNS_DIR}/src/rnsconcepts.cpp ${RNS_DIR}/include/rnsconcepts.h
     ${RNS_DIR}/src/matvec.cpp ${RNS_DIR}/include/matvec.h
     ${RNS_DIR}/src/readOdr.cpp ${RNS_DIR}/include/readOdr.h
+    ${RNS_DIR}/src/readXOdr.cpp ${RNS_DIR}/include/readXOdr.h
     ${RNS_DIR}/src/readOneVersion.cpp ${RNS_DIR}/include/readOneVersion.h
     ${RNS_DIR}/src/geometry.cpp ${RNS_DIR}/include/geometry.h
     ${RNS_DIR}/src/parametric.cpp ${RNS_DIR}/include/parametric.h

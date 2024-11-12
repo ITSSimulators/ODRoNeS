@@ -348,7 +348,7 @@ bool RNS::makeOpenDRIVERoads(std::string odrMap, concepts::drivingSide drivingSi
     if ((odrMap.length() < 255) && (std::filesystem::exists(odrMap)))
         isOdrFile = true;
 
-    ReadOdr read(odrMap, isOdrFile);
+    ReadXOdr read(odrMap, isOdrFile);
 
     if (!read.isReady())
     {
