@@ -99,6 +99,7 @@ add_library(rns
     ${RNS_DIR}/src/matvec.cpp ${RNS_DIR}/include/matvec.h
     ${RNS_DIR}/src/readOdr.cpp ${RNS_DIR}/include/readOdr.h
     ${RNS_DIR}/src/readXOdr.cpp ${RNS_DIR}/include/readXOdr.h
+    # ${RNS_DIR}/src/readBOdr.cpp ${RNS_DIR}/include/readBOdr.h
     ${RNS_DIR}/src/readOneVersion.cpp ${RNS_DIR}/include/readOneVersion.h
     ${RNS_DIR}/src/geometry.cpp ${RNS_DIR}/include/geometry.h
     ${RNS_DIR}/src/parametric.cpp ${RNS_DIR}/include/parametric.h
@@ -143,17 +144,13 @@ if (ODRONES_PYTHON_BINDINGS)
 	swig_add_library(odrones TYPE SHARED LANGUAGE python
                     SOURCES ${RNS_DIR}/include/odrones.i)
 	swig_link_libraries(odrones ${Python_LIBRARIES} rns clothoids)
-	swig_add_library(readOdr TYPE SHARED LANGUAGE python
-                    SOURCES ${RNS_DIR}/include/readOdr.i)
-	swig_link_libraries(readOdr ${Python_LIBRARIES} rns clothoids)
 
 	message(STATUS "ODRoNeS: ${RNS_INSTALL_DIR}")
 	set(ODRONES_PYTHON_INSTALL_DIR 
 	    ${RNS_INSTALL_DIR}/lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages/odrones 
 		 CACHE INTERNAL "folder in which ODRoNeS will install the Python bindings" FORCE)
-	install (TARGETS odrones readOdr DESTINATION ${ODRONES_PYTHON_INSTALL_DIR})
-	install (FILES ${CMAKE_BINARY_DIR}/odrones.py ${CMAKE_BINARY_DIR}/readOdr.py
-	         DESTINATION ${ODRONES_PYTHON_INSTALL_DIR})
+	install (TARGETS odrones DESTINATION ${ODRONES_PYTHON_INSTALL_DIR})
+	install (FILES ${CMAKE_BINARY_DIR}/odrones.py DESTINATION ${ODRONES_PYTHON_INSTALL_DIR})
 endif()
 
 
