@@ -66,11 +66,11 @@ void bezier::clearMem()
 {
     if (_ready)
     {
+        _degree = 0;
         delete[] _wx;
         delete[] _wy;
     }
 }
-
 
 void bezier::assignInputLaneToThis(const bezier &b)
 {
