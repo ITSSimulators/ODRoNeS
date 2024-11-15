@@ -137,9 +137,9 @@ if (ODRONES_PYTHON_BINDINGS)
 	include_directories(${Python_INCLUDE_DIRS})
 	set(USE_SWIG_FLAGS "-py3")
 
-   set_source_files_properties(${RNS_DIR}/include/odrones.i ${RNS_DIR}/include/readOdr.i
+   set_source_files_properties(${RNS_DIR}/include/odrones.i
 	             PROPERTIES CPLUSPLUS ON USE_SWIG_DEPENDENCIES ON)
-	set_property(SOURCE ${RNS_DIR}/include/odrones.i ${RNS_DIR}/include/readOdr.i
+	set_property(SOURCE ${RNS_DIR}/include/odrones.i
 	             PROPERTY SWIG_FLAGS ${USE_SWIG_FLAGS})
 	swig_add_library(odrones TYPE SHARED LANGUAGE python
                     SOURCES ${RNS_DIR}/include/odrones.i)
