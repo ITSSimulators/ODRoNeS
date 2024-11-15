@@ -484,7 +484,7 @@ namespace Odr
 
 };
 
-class ReadOdrBase
+class ReadOdr
 {
 public:
     void printRoads(); ///< print out the roads
@@ -493,7 +493,6 @@ public:
 
     const std::vector<Odr::smaS> &sections = _sections; ///< share a read-only version of _sections.
 
-public:
     static constexpr scalar defaultSpeed = 30 * constants::mphToMs; ///< default speed is 30 mph.
 
 protected:

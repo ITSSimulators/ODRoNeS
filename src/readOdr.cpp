@@ -212,9 +212,8 @@ std::string Odr::geomString(const Odr::Attr::Geometry &g)
 
 
 
-void ReadOdrBase::printRoads()
+void ReadOdr::printRoads()
 {
-
     for (uint i = 0; i < _sections.size(); ++i)
     {
         for (uint j = 0; j < _sections[i].lanes.size(); ++j)
@@ -256,7 +255,7 @@ void ReadOdrBase::printRoads()
 }
 
 
-bool ReadOdrBase::isReady()
+bool ReadOdr::isReady()
 {
     return ready;
 }

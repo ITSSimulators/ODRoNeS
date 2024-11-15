@@ -74,6 +74,7 @@ public:
 
     bool makeRoads(std::string mapFile, concepts::drivingSide drivingSide, bool loadSidewalk);
     bool makeOpenDRIVERoads(std::string mapFile, concepts::drivingSide drivingSide, bool loadSidewalk);
+    bool makeOpenDRIVERoads(ReadOdr &read, concepts::drivingSide drivingSide, bool loadSidewalk);
     bool makeOneVersionRoads(std::string mapFile);
     void printLanes() const; ///< print sections and lanes
 

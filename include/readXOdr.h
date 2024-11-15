@@ -28,7 +28,7 @@
 namespace odrones 
 {
 
-class ReadXOdr : public ReadOdrBase
+class ReadXOdr : public ReadOdr
 {
 public:
     /*! Constructor where iFile is either the input file name (isOdrFile == true) or

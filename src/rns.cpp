@@ -335,12 +335,6 @@ bool RNS::makeOneVersionRoads(std::string mapFile)
 
 bool RNS::makeOpenDRIVERoads(std::string odrMap, concepts::drivingSide drivingSide, bool loadSidewalk)
 {
-    _ready = false;
-
-    _drivingSide = drivingSide;
-
-
-
     if (verbose())
         std::cout << "[ Warning ] work in progress; ignoring loadSidewalk value: " << loadSidewalk << std::endl;
 
@@ -355,6 +349,16 @@ bool RNS::makeOpenDRIVERoads(std::string odrMap, concepts::drivingSide drivingSi
         std::cerr << "[ LRN ] unable to load the opendrive map" << std::endl;
         return false;
     }
+
+    return makeOpenDRIVERoads(read, drivingSide, loadSidewalk);
+}
+
+bool RNS::makeOpenDRIVERoads(ReadOdr &read, concepts::drivingSide drivingSide, bool loadSidewalk)
+{
+
+    _ready = false;
+
+    _drivingSide = drivingSide;
 
     // Allocate and do the geometry for the lanes:
     // We will allocate as many sections as laneSections:
