@@ -20,7 +20,7 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#include <bezier3.h>
+#include "bezier3.h"
 using namespace odrones;
 
 bezier3::bezier3()
@@ -31,13 +31,6 @@ bezier3::bezier3()
 bezier3::bezier3(const arr2 &p0, const arr2 &p1, const arr2 &p2, const arr2 &p3)
 {
     set(p0, p1, p2, p3);
-}
-
-bezier3::bezier3(const Odr::geometry &odr, int sign, scalar offsetA, scalar so, scalar se, scalar roadSo)
-{
-
-
-
 }
 
 

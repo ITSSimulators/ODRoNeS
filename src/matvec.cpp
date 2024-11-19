@@ -48,6 +48,8 @@ std::string mvf::shapeString(mvf::shape s)
         return "bezier";
     case mvf::shape::bezier3:
         return "bezier";
+    case mvf::shape::vwBezier3:
+        return "vwBezier";
     case mvf::shape::paramPoly3:
         return "paramPoly3";
     case mvf::shape::vwParamPoly3:

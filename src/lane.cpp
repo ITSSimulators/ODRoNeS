@@ -295,7 +295,7 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
             else if (odrg[i].g == Odr::Attr::Geometry::spiral)
                 _geom.push_back(new vwSpiral(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
             else if (odrg[0].g == Odr::Attr::Geometry::bezier3)
-                _geom.push_back(new bezier3(odrg[i], getSignInt(), off[0].a, soi, sei, roadSoi));
+                _geom.push_back(new vwBezier3(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
             else
             {
                 std::cerr << "[ Lane ] Unsupported shape! The code will crash quickly after this." << std::endl;
@@ -312,6 +312,8 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
                 _geom.push_back(new vwParamPoly3(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
             else if (odrg[i].g == Odr::Attr::Geometry::spiral)
                 _geom.push_back(new vwSpiral(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
+            else if (odrg[0].g == Odr::Attr::Geometry::bezier3)
+                _geom.push_back(new vwBezier3(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
             else
             {
                 std::cerr << "[ Lane ] Unsupported shape! The code will crash quickly after this." << std::endl;

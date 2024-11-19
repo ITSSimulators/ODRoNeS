@@ -96,7 +96,7 @@ public:
 
     // 3 - Geometry
     //! the shape of a segment:
-    enum class shape {straight, vwStraight, clockwise, counterclockwise, vwArc, bezier2, bezier3, paramPoly3, vwParamPoly3, vwSpiral, opendrive, oneversion, unknown};
+    enum class shape {straight, vwStraight, clockwise, counterclockwise, vwArc, bezier2, bezier3, vwBezier3, paramPoly3, vwParamPoly3, vwSpiral, opendrive, oneversion, unknown};
     static std::string shapeString(shape s);
     enum class side {port, bow, starboard, unknown};
     static std::string sideString(side s);

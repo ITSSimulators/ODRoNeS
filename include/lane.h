@@ -35,6 +35,7 @@
 #include "vwArc.h"
 #include "bezier2.h"
 #include "bezier3.h"
+#include "vwBezier3.h"
 #include "paramPoly3.h"
 #include "vwParamPoly3.h"
 #include "vwNumerical.h"
