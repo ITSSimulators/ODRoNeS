@@ -113,7 +113,7 @@ public:
 
     bool isArc() const override {return false;}
     bool isNumerical() const override {return false;}
-
+    arr2 controlPoint(uint i) const; ///< Return the ith control point;
 
 #ifdef QT_CORE_LIB
     QPainterPath getQPainterPath(uint n) const override;

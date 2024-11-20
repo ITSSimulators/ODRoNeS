@@ -35,6 +35,7 @@ public:
     vwArc(const Odr::geometry &odr, int sign, std::vector<Odr::offset> off,
           scalar so, scalar se, scalar roadSo, bool print);
     void printOut() const;
+    scalar l0Curvature() const;
 
 private:
     arr2 curvexy_a(scalar t) const override; ///< return the value of curvexy(s) ahead

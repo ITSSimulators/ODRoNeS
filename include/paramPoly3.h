@@ -70,6 +70,10 @@ public:
     bool isNumerical() const override {return true;}
     scalar sl0(scalar s) const override;
 
+    scalar u(uint i) const { if (i > 3) return 0; return _u[i]; }
+    scalar v(uint i) const { if (i > 3) return 0; return _v[i]; }
+    bool normalised() const { return _normalised; }
+
 #ifdef QT_CORE_LIB
     QPainterPath getQPainterPath(uint n) const override;
 #endif // QT_CORE_LIB

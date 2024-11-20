@@ -50,6 +50,9 @@ public:
     arr2 clNormal(scalar t) const; ///< return the normal at t;
     arr2 clNormalP(scalar t) const; ///< return the first derivative of the normal at t;
 
+    scalar l0CurvStart() const { return _curvStart; };
+    scalar l0CurvEnd() const { return _curvEnd; };
+
 
 private:
     arr2 curvexy_a(scalar t) const override; ///< normalised or not, here t is the distance in meters.
@@ -59,6 +62,8 @@ private:
 
     G2lib::ClothoidCurve _clothoid;
     int _sign;
+    scalar _curvStart;
+    scalar _curvEnd;
 
 };
 

@@ -45,6 +45,8 @@ public:
 
     arr2 origin() const {return _origin;}
     arr2 dest() const {return _dest;}
+    arr2 o() const {return _o;}
+    arr2 d() const {return _d;}
     arr2 to() const {return _to;}
     arr2 blc() const {return _blc;}
     arr2 trc() const {return _trc;}

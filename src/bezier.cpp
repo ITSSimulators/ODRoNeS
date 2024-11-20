@@ -62,6 +62,14 @@ void bezier::allocateMem(uint degree)
     _wy = new scalar[degree + 1];
 }
 
+
+arr2 bezier::controlPoint(uint i) const
+{
+    if (i >= _degree) return {0., 0.};
+    return {_wx[i], _wy[i]};
+}
+
+
 void bezier::clearMem()
 {
     if (_ready)

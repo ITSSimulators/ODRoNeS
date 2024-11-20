@@ -21,6 +21,7 @@
 //
 
 #include "rns.h"
+#include <boost/format.hpp>
 #ifdef USE_ONEVERSION
 #include "readOneVersion.h"
 #endif // USE_ONEVERSION
@@ -515,6 +516,63 @@ void RNS::printLanes() const
         }
     }
 
+}
+
+void RNS::write(const std::string &mapFile) const
+{
+    // Create a TinyXML2 object:
+    tinyxml2::XMLDocument xmlMap;
+    tinyxml2::XMLNode *root = xmlMap.NewElement(Odr::Elem::OpenDrive);
+    xmlMap.InsertFirstChild(root);
+
+    // Print out a header:
+    tinyxml2::XMLElement* header = xmlMap.NewElement(Odr::Elem::Header);
+    header->SetAttribute("revMajor", 1);
+    header->SetAttribute("revMinor", 6);
+    header->SetAttribute("vendor", "University of Leeds, Simulator5");
+    // ... with some user data:
+    tinyxml2::XMLElement* userData = xmlMap.NewElement(Odr::Elem::UserData);
+    userData->SetAttribute("extension", "24_11: bezier3, no junctions");
+    header->InsertEndChild(userData);
+    root->InsertEndChild(header); // into root.
+    // Iterate over the roads:
+    for (uint i = 0; i < _sections->size(); ++i)
+    {
+        tinyxml2::XMLElement* xmlRoad = xmlMap.NewElement(Odr::Elem::Road);
+        xmlRoad->SetAttribute(Odr::Attr::Rule, concepts::drivingString(_drivingSide).c_str());
+        xmlRoad->SetAttribute(Odr::Attr::Length, (boost::format("%.17g") % _sections[i].zero()->getLength()).str().c_str());
+        xmlRoad->SetAttribute(Odr::Attr::Id, _sections[i].odrID());
+        xmlRoad->SetAttribute(Odr::Attr::Junction, -1);
+
+        tinyxml2::XMLElement* type = xmlMap.NewElement(Odr::Elem::Type);
+        xmlRoad->SetAttribute(Odr::Attr::S, 0.00);
+        xmlRoad->SetAttribute(Odr::Attr::Type, Odr::Kind::Unknown);
+        // xmlRoad->SetAttribute("speed", _sections[i].maxSpeed());
+
+        // Link: -- eventually.
+        tinyxml2::XMLElement* link = xmlMap.NewElement(Odr::Elem::Link);
+        xmlRoad->InsertFirstChild(link);
+
+        // PlanView - i e, geometries
+        tinyxml2::XMLElement* planView = xmlMap.NewElement(Odr::Elem::PlanView);
+        _sections[i].zero()->xmlPlanView(planView);
+        xmlRoad->InsertEndChild(planView);
+
+
+        for (uint j = 0; j < _sections[i].size(); ++j)
+        {
+
+
+        }
+
+
+    }
+
+
+    tinyxml2::XMLError eResult = xmlMap.SaveFile(mapFile.c_str());
+    // XMLCheckResult(eResult);
+    if (eResult != tinyxml2::XML_SUCCESS)
+        std::cerr << "Unable to write: " << mapFile << std::endl;
 }
 
 void RNS::linkLanesGeometrically(scalar tol)

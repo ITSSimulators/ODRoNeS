@@ -538,6 +538,16 @@ bool section::setZero(const std::vector<Odr::geometry> &g, scalar so, scalar se)
 }
 
 
+scalar section::maxSpeed() const
+{
+    scalar speed = 0;
+    for (uint i = 0; i < _writtenSize; ++i)
+        if (_lanes[i].getSpeed() > speed) speed = _lanes[i].getSpeed();
+
+    return speed;
+}
+
+
 std::vector<lane::tSign> section::getTSigns() const
 {
     std::vector<lane::tSign> ts_o;

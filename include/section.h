@@ -129,6 +129,7 @@ public:
 
     bool setZero(const std::vector<Odr::geometry> &g, scalar so, scalar se); ///< return false if it was already configured.
 
+    scalar maxSpeed() const;
 
 private:
     void updateBoundingBox(uint ndx); ///< update the bounding box defined by _bbblc, bbtrc with the box of lane _sections[ndx];

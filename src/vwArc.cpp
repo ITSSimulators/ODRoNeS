@@ -127,3 +127,8 @@ void vwArc::printOut() const
     geometry::printOut();
 
 }
+
+scalar vwArc::l0Curvature() const
+{
+    return _radiusOfCurvature;
+}

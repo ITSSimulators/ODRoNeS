@@ -42,7 +42,9 @@ namespace Odr
     {
     public:
         static const char* OpenDrive;
+        static const char* Header;
         static const char* Road;
+        static const char* Type;
         static const char* PlanView;
         static const char* Lane;
         static const char* Lanes;
@@ -85,7 +87,9 @@ namespace Odr
         static const char* Type;
         static const char* Name;
         static const char* Id;
+        static const char* Junction;
         static const char* Length;
+        static const char* Rule;
 
         static const char* IncomingRoad;
         static const char* ConnectingRoad;
@@ -161,6 +165,7 @@ namespace Odr
         static const char* Driving;
         static const char* Sidewalk;
         static const char* Walking;
+        static const char* Unknown;
 
         static const char* Start;
         static const char* End;

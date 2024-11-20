@@ -25,8 +25,10 @@ using namespace odrones;
 
 
 const char* Odr::Elem::OpenDrive = "OpenDRIVE";
+const char* Odr::Elem::Header = "header";
 
 const char* Odr::Elem::Road = "road";
+const char* Odr::Elem::Type = "type";
 const char* Odr::Elem::PlanView = "planView";
 const char* Odr::Elem::Lane = "lane";
 const char* Odr::Elem::Lanes = "lanes";
@@ -62,10 +64,12 @@ const char* Odr::Elem::Validity = "validity";
 const char* Odr::Elem::UserData = "userData";
 const char* Odr::Elem::Dependency = "dependency";
 
-const char* Odr::Attr::Type   = "type";
-const char* Odr::Attr::Name   = "name";
-const char* Odr::Attr::Id     = "id";
-const char* Odr::Attr::Length = "length";
+const char* Odr::Attr::Type     = "type";
+const char* Odr::Attr::Name     = "name";
+const char* Odr::Attr::Id       = "id";
+const char* Odr::Attr::Junction = "junction";
+const char* Odr::Attr::Length   = "length";
+const char* Odr::Attr::Rule     = "rule";
 
 const char* Odr::Attr::IncomingRoad = "incomingRoad";
 const char* Odr::Attr::ConnectingRoad = "connectingRoad";
@@ -137,6 +141,7 @@ const char* Odr::Kind::normalized = "normalized";
 const char* Odr::Kind::Driving = "driving";
 const char* Odr::Kind::Sidewalk = "sidewalk";
 const char* Odr::Kind::Walking = "walking";
+const char* Odr::Kind::Unknown = "unknown";
 
 const char* Odr::Kind::Start = "start";
 const char* Odr::Kind::End = "end";

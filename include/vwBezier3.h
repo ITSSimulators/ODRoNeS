@@ -38,6 +38,9 @@ public:
     vwBezier3(const Odr::geometry &odr, int sign, std::vector<Odr::offset> ioffset,
                              scalar so, scalar se, scalar roadSo, bool print);
 
+
+    arr2 l0ControlPoint(uint i) const { return _bz0.controlPoint(i); }
+
 private:
     arr2 curvexy_a(scalar t) const override; ///< normalised or not, here t is the distance in meters.
     arr2 l0xy_a(scalar t) const override; ///< t is the distance in meters.
