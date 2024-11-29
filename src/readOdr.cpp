@@ -24,199 +24,6 @@
 using namespace odrones;
 
 
-const char* Odr::Elem::OpenDrive = "OpenDRIVE";
-const char* Odr::Elem::Header = "header";
-
-const char* Odr::Elem::Road = "road";
-const char* Odr::Elem::Type = "type";
-const char* Odr::Elem::PlanView = "planView";
-const char* Odr::Elem::Lane = "lane";
-const char* Odr::Elem::Lanes = "lanes";
-const char* Odr::Elem::LaneOffset = "laneOffset";
-const char* Odr::Elem::LaneSection = "laneSection";
-
-const char* Odr::Elem::Junction = "junction";
-const char* Odr::Elem::Connection = "connection";
-const char* Odr::Elem::LaneLink = "laneLink";
-
-const char* Odr::Elem::Link = "link";
-const char* Odr::Elem::Predecessor = "predecessor";
-const char* Odr::Elem::Successor = "successor";
-
-const char* Odr::Elem::Left = "left";
-const char* Odr::Elem::Center = "center";
-const char* Odr::Elem::Right = "right";
-
-const char* Odr::Elem::Geometry = "geometry";
-const char* Odr::Elem::Line = "line";
-const char* Odr::Elem::Arc = "arc";
-const char* Odr::Elem::Spiral = "spiral";
-const char* Odr::Elem::ParamPoly3 = "paramPoly3";
-const char* Odr::Elem::Bezier3 = "bezier3";
-
-const char* Odr::Elem::Width = "width";
-const char* Odr::Elem::Speed = "speed";
-const char* Odr::Elem::Border = "border";
-
-const char* Odr::Elem::Signals = "signals";
-const char* Odr::Elem::Signal = "signal";
-const char* Odr::Elem::Validity = "validity";
-const char* Odr::Elem::UserData = "userData";
-const char* Odr::Elem::Dependency = "dependency";
-
-const char* Odr::Attr::Type     = "type";
-const char* Odr::Attr::Name     = "name";
-const char* Odr::Attr::Id       = "id";
-const char* Odr::Attr::Junction = "junction";
-const char* Odr::Attr::Length   = "length";
-const char* Odr::Attr::Rule     = "rule";
-
-const char* Odr::Attr::IncomingRoad = "incomingRoad";
-const char* Odr::Attr::ConnectingRoad = "connectingRoad";
-const char* Odr::Attr::ContactPoint = "contactPoint";
-const char* Odr::Attr::From = "from";
-const char* Odr::Attr::To = "to";
-
-const char* Odr::Attr::SingleSide = "singleSide";
-
-const char* Odr::Attr::ElementType = "elementType";
-const char* Odr::Attr::ElementId = "elementId";
-
-const char* Odr::Attr::Curvature = "curvature";
-const char* Odr::Attr::CurvStart = "curvStart";
-const char* Odr::Attr::CurvEnd = "curvEnd";
-const char* Odr::Attr::S = "s";
-const char* Odr::Attr::T = "t";
-const char* Odr::Attr::X = "x";
-const char* Odr::Attr::Y = "y";
-const char* Odr::Attr::Hdg = "hdg";
-
-const char* Odr::Attr::sOffset = "sOffset";
-const char* Odr::Attr::A = "a";
-const char* Odr::Attr::B = "b";
-const char* Odr::Attr::C = "c";
-const char* Odr::Attr::D = "d";
-
-const char* Odr::Attr::Max = "max";
-
-const char* Odr::Attr::aU = "aU";
-const char* Odr::Attr::bU = "bU";
-const char* Odr::Attr::cU = "cU";
-const char* Odr::Attr::dU = "dU";
-const char* Odr::Attr::aV = "aV";
-const char* Odr::Attr::bV = "bV";
-const char* Odr::Attr::cV = "cV";
-const char* Odr::Attr::dV = "dV";
-const char* Odr::Attr::pRange = "pRange";
-
-const char* Odr::Attr::bz0x = "bz0x";
-const char* Odr::Attr::bz0y = "bz0y";
-const char* Odr::Attr::bz1x = "bz1x";
-const char* Odr::Attr::bz1y = "bz1y";
-const char* Odr::Attr::bz2x = "bz2x";
-const char* Odr::Attr::bz2y = "bz2y";
-const char* Odr::Attr::bz3x = "bz3x";
-const char* Odr::Attr::bz3y = "bz3y";
-
-const char* Odr::Attr::Unit = "unit";
-
-const char* Odr::Attr::Dynamic = "dynamic";
-const char* Odr::Attr::Orientation = "orientation";
-const char* Odr::Attr::ZOffset = "zOffset";
-const char* Odr::Attr::Value = "value";
-const char* Odr::Attr::Height = "height";
-const char* Odr::Attr::Width = "width";
-const char* Odr::Attr::Text = "text";
-const char* Odr::Attr::HOffset = "hOffset";
-const char* Odr::Attr::Pitch = "pitch";
-const char* Odr::Attr::Roll = "roll";
-
-const char* Odr::Attr::FromLane = "fromLane";
-const char* Odr::Attr::ToLane = "toLane";
-
-const char* Odr::Kind::arcLength = "arcLength";
-const char* Odr::Kind::normalized = "normalized";
-
-
-const char* Odr::Kind::Driving = "driving";
-const char* Odr::Kind::Sidewalk = "sidewalk";
-const char* Odr::Kind::Walking = "walking";
-const char* Odr::Kind::Unknown = "unknown";
-
-const char* Odr::Kind::Start = "start";
-const char* Odr::Kind::End = "end";
-
-const char* Odr::Kind::Road = "road";
-const char* Odr::Kind::Junction = "junction";
-
-const char* Odr::Kind::mph = "mph";
-const char* Odr::Kind::ms = "m/s";
-const char* Odr::Kind::kmh = "km/h";
-
-const char* Odr::Kind::Plus = "+";
-const char* Odr::Kind::Minus = "-";
-const char* Odr::Kind::None = "none";
-
-
-
-// // // Odr Static Methods ///
-std::vector<Odr::offset> Odr::offset::simplify(const std::vector<offset> &v)
-{
-    std::vector<Odr::offset> off;
-    // If the input vector v is empty, return a Zero offset:
-    if (v.size() == 0)
-    {
-        off.push_back(Odr::offset());
-        return off;
-    }
-
-    // Sort the offsets in "s" ascending order
-    std::vector<std::pair<scalar, uint>> order;
-    for (uint i = 0; i < v.size(); ++i)
-        order.push_back(std::pair<scalar, uint>(v[i].s, i));
-    std::sort(order.begin(), order.end());
-
-
-    // Put all the data in order and flattened.
-    off.push_back(v[order[0].second]);
-    for (uint i = 1; i < order.size(); ++ i)
-    {
-        Odr::offset oi = v[order[i].second];
-        if ((mvf::areSameValues(off.back().s, oi.s)) && (mvf::areSameValues(off.back().se, oi.se))
-                && (off.back().lr == oi.lr))
-            off.back() += oi;
-        else
-            off.push_back(oi);
-    }
-
-    return off;
-}
-
-
-std::string Odr::geomString(const Odr::Attr::Geometry &g)
-{
-    if (g == Odr::Attr::Geometry::line)
-        return "line";
-    else if (g == Odr::Attr::Geometry::arc)
-        return "arc";
-    else if (g == Odr::Attr::Geometry::spiral)
-        return "spiral";
-    else if (g == Odr::Attr::Geometry::paramPoly3)
-        return "paramPoly3";
-    else if (g == Odr::Attr::Geometry::bezier3)
-        return "bezier3";
-    else if (g == Odr::Attr::Geometry::none)
-        return "none";
-    else
-        return "clueless!";
-}
-// // // End of Odr Static Methods ///
-
-
-
-
-
-
 void ReadOdr::printRoads()
 {
     for (uint i = 0; i < _sections.size(); ++i)
@@ -264,3 +71,142 @@ bool ReadOdr::isReady()
 {
     return ready;
 }
+
+
+Odr::smaL* ReadOdr::getLaneWithODRIds(uint rOdrID, int lOdrID, int lsID)
+{
+    for (size_t i = 0; i < _sections.size(); ++i)
+    {
+        // Get the right road:
+        if (_sections[i].odrID != rOdrID) continue;
+
+        // Get the correct ndxLS: either lsID itself, or the max value.
+        uint ndxLS;
+        if (lsID < 0)
+            ndxLS = _sections[i].lsSize - 1;
+        else ndxLS = static_cast<uint>(lsID);
+
+        // Find the right lane:
+        for (size_t j = 0; j < _sections[i].lanes.size(); ++j)
+        {
+            if ((_sections[i].lanes[j].odrID == lOdrID) &&
+                (_sections[i].lanes[j].ndxLS == ndxLS)) return &(_sections[i].lanes[j]);
+        }
+    }
+    return nullptr;
+}
+
+
+ReadOdr& ReadOdr::operator=(const ReadOdr &r)
+{
+    _k = r._k;
+
+    // Basics:
+    for (uint i = 0; i < r.sections.size(); ++i)
+    {
+        _sections.push_back(Odr::smaS());
+        _sections.back().id = r.sections[i].id;
+        _sections.back().odrID = r.sections[i].odrID;
+        _sections.back().lsSize = r.sections[i].lsSize;
+        _sections.back().name = r.sections[i].name;
+        _sections.back().geom = r.sections[i].geom;
+        _sections.back().loffset = r.sections[i].loffset;
+        _sections.back().tsigns = r.sections[i].tsigns;
+        for (uint j = 0; j < r.sections[i].lanes.size(); ++j)
+        {
+            Odr::smaL smal;
+            smal.id = r.sections[i].lanes[j].id;
+            smal.sID = r.sections[i].lanes[j].sID;
+            smal.ndxLS = r.sections[i].lanes[j].ndxLS;
+            smal.odrID = r.sections[i].lanes[j].odrID;
+            smal.sign = r.sections[i].lanes[j].sign;
+            smal.length = r.sections[i].lanes[j].length;
+            smal.speed = r.sections[i].lanes[j].speed;
+            smal.startingS = r.sections[i].lanes[j].startingS;
+
+            smal.w = r.sections[i].lanes[j].w;
+            smal.border = r.sections[i].lanes[j].border;
+            smal.kind = r.sections[i].lanes[j].kind;
+
+            _sections.back().lanes.push_back(smal);
+        }
+    }
+
+    // Links:
+    for (uint i = 0; i < r.sections.size(); ++i)
+    {
+        for (uint j = 0; j < r.sections[i].lanes.size(); ++j)
+        {
+            for (uint k = 0; k < r.sections[i].lanes[j].prevLane.size(); ++k)
+            {
+                Odr::smaL *lk = r.sections[i].lanes[j].prevLane[k];
+                Odr::smaL *l = getLaneWithODRIds(_sections[lk->sID].odrID, lk->odrID, lk->ndxLS);
+                _sections[i].lanes[j].prevLane.push_back(l);
+            }
+
+            for (uint k = 0; k < r.sections[i].lanes[j].nextLane.size(); ++k)
+            {
+                Odr::smaL *lk = r.sections[i].lanes[j].nextLane[k];
+                Odr::smaL *l = getLaneWithODRIds(_sections[lk->sID].odrID, lk->odrID, lk->ndxLS);
+                _sections[i].lanes[j].nextLane.push_back(l);
+            }
+        }
+    }
+
+    return *this;
+}
+
+const Odr::smaS* ReadOdr::odrSection(uint odrID) const
+{
+    for (uint i = 0; i < _sections.size(); ++i)
+    {
+        if (odrID == _sections[i].odrID)
+            return &(_sections[i]);
+    }
+    return nullptr;
+}
+
+void Odr::smaL::writeXMLWidth(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const
+{
+    for (uint k = 0; k < w.size(); ++k)
+    {
+        tinyxml2::XMLElement* width = doc.NewElement(Odr::Elem::Width);
+        xmlUtils::setAttrOffsetSOffset(width, w[k]);
+        elem->InsertEndChild(width);
+    }
+}
+
+void Odr::smaL::writeXMLBorder(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const
+{
+    for (uint k = 0; k < border.size(); ++k)
+    {
+        tinyxml2::XMLElement* b = doc.NewElement(Odr::Elem::Border);
+        xmlUtils::setAttrOffsetSOffset(b, border[k]);
+        elem->InsertEndChild(b);
+    }
+}
+
+void Odr::smaL::writeXML(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const
+{
+    elem->SetAttribute(Odr::Attr::Id, odrID);
+    elem->SetAttribute(Odr::Attr::Type, kind.c_str());
+    elem->SetAttribute(Odr::Attr::Level, Odr::Kind::False);
+
+    tinyxml2::XMLElement* link = doc.NewElement(Odr::Elem::Link);
+    if (nextLane.size())
+    {
+        tinyxml2::XMLElement* successor = doc.NewElement(Odr::Elem::Successor);
+        successor->SetAttribute(Odr::Attr::Id, nextLane[0]->odrID);
+        link->InsertEndChild(successor);
+    }
+    if (prevLane.size())
+    {
+        tinyxml2::XMLElement* predecessor = doc.NewElement(Odr::Elem::Predecessor);
+        predecessor->SetAttribute(Odr::Attr::Id, prevLane[0]->odrID);
+        link->InsertEndChild(predecessor);
+    }
+    elem->InsertEndChild(link);
+
+    writeXMLWidth(elem, doc);
+}
+

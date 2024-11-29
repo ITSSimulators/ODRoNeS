@@ -24,37 +24,6 @@
 using namespace odrones;
 
 
-void ReadXOdr::XMLCheckResult(int a_eResult)
-{
-    if (a_eResult != tinyxml2::XML_SUCCESS)
-    {
-        printf("tinyXML Error: %i\n", a_eResult);
-    }
-}
-
-
-Odr::smaL* ReadXOdr::getLaneWithODRIds(uint rOdrID, int lOdrID, int lsID)
-{
-    for (size_t i = 0; i < _sections.size(); ++i)
-    {
-        // Get the right road:
-        if (_sections[i].odrID != rOdrID) continue;
-
-        // Get the correct ndxLS: either lsID itself, or the max value.
-        uint ndxLS;
-        if (lsID < 0)
-            ndxLS = _sections[i].lsSize - 1;
-        else ndxLS = static_cast<uint>(lsID);
-
-        // Find the right lane:
-        for (size_t j = 0; j < _sections[i].lanes.size(); ++j)
-        {
-            if ((_sections[i].lanes[j].odrID == lOdrID) &&
-                (_sections[i].lanes[j].ndxLS == ndxLS)) return &(_sections[i].lanes[j]);
-        }
-    }
-    return nullptr;
-}
 
 // though we don't use it.
 std::vector<Odr::connection> ReadXOdr::readJunction(tinyxml2::XMLElement *c)
@@ -67,9 +36,9 @@ std::vector<Odr::connection> ReadXOdr::readJunction(tinyxml2::XMLElement *c)
         // Read the connection id, incoming road and connecting road;
         Odr::connection smaC;
         j.push_back(smaC);
-        XMLCheckResult(c->QueryIntAttribute(Odr::Attr::Id, &j.back().id));
-        XMLCheckResult(c->QueryIntAttribute(Odr::Attr::IncomingRoad, &j.back().incomingRoad));
-        XMLCheckResult(c->QueryIntAttribute(Odr::Attr::ConnectingRoad, &j.back().connectingRoad));
+        xmlUtils::CheckResult(c->QueryIntAttribute(Odr::Attr::Id, &j.back().id));
+        xmlUtils::CheckResult(c->QueryIntAttribute(Odr::Attr::IncomingRoad, &j.back().incomingRoad));
+        xmlUtils::CheckResult(c->QueryIntAttribute(Odr::Attr::ConnectingRoad, &j.back().connectingRoad));
 
         // Read the contact point and assign 0 or one depending on whether it is start or end:
         const char *txt = nullptr;
@@ -90,8 +59,8 @@ std::vector<Odr::connection> ReadXOdr::readJunction(tinyxml2::XMLElement *c)
         {
             Odr::laneLink ll;
             j.back().llink.push_back(ll);
-            XMLCheckResult(llXML->QueryIntAttribute(Odr::Attr::From, &j.back().llink.back().from));
-            XMLCheckResult(llXML->QueryIntAttribute(Odr::Attr::To, &j.back().llink.back().to));
+            xmlUtils::CheckResult(llXML->QueryIntAttribute(Odr::Attr::From, &j.back().llink.back().from));
+            xmlUtils::CheckResult(llXML->QueryIntAttribute(Odr::Attr::To, &j.back().llink.back().to));
 
             // loop over:
             llXML = llXML->NextSiblingElement(Odr::Elem::LaneLink);
@@ -369,8 +338,7 @@ int ReadXOdr::getRoadLinkData(uint &rLinkID, uint &rLinkCP, tinyxml2::XMLElement
     if (elementType.compare(Odr::Kind::Road) == 0)
     {
         int linkID;
-        XMLCheckResult(fbLinkXML->QueryIntAttribute(Odr::Attr::ElementId, &linkID));
-        // XMLCheckResult(fbLinkXML->QueryIntAttribute(Odr::Attr::Id, &linkID));
+        xmlUtils::CheckResult(fbLinkXML->QueryIntAttribute(Odr::Attr::ElementId, &linkID));
         rLinkID = static_cast<uint>(linkID);
 
         const char* txt = fbLinkXML->Attribute(Odr::Attr::ContactPoint);
@@ -407,11 +375,11 @@ int ReadXOdr::addLane(tinyxml2::XMLElement *road, tinyxml2::XMLElement *lane, ui
     _sections[ndxS].lanes.back().startingS = startingS;
 
     double length = 0;
-    XMLCheckResult(road->QueryDoubleAttribute(Odr::Attr::Length, &length));
+    xmlUtils::CheckResult(road->QueryDoubleAttribute(Odr::Attr::Length, &length));
     _sections[ndxS].lanes.back().length = length;
 
     int odrID = 0;
-    XMLCheckResult(lane->QueryIntAttribute(Odr::Attr::Id, &odrID));
+    xmlUtils::CheckResult(lane->QueryIntAttribute(Odr::Attr::Id, &odrID));
     _sections[ndxS].lanes.back().odrID = odrID;
 
     if (odrID > 0) _sections[ndxS].lanes.back().sign = 1;
@@ -427,11 +395,11 @@ int ReadXOdr::addLane(tinyxml2::XMLElement *road, tinyxml2::XMLElement *lane, ui
     {
         _sections[ndxS].lanes.back().w.push_back(Odr::offset());
         _sections[ndxS].lanes.back().w.back().lr = Odr::offset::LR::L;
-        XMLCheckResult(width->QueryDoubleAttribute(Odr::Attr::sOffset, &(_sections[ndxS].lanes.back().w.back().s) ));
-        XMLCheckResult(width->QueryDoubleAttribute(Odr::Attr::A, &(_sections[ndxS].lanes.back().w.back().a) ));
-        XMLCheckResult(width->QueryDoubleAttribute(Odr::Attr::B, &(_sections[ndxS].lanes.back().w.back().b) ));
-        XMLCheckResult(width->QueryDoubleAttribute(Odr::Attr::C, &(_sections[ndxS].lanes.back().w.back().c) ));
-        XMLCheckResult(width->QueryDoubleAttribute(Odr::Attr::D, &(_sections[ndxS].lanes.back().w.back().d) ));
+        xmlUtils::CheckResult(width->QueryDoubleAttribute(Odr::Attr::sOffset, &(_sections[ndxS].lanes.back().w.back().s) ));
+        xmlUtils::CheckResult(width->QueryDoubleAttribute(Odr::Attr::A, &(_sections[ndxS].lanes.back().w.back().a) ));
+        xmlUtils::CheckResult(width->QueryDoubleAttribute(Odr::Attr::B, &(_sections[ndxS].lanes.back().w.back().b) ));
+        xmlUtils::CheckResult(width->QueryDoubleAttribute(Odr::Attr::C, &(_sections[ndxS].lanes.back().w.back().c) ));
+        xmlUtils::CheckResult(width->QueryDoubleAttribute(Odr::Attr::D, &(_sections[ndxS].lanes.back().w.back().d) ));
         width = width->NextSiblingElement(Odr::Elem::Width);
     }
     if (!_sections[ndxS].lanes.back().w.size())
@@ -444,11 +412,11 @@ int ReadXOdr::addLane(tinyxml2::XMLElement *road, tinyxml2::XMLElement *lane, ui
     {
         _sections[ndxS].lanes.back().border.push_back(Odr::offset());
         _sections[ndxS].lanes.back().border.back().lr = Odr::offset::LR::L;
-        XMLCheckResult(border->QueryDoubleAttribute(Odr::Attr::sOffset, &(_sections[ndxS].lanes.back().border.back().s) ));
-        XMLCheckResult(border->QueryDoubleAttribute(Odr::Attr::A, &(_sections[ndxS].lanes.back().border.back().a) ));
-        XMLCheckResult(border->QueryDoubleAttribute(Odr::Attr::B, &(_sections[ndxS].lanes.back().border.back().b) ));
-        XMLCheckResult(border->QueryDoubleAttribute(Odr::Attr::C, &(_sections[ndxS].lanes.back().border.back().c) ));
-        XMLCheckResult(border->QueryDoubleAttribute(Odr::Attr::D, &(_sections[ndxS].lanes.back().border.back().d) ));
+        xmlUtils::CheckResult(border->QueryDoubleAttribute(Odr::Attr::sOffset, &(_sections[ndxS].lanes.back().border.back().s) ));
+        xmlUtils::CheckResult(border->QueryDoubleAttribute(Odr::Attr::A, &(_sections[ndxS].lanes.back().border.back().a) ));
+        xmlUtils::CheckResult(border->QueryDoubleAttribute(Odr::Attr::B, &(_sections[ndxS].lanes.back().border.back().b) ));
+        xmlUtils::CheckResult(border->QueryDoubleAttribute(Odr::Attr::C, &(_sections[ndxS].lanes.back().border.back().c) ));
+        xmlUtils::CheckResult(border->QueryDoubleAttribute(Odr::Attr::D, &(_sections[ndxS].lanes.back().border.back().d) ));
         border = border->NextSiblingElement(Odr::Elem::Border);
     }
     if (!_sections[ndxS].lanes.back().border.size())
@@ -459,7 +427,7 @@ int ReadXOdr::addLane(tinyxml2::XMLElement *road, tinyxml2::XMLElement *lane, ui
     tinyxml2::XMLElement *speed = lane->FirstChildElement(Odr::Elem::Speed);
     if (speed)
     {
-        XMLCheckResult(speed->QueryDoubleAttribute(Odr::Attr::Max, &(_sections[ndxS].lanes.back().speed)));
+        xmlUtils::CheckResult(speed->QueryDoubleAttribute(Odr::Attr::Max, &(_sections[ndxS].lanes.back().speed)));
 
         std::string units = speed->Attribute(Odr::Attr::Unit);
         if (units.compare(Odr::Kind::mph) == 0)
@@ -494,7 +462,7 @@ uint ReadXOdr::linkLanes(tinyxml2::XMLElement *lXML, uint ndxS, uint ndxL, uint 
             if (lPrev)
             {
                 int lPrevID = 0;
-                XMLCheckResult(lPrev->QueryIntAttribute(Odr::Attr::Id, &lPrevID));
+                xmlUtils::CheckResult(lPrev->QueryIntAttribute(Odr::Attr::Id, &lPrevID));
                 // Now the lane may be linked
                 // to a lane in the previous road (last laneSection):
                 uint rLink = rPrevID;
@@ -514,7 +482,7 @@ uint ReadXOdr::linkLanes(tinyxml2::XMLElement *lXML, uint ndxS, uint ndxL, uint 
             if (lNext)
             {
                 int lNextID = 0;
-                XMLCheckResult(lNext->QueryIntAttribute(Odr::Attr::Id, &lNextID));
+                xmlUtils::CheckResult(lNext->QueryIntAttribute(Odr::Attr::Id, &lNextID));
                 // Now the lane may be linked to the next road (first laneSection)
                 uint rLink = rNextID;
                 int lsLink = 0;
@@ -544,7 +512,7 @@ uint ReadXOdr::linkLanes(tinyxml2::XMLElement *lXML, uint ndxS, uint ndxL, uint 
 
 
 
-ReadXOdr::ReadXOdr(std::string iFile, bool isOdrFile)
+ReadXOdr::ReadXOdr(std::string iFile, bool isOdrFile) : ReadOdr(ReadOdr::kind::xodr)
 {
     ready = false;
     if (!loadXodr(iFile, isOdrFile)) ready = true;
@@ -555,9 +523,9 @@ int ReadXOdr::loadXodr(std::string iFile, bool isOdrFile)
 
     tinyxml2::XMLDocument doc;
     if (isOdrFile)
-        XMLCheckResult(doc.LoadFile(iFile.c_str()));
+        xmlUtils::CheckResult(doc.LoadFile(iFile.c_str()));
     else
-        XMLCheckResult(doc.Parse(iFile.c_str()));
+        xmlUtils::CheckResult(doc.Parse(iFile.c_str()));
 
     tinyxml2::XMLElement *root = doc.FirstChildElement(Odr::Elem::OpenDrive);
     if (root == nullptr) return tinyxml2::XML_ERROR_FILE_READ_ERROR;
@@ -578,8 +546,11 @@ int ReadXOdr::loadXodr(std::string iFile, bool isOdrFile)
 
         int roadID = 0;
         double length;
-        XMLCheckResult(r->QueryIntAttribute(Odr::Attr::Id, &roadID));
-        XMLCheckResult(r->QueryDoubleAttribute(Odr::Attr::Length, &length));
+        xmlUtils::CheckResult(r->QueryIntAttribute(Odr::Attr::Id, &roadID));
+        xmlUtils::CheckResult(r->QueryDoubleAttribute(Odr::Attr::Length, &length));
+
+        const char *txt = r->Attribute(Odr::Attr::Name);
+        if (txt) _sections[ndxS].name = txt;
 
         _sections[ndxS].id = ndxS;
         _sections[ndxS].odrID = static_cast<uint>(roadID);
@@ -598,7 +569,7 @@ int ReadXOdr::loadXodr(std::string iFile, bool isOdrFile)
         while (laneSection)
         {
             double startingS = 0;
-            XMLCheckResult(laneSection->QueryDoubleAttribute(Odr::Attr::S, &startingS));
+            xmlUtils::CheckResult(laneSection->QueryDoubleAttribute(Odr::Attr::S, &startingS));
 
             bool oneSided = false;
             if (laneSection->QueryBoolAttribute(Odr::Attr::SingleSide, &oneSided) == tinyxml2::XML_NO_ATTRIBUTE)
@@ -651,7 +622,7 @@ int ReadXOdr::loadXodr(std::string iFile, bool isOdrFile)
     while (r)
     {
         int roadID = -1;
-        XMLCheckResult(r->QueryIntAttribute(Odr::Attr::Id, &roadID));
+        xmlUtils::CheckResult(r->QueryIntAttribute(Odr::Attr::Id, &roadID));
 
         // Get the Links at the road level:
         uint rPrevID = 0;

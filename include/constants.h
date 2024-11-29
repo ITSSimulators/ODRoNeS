@@ -29,7 +29,6 @@ namespace odrones
 {
 
 typedef double scalar;
-// while purists may argue, Qt uses just this same definition and I can't type so much.
 typedef unsigned int uint;
 
 namespace constants

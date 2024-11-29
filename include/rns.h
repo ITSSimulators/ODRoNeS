@@ -175,6 +175,7 @@ private:
     std::vector<lane::tSign> _tSigns;  ///< a convenience vector with an instance of every traffic sign.
     // std::vector<conflict::staticObj> _sObjects; ///< a convenience vector with
 
+    ReadOdr _letter; ///< keep a copy of the ReadOdr that was used to configure the rns in case we need printing.
     bool _ready; ///< whether the RNS is ready or not.
     bool _verbose; ///< whether to print out to std::out or not.
 

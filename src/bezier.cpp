@@ -65,7 +65,7 @@ void bezier::allocateMem(uint degree)
 
 arr2 bezier::controlPoint(uint i) const
 {
-    if (i >= _degree) return {0., 0.};
+    if (i > _degree) return {0., 0.};
     return {_wx[i], _wy[i]};
 }
 

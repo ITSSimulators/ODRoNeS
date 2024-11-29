@@ -4,6 +4,7 @@
 #include <limits>
 #include "constants.h"
 #include "matvec.h"
+#include "Odr.h"
 #include "readOdr.h"
 #include "readBOdr.h"
 using namespace odrones;
@@ -18,7 +19,7 @@ using namespace odrones;
 %include "stdint.i"
 %include "std_array.i"
 %include "std_vector.i"
-typedef odrones::scalar scalar;
+// typedef odrones::scalar scalar;
 typedef odrones::uint uint;
 // %template(arr2) std::array<odrones::scalar, 2>;
 %template(arr2) std::array<double, 2>;
@@ -35,7 +36,15 @@ typedef odrones::uint uint;
 
 %ignore odrones::geometry::operator=;
 %ignore odrones::bezier::operator=;
+%ignore odrones::RNS::operator=;
+%ignore odrones::Odr::offset::operator=;
+%ignore odrones::ReadOdr::operator=;
+%rename(Odr_Kind_False) odrones::Odr::Kind::False;
+%rename(Odr_Kind_True) odrones::Odr::Kind::True;
+%rename(Odr_Kind_None) odrones::Odr::Kind::None;
+%rename(Odr_laneLink_from) odrones::Odr::laneLink::from;
 
+%include "Odr.h"
 %include "readOdr.h"
 %include "readBOdr.h"
 %include "geometry.h"

@@ -619,6 +619,16 @@ const lane* section::getLane(size_t index) const
     return &(_lanes[index]);
 }
 
+const lane* section::getOdrLane(size_t id) const
+{
+    for (uint i = 0; i < _writtenSize; ++i)
+    {
+        if (_lanes[i].odrID() == id)
+            return &(_lanes[i]);
+    }
+    return nullptr;
+}
+
 lane* section::zero()
 {
     return &_zero;

@@ -23,6 +23,7 @@
 #ifndef ODRONES_READBODR_H
 #define ODRONES_READBODR_H
 
+
 #include "readOdr.h"
 
 namespace odrones 
@@ -31,7 +32,7 @@ namespace odrones
 class ReadBOdr : public ReadOdr
 {
 public:
-    ReadBOdr() { return; }
+    ReadBOdr() : ReadOdr(ReadOdr::kind::bodr) {}
 
     void addRoad(Odr::smaS &s);
 };

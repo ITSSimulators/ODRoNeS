@@ -1,4 +1,4 @@
-// 
+﻿// 
 //  This file is part of the ODRoNeS (OpenDRIVE Road Network System) package.
 //  
 //  Copyright (c) 2023 Albert Solernou, University of Leeds.
@@ -21,6 +21,7 @@
 //
 
 #include "lane.h"
+#include "xmlUtils.h"
 // DEBUG //
 #include <fstream>
 #include <boost/format.hpp>
@@ -537,95 +538,98 @@ bool lane::isOdrShapeSupported(mvf::shape s) const
 }
 
 
-bool lane::xmlPlanView(tinyxml2::XMLElement *planView)
+bool lane::xmlPlanView(tinyxml2::XMLElement *planView, tinyxml2::XMLDocument &doc) const
 {
-
     if (_odrID != 0) return false;
 
     // We're in Lane Zero from here on:
-    tinyxml2::XMLDocument doc = planView->GetDocument();
     for (uint i = 0; i < _geom.size(); ++i)
     {
         tinyxml2::XMLElement *geometry = doc.NewElement(Odr::Elem::Geometry);
-        geometry->SetAttribute(Odr::Attr::S,
-                               (boost::format(".17g") % _geom[i]->roadSo()).str().c_str());
-        geometry->SetAttribute(Odr::Attr::X,
-                               (boost::format(".17g") % _geom[i]->o()[0]).str().c_str());
-        geometry->SetAttribute(Odr::Attr::Y,
-                               (boost::format(".17g") % _geom[i]->o()[1]).str().c_str());
-        geometry->SetAttribute(Odr::Attr::Hdg,
-                               (boost::format(".17g") % std::atan2(-_geom[i]->to()[1], _geom[i]->to()[0])).str().c_str());
-        geometry->SetAttribute(Odr::Attr::Length,
-                               (boost::format(".17g") % (_geom[i]->roadSe() - _geom[i]->roadSo())).str().c_str());
+        if (!geometry)
+        {
+            std::cerr << "[ Error ] Lane::xmlPlanView unable to create geometry element" << std::endl;
+            return false;
+        }
+        xmlUtils::setAttrDouble(geometry, Odr::Attr::S, _geom[i]->roadSo());
+        xmlUtils::setAttrDouble(geometry, Odr::Attr::X, _geom[i]->o()[0]);
+        xmlUtils::setAttrDouble(geometry, Odr::Attr::Y,  _geom[i]->o()[1]);
+        xmlUtils::setAttrDouble(geometry, Odr::Attr::Hdg,
+                                std::atan2(-_geom[i]->to()[1], _geom[i]->to()[0]));
+        xmlUtils::setAttrDouble(geometry, Odr::Attr::Length,
+                               _geom[i]->roadSe() - _geom[i]->roadSo());
         if (_geom[i]->shape() == mvf::shape::straight)
         {
             tinyxml2::XMLElement *xmlLine = doc.NewElement(Odr::Elem::Line);
-            geometry->InsertFirstChild(xmlLine);
+            geometry->InsertEndChild(xmlLine);
         }
         else if (_geom[i]->isArc())
         {
             tinyxml2::XMLElement *xmlArc = doc.NewElement(Odr::Elem::Arc);
-            xmlArc->SetAttribute(Odr::Attr::Curvature,
-                              (boost::format(".17g") % (1. / static_cast<arc*>(_geom[i])->radiusOfCurvature())).str().c_str());
-            geometry->InsertFirstChild(xmlArc);
+            xmlUtils::setAttrDouble(xmlArc, Odr::Attr::Curvature,
+                              (1. / static_cast<arc*>(_geom[i])->radiusOfCurvature()));
+            geometry->InsertEndChild(xmlArc);
         }
         else if (_geom[i]->shape() == mvf::shape::paramPoly3)
         {
             tinyxml2::XMLElement *xmlPP3 = doc.NewElement(Odr::Elem::ParamPoly3);
-            xmlPP3->SetAttribute(Odr::Attr::aU,
-                                 (boost::format(".17g") % (static_cast<paramPoly3*>(_geom[i])->u(0))).str().c_str());
-            xmlPP3->SetAttribute(Odr::Attr::bU,
-                                 (boost::format(".17g") % (static_cast<paramPoly3*>(_geom[i])->u(1))).str().c_str());
-            xmlPP3->SetAttribute(Odr::Attr::cU,
-                                 (boost::format(".17g") % (static_cast<paramPoly3*>(_geom[i])->u(2))).str().c_str());
-            xmlPP3->SetAttribute(Odr::Attr::dU,
-                                 (boost::format(".17g") % (static_cast<paramPoly3*>(_geom[i])->u(3))).str().c_str());
+            xmlUtils::setAttrDouble(xmlPP3, Odr::Attr::aU,
+                                 (static_cast<paramPoly3*>(_geom[i])->u(0)));
+            xmlUtils::setAttrDouble(xmlPP3,Odr::Attr::bU,
+                                 (static_cast<paramPoly3*>(_geom[i])->u(1)));
+            xmlUtils::setAttrDouble(xmlPP3, Odr::Attr::cU,
+                                 (static_cast<paramPoly3*>(_geom[i])->u(2)));
+            xmlUtils::setAttrDouble(xmlPP3, Odr::Attr::dU,
+                                 (static_cast<paramPoly3*>(_geom[i])->u(3)));
 
-            xmlPP3->SetAttribute(Odr::Attr::aV,
-                                 (boost::format(".17g") % (static_cast<paramPoly3*>(_geom[i])->v(0))).str().c_str());
-            xmlPP3->SetAttribute(Odr::Attr::bV,
-                                 (boost::format(".17g") % (static_cast<paramPoly3*>(_geom[i])->v(1))).str().c_str());
-            xmlPP3->SetAttribute(Odr::Attr::cV,
-                                 (boost::format(".17g") % (static_cast<paramPoly3*>(_geom[i])->v(2))).str().c_str());
-            xmlPP3->SetAttribute(Odr::Attr::dV,
-                                 (boost::format(".17g") % (static_cast<paramPoly3*>(_geom[i])->v(3))).str().c_str());
+            xmlUtils::setAttrDouble(xmlPP3, Odr::Attr::aV,
+                                 (static_cast<paramPoly3*>(_geom[i])->v(0)));
+            xmlUtils::setAttrDouble(xmlPP3,Odr::Attr::bV,
+                                 (static_cast<paramPoly3*>(_geom[i])->v(1)));
+            xmlUtils::setAttrDouble(xmlPP3, Odr::Attr::cV,
+                                 (static_cast<paramPoly3*>(_geom[i])->v(2)));
+            xmlUtils::setAttrDouble(xmlPP3, Odr::Attr::dV,
+                                 (static_cast<paramPoly3*>(_geom[i])->v(3)));
 
             if (static_cast<paramPoly3*>(_geom[i])->normalised())
                 xmlPP3->SetAttribute(Odr::Attr::pRange, Odr::Kind::normalized);
             else
                 xmlPP3->SetAttribute(Odr::Attr::pRange, Odr::Kind::arcLength);
 
-            geometry->InsertFirstChild(xmlPP3);
+            geometry->InsertEndChild(xmlPP3);
         }
         else if (_geom[i]->shape() == mvf::shape::vwSpiral)
         {
             tinyxml2::XMLElement *xmlSpiral = doc.NewElement(Odr::Elem::Spiral);
-            xmlSpiral->SetAttribute(Odr::Attr::CurvStart,
-                                 (boost::format(".17g") % (static_cast<vwSpiral*>(_geom[i])->l0CurvStart())).str().c_str());
-            xmlSpiral->SetAttribute(Odr::Attr::CurvEnd,
-                                 (boost::format(".17g") % (static_cast<vwSpiral*>(_geom[i])->l0CurvEnd())).str().c_str());
-            geometry->InsertFirstChild(xmlSpiral);
+            xmlUtils::setAttrDouble(xmlSpiral, Odr::Attr::CurvStart,
+                                 (static_cast<vwSpiral*>(_geom[i])->l0CurvStart()));
+            xmlUtils::setAttrDouble(xmlSpiral, Odr::Attr::CurvEnd,
+                                 (static_cast<vwSpiral*>(_geom[i])->l0CurvEnd()));
+            geometry->InsertEndChild(xmlSpiral);
         }
         else if (_geom[i]->shape() == mvf::shape::vwBezier3)
         {
             tinyxml2::XMLElement *xmlBezier = doc.NewElement(Odr::Elem::Bezier3);
-            xmlBezier->SetAttribute(Odr::Attr::bz0x,
-                                    (boost::format(".17g") % (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(0)[0] )).str().c_str());
-            xmlBezier->SetAttribute(Odr::Attr::bz0y,
-                                    (boost::format(".17g") % (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(0)[1] )).str().c_str());
-            xmlBezier->SetAttribute(Odr::Attr::bz1x,
-                                    (boost::format(".17g") % (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(1)[0] )).str().c_str());
-            xmlBezier->SetAttribute(Odr::Attr::bz1y,
-                                    (boost::format(".17g") % (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(1)[1] )).str().c_str());
-            xmlBezier->SetAttribute(Odr::Attr::bz2x,
-                                    (boost::format(".17g") % (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(2)[0] )).str().c_str());
-            xmlBezier->SetAttribute(Odr::Attr::bz2y,
-                                    (boost::format(".17g") % (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(2)[1] )).str().c_str());
-            xmlBezier->SetAttribute(Odr::Attr::bz3x,
-                                    (boost::format(".17g") % (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(3)[0] )).str().c_str());
-            xmlBezier->SetAttribute(Odr::Attr::bz3y,
-                                    (boost::format(".17g") % (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(3)[1] )).str().c_str());
-            geometry->InsertFirstChild(xmlBezier);
+
+            xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz0x,
+                                    (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(0)[0] ));
+            xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz0y,
+                                    (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(0)[1] ));
+            xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz1x,
+                                    (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(1)[0] ));
+            xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz1y,
+                                    (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(1)[1] ));
+            xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz2x,
+                                    (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(2)[0] ));
+            xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz2y,
+                                    (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(2)[1] ));
+            xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz3x,
+                                    (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(3)[0] ));
+            xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz3y,
+                                    (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(3)[1] ));
+
+
+            geometry->InsertEndChild(xmlBezier);
         }
         /* That should never happen because this is lane 0, that is constant and zero width.
         else if (_geom[i]->shape() == mvf::shape::vwArc)
@@ -633,18 +637,47 @@ bool lane::xmlPlanView(tinyxml2::XMLElement *planView)
             tinyxml2::XMLElement *xmlArc = doc.NewElement(Odr::Elem::Arc);
             xmlArc->SetAttribute(Odr::Attr::Curvature,
                               (boost::format(".17g") % (1. / static_cast<vwArc*>(_geom[i])->baseCurvature())).str().c_str());
-            geometry->InsertFirstChild(xmlArc);
+            geometry->InsertEndChild(xmlArc);
         }
         */ // Thus:
         else
             return false;
 
-        // Push back the geometry
-        if (i == 0)
-            planView->InsertFirstChild(geometry);
-        else
-            planView->InsertEndChild(geometry);
+        planView->InsertEndChild(geometry);
     }
+
+    return true;
+}
+
+
+bool lane::xmlLaneAttributesAndLinks(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const
+{
+    if (!elem) return false;
+
+    elem->SetAttribute(Odr::Attr::Id, _odrID);
+    if (_kind == kind::tarmac)
+        elem->SetAttribute(Odr::Attr::Type, Odr::Kind::Driving);
+    else if (_kind == kind::pavement)
+        elem->SetAttribute(Odr::Attr::Type, Odr::Kind::Walking);
+    elem->SetAttribute(Odr::Attr::Level, Odr::Kind::False);
+
+    tinyxml2::XMLElement* link = doc.NewElement(Odr::Elem::Link);
+    if (!link) return false;
+    if (_nextLaneSize)
+    {
+        tinyxml2::XMLElement *successor = doc.NewElement(Odr::Elem::Successor);
+        if (!successor) return false;
+        successor->SetAttribute(Odr::Attr::Id, _nextLane[0]->odrID());
+        link->InsertEndChild(successor);
+    }
+    if (_prevLaneSize)
+    {
+        tinyxml2::XMLElement *predecessor = doc.NewElement(Odr::Elem::Predecessor);
+        if (!predecessor) return false;
+        predecessor->SetAttribute(Odr::Attr::Id, _prevLane[0]->odrID());
+        link->InsertEndChild(predecessor);
+    }
+    elem->InsertEndChild(link);
 
     return true;
 }

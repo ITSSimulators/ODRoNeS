@@ -359,6 +359,8 @@ bool RNS::makeOpenDRIVERoads(ReadOdr &read, concepts::drivingSide drivingSide, b
 
     _ready = false;
 
+    _letter = read;
+
     _drivingSide = drivingSide;
 
     // Allocate and do the geometry for the lanes:
@@ -402,32 +404,37 @@ bool RNS::makeOpenDRIVERoads(ReadOdr &read, concepts::drivingSide drivingSide, b
     }
 
     // Now do the linking:
-    for (uint i = 0; i < read.sections.size(); ++i)
+    if (read.k() == ReadOdr::kind::xodr)
     {
-        for (uint j = 0; j < read.sections[i].lanes.size(); ++j)
+        for (uint i = 0; i < read.sections.size(); ++i)
         {
-            lane* lij = getLaneWithODRIds(read.sections[i].odrID, read.sections[i].lanes[j].odrID);
-            if (!lij)
-               std::cerr << "[ Error ] No lane for: " << i << ", " << j << ", segfault on the way... " << std::endl;
-            for (uint k = 0; k < read.sections[i].lanes[j].nextLane.size(); ++k)
+            for (uint j = 0; j < read.sections[i].lanes.size(); ++j)
             {
-                Odr::smaL *sml = read.sections[i].lanes[j].nextLane[k];
-                if (!sml) continue;
+                lane* lij = getLaneWithODRIds(read.sections[i].odrID, read.sections[i].lanes[j].odrID);
+                if (!lij)
+                    std::cerr << "[ Error ] No lane for: " << i << ", " << j << ", segfault on the way... " << std::endl;
+                for (uint k = 0; k < read.sections[i].lanes[j].nextLane.size(); ++k)
+                {
+                    Odr::smaL *sml = read.sections[i].lanes[j].nextLane[k];
+                    if (!sml) continue;
 
-                lane* nextLane = getLaneWithODRIds(read.sections[sml->sID].odrID, sml->odrID);
-                linkLanesIfInRange(lij, nextLane);
-            }
+                    lane* nextLane = getLaneWithODRIds(read.sections[sml->sID].odrID, sml->odrID);
+                    linkLanesIfInRange(lij, nextLane);
+                }
 
-            for (uint k = 0; k < read.sections[i].lanes[j].prevLane.size(); ++k)
-            {
-                Odr::smaL *sml = read.sections[i].lanes[j].prevLane[k];
-                if (!sml) continue;
+                for (uint k = 0; k < read.sections[i].lanes[j].prevLane.size(); ++k)
+                {
+                    Odr::smaL *sml = read.sections[i].lanes[j].prevLane[k];
+                    if (!sml) continue;
 
-                lane* prevLane = getLaneWithODRIds(read.sections[sml->sID].odrID, sml->odrID);
-                linkLanesIfInRange(lij, prevLane);
+                    lane* prevLane = getLaneWithODRIds(read.sections[sml->sID].odrID, sml->odrID);
+                    linkLanesIfInRange(lij, prevLane);
+                }
             }
         }
     }
+    else
+        linkLanesGeometrically();
 
 
     // Set port and starboard lanes, and assume left hand driving:
@@ -523,7 +530,7 @@ void RNS::write(const std::string &mapFile) const
     // Create a TinyXML2 object:
     tinyxml2::XMLDocument xmlMap;
     tinyxml2::XMLNode *root = xmlMap.NewElement(Odr::Elem::OpenDrive);
-    xmlMap.InsertFirstChild(root);
+    xmlMap.InsertEndChild(root);
 
     // Print out a header:
     tinyxml2::XMLElement* header = xmlMap.NewElement(Odr::Elem::Header);
@@ -535,44 +542,164 @@ void RNS::write(const std::string &mapFile) const
     userData->SetAttribute("extension", "24_11: bezier3, no junctions");
     header->InsertEndChild(userData);
     root->InsertEndChild(header); // into root.
-    // Iterate over the roads:
-    for (uint i = 0; i < _sections->size(); ++i)
+
+    // If we built that from using ReadBOdr, the original input was incomplete:
+    if (_letter.k() == ReadOdr::kind::bodr)
     {
-        tinyxml2::XMLElement* xmlRoad = xmlMap.NewElement(Odr::Elem::Road);
-        xmlRoad->SetAttribute(Odr::Attr::Rule, concepts::drivingString(_drivingSide).c_str());
-        xmlRoad->SetAttribute(Odr::Attr::Length, (boost::format("%.17g") % _sections[i].zero()->getLength()).str().c_str());
-        xmlRoad->SetAttribute(Odr::Attr::Id, _sections[i].odrID());
-        xmlRoad->SetAttribute(Odr::Attr::Junction, -1);
-
-        tinyxml2::XMLElement* type = xmlMap.NewElement(Odr::Elem::Type);
-        xmlRoad->SetAttribute(Odr::Attr::S, 0.00);
-        xmlRoad->SetAttribute(Odr::Attr::Type, Odr::Kind::Unknown);
-        // xmlRoad->SetAttribute("speed", _sections[i].maxSpeed());
-
-        // Link: -- eventually.
-        tinyxml2::XMLElement* link = xmlMap.NewElement(Odr::Elem::Link);
-        xmlRoad->InsertFirstChild(link);
-
-        // PlanView - i e, geometries
-        tinyxml2::XMLElement* planView = xmlMap.NewElement(Odr::Elem::PlanView);
-        _sections[i].zero()->xmlPlanView(planView);
-        xmlRoad->InsertEndChild(planView);
-
-
-        for (uint j = 0; j < _sections[i].size(); ++j)
+        // Iterate over the roads, because there are no road sections:
+        for (uint i = 0; i < _sectionsSize; ++i)
         {
+            // Road definition and attributes:
+            tinyxml2::XMLElement* xmlRoad = xmlMap.NewElement(Odr::Elem::Road);
+            const Odr::smaS *smas = _letter.odrSection(_sections[i].odrID());
+            if (!smas)
+            {
+                std::cerr << "[ RNS::Write Error ] smas not found "
+                          << "for road with odrID: " << _sections[i].odrID() << std::endl;
+            }
+            xmlRoad->SetAttribute(Odr::Attr::Name, smas->name.c_str());
+            xmlUtils::setAttrDouble(xmlRoad, Odr::Attr::Length, _sections[i].zero()->getLength());
+            xmlRoad->SetAttribute(Odr::Attr::Id, _sections[i].odrID());
+            xmlRoad->SetAttribute(Odr::Attr::Junction, -1);
+            if (_drivingSide == concepts::drivingSide::leftHand)
+                xmlRoad->SetAttribute(Odr::Attr::Rule, Odr::Kind::LHT);
+            else if (_drivingSide == concepts::drivingSide::rightHand)
+                xmlRoad->SetAttribute(Odr::Attr::Rule, Odr::Kind::RHT);
+
+            // Road -> Type:
+            tinyxml2::XMLElement* type = xmlMap.NewElement(Odr::Elem::Type);
+            xmlUtils::setAttrDouble(type, Odr::Attr::S, 0.00);
+            type->SetAttribute(Odr::Attr::Type, Odr::Kind::Unknown);
+            // Road -> type -> speed:
+            tinyxml2::XMLElement* speed = xmlMap.NewElement(Odr::Elem::Speed);
+            xmlUtils::setAttrDouble(speed, Odr::Attr::Max, _sections[i].maxSpeed());
+            speed->SetAttribute(Odr::Attr::Unit, Odr::Kind::ms);
+            type->InsertEndChild(speed); // push speed
+            xmlRoad->InsertEndChild(type); // push type
+
+            // Road -> link - We don't need road linking, lanes are linked individually.
+            tinyxml2::XMLElement* roadLink = xmlMap.NewElement(Odr::Elem::Link);
+            xmlRoad->InsertEndChild(roadLink);
+
+            // Road -> PlanView - i e, geometries
+            tinyxml2::XMLElement* planView = xmlMap.NewElement(Odr::Elem::PlanView);
+            if (!_sections[i].zero()->xmlPlanView(planView, xmlMap))
+                std::cerr << "zero was unable to run xmlPlanView" << std::endl;
+            xmlRoad->InsertEndChild(planView);
+
+            // Road -> Lanes:
+            tinyxml2::XMLElement *lanes = xmlMap.NewElement(Odr::Elem::Lanes);
+            // Road -> Lanes -> Lanes offset:
+            for (uint j = 0; j < smas->loffset.size(); ++j)
+            {
+                tinyxml2::XMLElement* laneOffset = xmlMap.NewElement(Odr::Elem::LaneOffset);
+                xmlUtils::setAttrOffsetS(laneOffset, smas->loffset[j]);
+                lanes->InsertEndChild(laneOffset);
+            }
+
+            // Road -> Lanes -> Lane Section:
+            tinyxml2::XMLElement* laneSection = xmlMap.NewElement(Odr::Elem::LaneSection);
+            xmlUtils::setAttrDouble(laneSection, Odr::Attr::S, 0.);
+
+            // Gather the indices for left & right lanes:
+            std::vector<uint> leftUint, rightUint;
+            for (uint j = 0; j < smas->lanes.size(); ++j)
+            {
+                if (smas->lanes[j].odrID < 0)
+                    rightUint.push_back(j);
+                else if (smas->lanes[j].odrID > 0)
+                    leftUint.push_back(j);
+            }
+
+            // Road -> Lanes -> LaneSection -> Left
+            tinyxml2::XMLElement* leftXML = xmlMap.NewElement(Odr::Elem::Left);
+            for (uint j = 0; j < leftUint.size(); ++j)
+            {
+                tinyxml2::XMLElement* laneXML = xmlMap.NewElement(Odr::Elem::Lane);
+                const lane* l = _sections[i].getOdrLane(smas->lanes[leftUint[j]].odrID);
+                if (!l)
+                {
+                    std::cerr << "[ Error ] RNS::write - lane not found" << std::endl;
+                    return;
+                }
+                l->xmlLaneAttributesAndLinks(laneXML, xmlMap);
+                smas->lanes[leftUint[j]].writeXMLWidth(laneXML, xmlMap);
+                smas->lanes[leftUint[j]].writeXMLBorder(laneXML, xmlMap);
+                leftXML->InsertEndChild(laneXML);
+            }
+            if (leftUint.size())
+                laneSection->InsertEndChild(leftXML);
 
 
+            // Road -> Lanes -> LaneSection -> Centre
+            tinyxml2::XMLElement* centreXML = xmlMap.NewElement(Odr::Elem::Center);
+            tinyxml2::XMLElement* centreLane = xmlMap.NewElement(Odr::Elem::Lane);
+            centreLane->SetAttribute(Odr::Attr::Id, 0);
+            centreLane->SetAttribute(Odr::Attr::Type, Odr::Kind::None);
+            centreLane->SetAttribute(Odr::Attr::Level, Odr::Kind::False);
+            tinyxml2::XMLElement* lane0Link = xmlMap.NewElement(Odr::Elem::Link);
+            centreLane->InsertEndChild(lane0Link); // push laneLink into Lane
+            centreXML->InsertEndChild(centreLane); // push centreLane into Center
+            laneSection->InsertEndChild(centreXML); // push Center into Lane Section
+
+
+            // Road -> Lanes -> LaneSection -> Right
+            tinyxml2::XMLElement* rightXML = xmlMap.NewElement(Odr::Elem::Right);
+            for (uint j = 0; j < rightUint.size(); ++j)
+            {
+                tinyxml2::XMLElement* laneXML = xmlMap.NewElement(Odr::Elem::Lane);
+                const lane* l = _sections[i].getOdrLane(smas->lanes[rightUint[j]].odrID);
+                if (!l)
+                {
+                    std::cerr << "[ Error ] RNS::write - lane not found" << std::endl;
+                    return;
+                }
+                l->xmlLaneAttributesAndLinks(laneXML, xmlMap);
+                smas->lanes[rightUint[j]].writeXMLWidth(laneXML, xmlMap);
+                smas->lanes[rightUint[j]].writeXMLBorder(laneXML, xmlMap);
+                rightXML->InsertEndChild(laneXML);
+            }
+            if (rightUint.size())
+                laneSection->InsertEndChild(rightXML);
+
+            lanes->InsertEndChild(laneSection);
+            xmlRoad->InsertEndChild(lanes);
+
+            root->InsertEndChild(xmlRoad); // into root.
         }
+    }
+    else
+    {
 
+        /*
+            // loop over letter.sections:
+            const Odr::smaS *smas = &(_letter.sections[5]);
 
+            // Gather the indices for left & right lanes:
+            std::vector<uint> leftUint, rightUint;
+            for (uint j = 0; j < smas->lanes.size(); ++j)
+            {
+                if (smas->lanes[j].odrID < 0)
+                    rightUint.push_back(j);
+                else if (smas->lanes[j].odrID > 0)
+                    leftUint.push_back(j);
+            }
+
+            // Road -> Lanes -> LaneSection -> Left
+            tinyxml2::XMLElement* leftXML = xmlMap.NewElement(Odr::Elem::Left);
+            for (uint j = 0; j < leftUint.size(); ++j)
+            {
+                tinyxml2::XMLElement* lane = xmlMap.NewElement(Odr::Elem::Lane);
+                smas->lanes[leftUint[j]].writeXML(lane, xmlMap);
+                leftXML->InsertEndChild(lane);
+            }
+            if (leftUint.size())
+                laneSection->InsertEndChild(leftXML);
+        */
+        std::cout << "not implemented!" << std::endl;
     }
 
-
-    tinyxml2::XMLError eResult = xmlMap.SaveFile(mapFile.c_str());
-    // XMLCheckResult(eResult);
-    if (eResult != tinyxml2::XML_SUCCESS)
-        std::cerr << "Unable to write: " << mapFile << std::endl;
+    xmlUtils::CheckResult(xmlMap.SaveFile(mapFile.c_str()));
 }
 
 void RNS::linkLanesGeometrically(scalar tol)

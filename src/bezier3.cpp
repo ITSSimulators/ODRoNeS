@@ -81,10 +81,10 @@ void bezier3::set(const arr2 &p0, const arr2 &p1, const arr2 &p2, const arr2 &p3
     _origin = p0; // curvexy(0);
     _dest = p3; // curvexy(1);
     _shape = mvf::shape::bezier3;
-    _length = calcLength();
+    _length = bezier3::calcLength();
     _to = mvf::tangent(p0, p1); //curvePxy(0);
     // mvf::normalise(_to);
-    getBoundingBox(_blc, _trc);
+    bezier3::getBoundingBox(_blc, _trc);
 
     _ready = true;
 }

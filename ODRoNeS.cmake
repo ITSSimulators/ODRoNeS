@@ -53,7 +53,7 @@ option(ODRONES_USE_QT "Build ODRoNeS with a graphical interface" ON)
 if (ODRONES_USE_QT)
   find_package(Qt6 COMPONENTS Core Gui Widgets) # 3DCore 3DRender 3DExtras)
   if (NOT ${Qt6_FOUND})
-      message(FATAL_ERROR "You could also try compiling without Qt support using -DUSE_QT=OFF")
+      message(FATAL_ERROR "You could also try compiling without Qt support using -DODRONES_USE_QT=OFF")
   endif (NOT ${Qt6_FOUND})
   set(QT_LIBRARIES Qt6::Core Qt6::Gui Qt6::Widgets)
   set(CMAKE_AUTOUIC ON)
@@ -97,6 +97,8 @@ add_library(rns
     ${RNS_DIR}/include/constants.h 
     ${RNS_DIR}/src/rnsconcepts.cpp ${RNS_DIR}/include/rnsconcepts.h
     ${RNS_DIR}/src/matvec.cpp ${RNS_DIR}/include/matvec.h
+	 ${RNS_DIR}/src/xmlUtils.cpp ${RNS_DIR}/include/xmlUtils.h
+	 ${RNS_DIR}/src/Odr.cpp ${RNS_DIR}/include/Odr.h
     ${RNS_DIR}/src/readOdr.cpp ${RNS_DIR}/include/readOdr.h
     ${RNS_DIR}/src/readXOdr.cpp ${RNS_DIR}/include/readXOdr.h
     ${RNS_DIR}/src/readBOdr.cpp ${RNS_DIR}/include/readBOdr.h
@@ -163,7 +165,7 @@ endif (ODRONES_USE_ONEVERSION)
 
 
 # Build the Graphical representations, provided you have Qt available
-if (USE_QT)
+if (ODRONES_USE_QT)
   add_executable(rnscheck
       ${RNS_DIR}/src/main.cpp
       ${RNS_DIR}/src/rnswindow.cpp ${RNS_DIR}/include/rnswindow.h
@@ -176,11 +178,11 @@ if (USE_QT)
   # target_link_libraries(rns3d PRIVATE rns Qt6::Widgets Qt6::3DCore Qt6::3DRender Qt6::3DExtras)
 
   install (TARGETS rnscheck RUNTIME DESTINATION ${RNS_INSTALL_DIR}/bin)
-endif (USE_QT)
+endif()
 
 if (RNS_INSTALL_DEV)
    install (TARGETS rns DESTINATION ${RNS_INSTALL_DIR}/lib)
    install (DIRECTORY ${RNS_DIR}/include DESTINATION ${RNS_INSTALL_DIR}/include/odrones)
-endif ()
+endif()
                          
 

@@ -24,6 +24,7 @@
 #define ODRONES_READXODR_H
 
 #include "readOdr.h"
+#include "xmlUtils.h"
 
 namespace odrones 
 {
@@ -38,11 +39,6 @@ public:
 
 private:
     int loadXodr(std::string iFile, bool isOdrFile); ///< return non-zero in case of error.
-
-    void XMLCheckResult(int a_eResult); ///< print out whether there was an XML error.
-
-    /*! return the point to a lane that has the required OpenDRIVE IDs */
-    Odr::smaL* getLaneWithODRIds(uint rOdrID, int lOdrID, int lsID);
 
     /*! Read and return a Junction, given the Junction XMLElement */
     std::vector<Odr::connection> readJunction(tinyxml2::XMLElement *c);

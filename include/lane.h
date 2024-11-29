@@ -424,7 +424,8 @@ public:
     bool isFlippable() const; ///< return _flippable
     bool isOdrFwd() const; ///< return _odrFwd
     bool isOdrShapeSupported(mvf::shape s) const; ///< return true if the shape is supported;
-    bool xmlPlanView(tinyxml2::XMLElement *planView); ///< fill in the planView with geometries ONLY IF IT's LANE 0! (false otherwise).
+    bool xmlPlanView(tinyxml2::XMLElement *planView, tinyxml2::XMLDocument &doc) const; ///< fill in the planView with geometries ONLY IF IT's LANE 0! (false otherwise).
+    bool xmlLaneAttributesAndLinks(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const;
 
 
 private:
