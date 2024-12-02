@@ -152,8 +152,10 @@ if (ODRONES_PYTHON_BINDINGS)
 	set(ODRONES_PYTHON_INSTALL_DIR 
 	    ${RNS_INSTALL_DIR}/lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages/odrones 
 		 CACHE INTERNAL "folder in which ODRoNeS will install the Python bindings" FORCE)
+	file(WRITE ${CMAKE_BINARY_DIR}/__init__.py "from . import odrones")
 	install (TARGETS odrones DESTINATION ${ODRONES_PYTHON_INSTALL_DIR})
-	install (FILES ${CMAKE_BINARY_DIR}/odrones.py DESTINATION ${ODRONES_PYTHON_INSTALL_DIR})
+	install (FILES ${CMAKE_BINARY_DIR}/odrones.py ${CMAKE_BINARY_DIR}/__init__.py
+	         DESTINATION ${ODRONES_PYTHON_INSTALL_DIR})
 endif()
 
 
