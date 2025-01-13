@@ -22,6 +22,7 @@
 
 #include <utility>
 #include <cstdlib>
+#include <cstdint>
 #include <cmath>
 #include <complex>
 #include <iostream>
