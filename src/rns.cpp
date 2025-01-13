@@ -569,7 +569,7 @@ void RNS::write(const std::string &mapFile) const
             // Road -> Type:
             tinyxml2::XMLElement* type = xmlMap.NewElement(Odr::Elem::Type);
             xmlUtils::setAttrDouble(type, Odr::Attr::S, 0.00);
-            type->SetAttribute(Odr::Attr::Type, Odr::Kind::Unknown);
+            type->SetAttribute(Odr::Attr::Type, smas->type.c_str());
             // Road -> type -> speed:
             tinyxml2::XMLElement* speed = xmlMap.NewElement(Odr::Elem::Speed);
             xmlUtils::setAttrDouble(speed, Odr::Attr::Max, _sections[i].maxSpeed());

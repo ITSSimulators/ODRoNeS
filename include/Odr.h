@@ -191,6 +191,19 @@ namespace Odr
 
         static const char* LHT;
         static const char* RHT;
+
+        static const char* Bicycle;
+        static const char* LowSpeed;
+        static const char* Motorway;
+        static const char* Pedestrian;
+        static const char* Rural;
+        static const char* TownArterial;
+        static const char* TownCollector;
+        static const char* TownExpressway;
+        static const char* TownLocal;
+        static const char* TownPlayStreet;
+        static const char* TownPrivate;
+        static const char* Town;
     };
 
 
@@ -492,6 +505,7 @@ namespace Odr
         uint odrID;
         uint lsSize; ///< number of lane sections
         std::string name;
+        std::string type;
         std::vector<Odr::geometry> geom;
         std::vector<Odr::offset> loffset;
         std::vector<Odr::tsign> tsigns;
@@ -500,6 +514,7 @@ namespace Odr
 
 // public:
     extern std::string geomString(const Odr::Attr::Geometry &g);
+    extern bool isRoadTypeValid(const std::string &rt);
 
 };
 

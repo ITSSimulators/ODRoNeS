@@ -164,6 +164,20 @@ const char* Odr::Kind::True = "true";
 const char* Odr::Kind::RHT = "RHT";
 const char* Odr::Kind::LHT = "LHT";
 
+const char* Odr::Kind::Bicycle = "bicycle";
+const char* Odr::Kind::LowSpeed = "lowSpeed";
+const char* Odr::Kind::Motorway = "motorway";
+const char* Odr::Kind::Pedestrian = "pedestrian";
+const char* Odr::Kind::Rural = "rural";
+const char* Odr::Kind::TownArterial = "townArterial";
+const char* Odr::Kind::TownCollector = "townCollector";
+const char* Odr::Kind::TownExpressway = "townExpressway";
+const char* Odr::Kind::TownLocal = "townLocal";
+const char* Odr::Kind::TownPlayStreet = "townPlayStreet";
+const char* Odr::Kind::TownPrivate = "townPrivate";
+const char* Odr::Kind::Town = "town";
+
+
 std::vector<Odr::offset> Odr::offset::simplify(const std::vector<offset> &v)
 {
     std::vector<Odr::offset> off;
@@ -215,5 +229,23 @@ std::string Odr::geomString(const Odr::Attr::Geometry &g)
         return "clueless!";
 }
 
+bool Odr::isRoadTypeValid(const std::string &rt)
+{
+    if ((strcmp(rt.c_str(), Odr::Kind::Bicycle) == 0) ||
+            (strcmp(rt.c_str(), Odr::Kind::LowSpeed) == 0) ||
+            (strcmp(rt.c_str(), Odr::Kind::Motorway) == 0) ||
+            (strcmp(rt.c_str(), Odr::Kind::Pedestrian) == 0) ||
+            (strcmp(rt.c_str(), Odr::Kind::Rural) == 0) ||
+            (strcmp(rt.c_str(), Odr::Kind::TownArterial) == 0) ||
+            (strcmp(rt.c_str(), Odr::Kind::TownCollector) == 0) ||
+            (strcmp(rt.c_str(), Odr::Kind::TownExpressway) == 0) ||
+            (strcmp(rt.c_str(), Odr::Kind::TownLocal) == 0) ||
+            (strcmp(rt.c_str(), Odr::Kind::TownPlayStreet) == 0) ||
+            (strcmp(rt.c_str(), Odr::Kind::TownPrivate) == 0) ||
+            (strcmp(rt.c_str(), Odr::Kind::Town) == 0) )
+        return true;
+
+    return false;
+}
 
 

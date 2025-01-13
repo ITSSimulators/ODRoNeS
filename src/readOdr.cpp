@@ -109,6 +109,7 @@ ReadOdr& ReadOdr::operator=(const ReadOdr &r)
         _sections.back().odrID = r.sections[i].odrID;
         _sections.back().lsSize = r.sections[i].lsSize;
         _sections.back().name = r.sections[i].name;
+        _sections.back().type = r.sections[i].type;
         _sections.back().geom = r.sections[i].geom;
         _sections.back().loffset = r.sections[i].loffset;
         _sections.back().tsigns = r.sections[i].tsigns;
