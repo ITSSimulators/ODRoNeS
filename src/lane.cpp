@@ -810,10 +810,12 @@ void lane::setBezierLines(const std::vector<bezier3> &bzr)
 
     calcBoundingBox();
 
+    /*
     scalar ds = numerical::defaultDs(_length);
     uint size = 1 + static_cast<uint>(std::round(_length / ds));
     numerical::initialise(ds, size);
     numerical::setup();
+    */
 }
 
 void lane::appendBezierLines(const std::vector<bezier2> &bzr)
@@ -1151,7 +1153,8 @@ const lane* lane::getNextLane() const
 
 const lane* lane::getNextLane(uint idx) const
 {
-    return _nextLane[idx];
+    if (idx < _nextLaneSize ) return _nextLane[idx];
+    return nullptr;
 }
 
 std::tuple<const lane**, size_t> lane::getNextLanes() const
@@ -1171,7 +1174,8 @@ const lane* lane::getPrevLane() const
 
 const lane* lane::getPrevLane(uint idx) const
 {
-    return _prevLane[idx];
+    if (idx < _prevLaneSize) return _prevLane[idx];
+    return nullptr;
 }
 
 std::tuple<const lane**, size_t> lane::getPrevLanes() const
