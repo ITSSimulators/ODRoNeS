@@ -333,14 +333,6 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
             break;
     }
 
-    scalar ds = numerical::defaultDs(_length);
-    uint size = 1 + static_cast<uint>(std::round(_length / ds));
-    numerical::initialise(ds, size);
-    if (numerical::setup())
-    {
-        std::cout << "[ Error ] on " << getCSUID() << " in configuring numerical for the top class" << std::endl;
-    }
-
     scalar maxSo = _geom.back()->sl0(_geom.back()->length());
     for (uint i = 0; i < _odrWidth.size(); ++i)
     {
@@ -495,14 +487,6 @@ void lane::set(const OneVersion::smaS &sec, uint index)
         }
 
         _length += _geom.back()->length();
-    }
-
-    scalar ds = numerical::defaultDs(_length);
-    uint size = 1 + static_cast<uint>(std::round(_length / ds));
-    numerical::initialise(ds, size);
-    if (numerical::setup())
-    {
-        std::cout << "[ Error ] on " << getCSUID() << " in configuring numerical for the top class" << std::endl;
     }
 
     calcBoundingBox();
@@ -785,11 +769,18 @@ void lane::setBezierLines(const std::vector<bezier2> &bzr)
     }
 
     calcBoundingBox();
+}
+
+void lane::numericalSetup()
+{
 
     scalar ds = numerical::defaultDs(_length);
     uint size = 1 + static_cast<uint>(std::round(_length / ds));
+    numerical::clearMemory();
     numerical::initialise(ds, size);
-    numerical::setup();
+    if (numerical::setup())
+        std::cout << "[ Error ] on " << getCSUID() << " in configuring numerical for the top class" << std::endl;
+
 }
 
 void lane::setBezierLines(const std::vector<bezier3> &bzr)
@@ -810,12 +801,6 @@ void lane::setBezierLines(const std::vector<bezier3> &bzr)
 
     calcBoundingBox();
 
-    /*
-    scalar ds = numerical::defaultDs(_length);
-    uint size = 1 + static_cast<uint>(std::round(_length / ds));
-    numerical::initialise(ds, size);
-    numerical::setup();
-    */
 }
 
 void lane::appendBezierLines(const std::vector<bezier2> &bzr)
@@ -827,12 +812,6 @@ void lane::appendBezierLines(const std::vector<bezier2> &bzr)
     }
 
     calcBoundingBox();
-
-    scalar ds = numerical::defaultDs(_length);
-    uint size = 1 + static_cast<uint>(std::round(_length / ds));
-    numerical::clearMemory();
-    numerical::initialise(ds, size);
-    numerical::setup();
 }
 
 
@@ -1745,7 +1724,7 @@ void lane::nSetupPointsXYUniformly(scalar ds)
 
 }
 
-std::vector<arr2> lane::getIntersectionPoints(const lane *l) const
+std::vector<arr2> lane::getIntersectionPoints(lane *l)
 {
     // In this case we know it is odr vs odr, and thus we will do numerically with the following approach
     // 1 - Check whether the two bounding boxes do overlap;
@@ -1756,11 +1735,15 @@ std::vector<arr2> lane::getIntersectionPoints(const lane *l) const
 
     std::vector<arr2> intersections;
 
-    if ((_pointsSize == 0) || (l->_pointsSize == 0)) return intersections;
-
     if (!mvf::boxesOverlap(_bbblc, _bbtrc, l->_bbblc, l->_bbtrc)) return intersections;
-    mvf::numericalIntersections(intersections, _pointsX, _pointsY, 0, _pointsSize -1, l->_pointsX, l->_pointsY, 0, l->_pointsSize -1);
 
+    if (!numerical::isSet())
+        numericalSetup();
+
+    if (!l->numerical::isSet())
+        l->numericalSetup();
+
+    mvf::numericalIntersections(intersections, _pointsX, _pointsY, 0, _pointsSize -1, l->_pointsX, l->_pointsY, 0, l->_pointsSize -1);
 
     return intersections;
 }

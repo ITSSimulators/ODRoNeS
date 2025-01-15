@@ -61,6 +61,7 @@ public:
 
     void base(); ///< initialise all the variables.
     void nInvert(); ///< invert recalculating the points using interpolate().
+    bool isSet() const; ///< check if _pointsSize > 0;
 
     arr2 interpolate(scalar d) const; ///< interpolate the value of the curve at 0 <= d <= n.
     bool interpolate(arr2 &p, scalar d) const; ///< interpolate safely;

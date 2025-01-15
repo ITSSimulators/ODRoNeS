@@ -371,8 +371,9 @@ public:
     //! return a point p, given a distance down the lane, and a lateral offset loff (positive is starboard, negative is port)
     void getPointWithOffset(arr2& p, scalar d, scalar loff) const;
     //! return a vector with all the intersection points between "this" and lane l;
+    //!   It will configure numerical base class if needed.
     //!   we'll have intersection points on every type of lane, just not today!
-    std::vector<arr2> getIntersectionPoints(const lane *l) const;
+    std::vector<arr2> getIntersectionPoints(lane *l);
 
     //! returns true and sets the destination intersection point between arr2 origin and arr2 tangent if there is some intersection,
     //!   and false otherwise.
@@ -432,6 +433,8 @@ private:
     //! Find the correct geometry:
     int getGeometryIndex(const arr2 &p) const;  ///< get the geometry index for this point; return -1 if the point is not there for some tol.
     int getGeometryIndex(scalar d) const; ///< get the geometry index for this point; return -1 if out of bounds;
+
+    void numericalSetup();
 
 
 public:
