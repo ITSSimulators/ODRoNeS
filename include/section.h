@@ -93,8 +93,9 @@ public:
     /*! this section IS a crosswalk if every lane is of type crosswalk */
     bool isCrosswalk() const;
 
-    bool isTransitable(); ///< i. e., it has at least one transitable road
+    bool isTransitable() const; ///< i. e., it has at least one transitable road
     bool isInOdrRange(scalar s) const; ///< true if s within the range of this section (aka laneGroup).
+    bool isOneWay() const;
 
     /*! store the input data, and add all the lanes for this laneSection ID */
     void setOdrRoad(const Odr::smaS &sec, uint lsID);

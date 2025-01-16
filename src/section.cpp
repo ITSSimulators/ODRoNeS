@@ -823,20 +823,10 @@ void section::setPortAndStarboard(bool assumeLeftHandDriving, bool assumeRightHa
     }
 
 
-    bool deduceDirection = false; // we may not deduce anything if every lane has the same direction.
+    // we may not deduce anything if every lane has the same direction.
+    if (isOneWay()) return;
+
     lane::sign so = _lanes[leftToRight[0]].getSign();
-    for (uint i = 1; i < size(); ++i)
-    {
-        if (leftToRight[i] == -1) break;
-        if (!_lanes[leftToRight[i]].isSameSign(so))
-        {
-            deduceDirection = true;
-            break;
-        }
-    }
-
-    if (!deduceDirection) return;
-
     if (assumeLeftHandDriving)
     {
         _lanes[leftToRight[0]].lockFlippable();
@@ -894,7 +884,7 @@ void section::lockOdrFlippable()
 
 }
 
-bool section::isTransitable()
+bool section::isTransitable() const
 {
     for (uint i = 0; i < size(); ++i)
         if (_lanes[i].isTransitable()) return true;
@@ -905,4 +895,19 @@ bool section::isTransitable()
 bool section::isInOdrRange(scalar s) const
 {
     return (_lanes[0].isInOdrRange(s));
+}
+
+
+bool section::isOneWay() const
+{
+    if (!size()) return false;
+
+    if (size() == 1) return true;
+
+    for (uint i = 1; i < size(); ++i)
+    {
+        if (_lanes[i].getSign() != _lanes[0].getSign())
+            return false;
+    }
+    return true;
 }
