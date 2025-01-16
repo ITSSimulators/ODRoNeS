@@ -86,7 +86,7 @@ std::vector<Odr::tsign> ReadXOdr::readTrafficSigns(tinyxml2::XMLElement *xmlsgns
     tinyxml2::XMLElement *s = xmlsgns->FirstChildElement(Odr::Elem::Signal);
     if (!s)
     {
-        std::cerr << "no sign to read, no sign found in the signs section!" << std::endl;
+        // std::cerr << "no sign to read, no sign found in the signs section!" << std::endl;
         return tsigns;
     }
 
