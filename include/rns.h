@@ -80,8 +80,10 @@ public:
     void printLanes() const; ///< print sections and lanes
     void write(const std::string &mapFile) const;
 
-    void setPortAndStarboard(concepts::drivingSide drivingSide);
+    void setPortAndStarboard(concepts::drivingSide drivingSide); ///< sets Port and Starboard for every section AND flips two-way sections if drivingSide is known.
     void setPortAndStarboard(); ///< it uses _drivingSide
+    void flipOneWaySections(); ///< flips one way sections after, using the knowledge gained from two-way sections in setPortAndStarboard.
+
 
     /*! establish the priorities, essentially through the methods below: */
     bool makePriorities(scalar anticipationTime);

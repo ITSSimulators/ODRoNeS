@@ -322,13 +322,8 @@ bool RNS::makeOneVersionRoads(std::string mapFile)
         }
     }
 
-    // Set port and starboard lanes, and assume left hand driving:
-    for (uint i = 0; i < _sectionsSize; ++i)
-    {
-        if (!_sections[i].isTransitable()) continue;
-        _sections[i].setPortAndStarboard(_drivingSide); // true, false);
-    }
-
+    // Set port and starboard lanes
+    setPortAndStarboard();
 
     _ready = true;
     return _ready;
@@ -437,13 +432,8 @@ bool RNS::makeOpenDRIVERoads(ReadOdr &read, concepts::drivingSide drivingSide, b
         linkLanesGeometrically();
 
 
-    // Set port and starboard lanes, and assume left hand driving:
-    for (uint i = 0; i < _sectionsSize; ++i)
-    {
-        if (!_sections[i].isTransitable()) continue;
-        _sections[i].setPortAndStarboard(drivingSide); // true, false);
-    }
-
+    // Set port and starboard lanes, with knowledge on the driving side:
+    setPortAndStarboard(drivingSide);
 
     // Get the traffic signs:
     for (uint i = 0; i < _sectionsSize; ++i)
@@ -476,11 +466,90 @@ void RNS::setPortAndStarboard(concepts::drivingSide drivingSide)
         _sections[i].setPortAndStarboard(drivingSide); // true, false);
     }
 
+    flipOneWaySections();
+
 }
 
 void RNS::setPortAndStarboard()
 {
     return setPortAndStarboard(_drivingSide);
+}
+
+
+void RNS::flipOneWaySections()
+{
+
+    // Flip lanes in one-way sections linked to two-way sections
+    //   for which "prev" and "next" don't match.
+    bool satisfaction = false;
+    std::vector<uint> knowledge; // vector of one-way section ids for which we know the direction.
+    while (!satisfaction)
+    {
+        uint initialKnowledge = knowledge.size();
+        uint nTwoWay = 0;
+
+        for (uint i = 0; i < _sectionsSize; ++i)
+        {
+            if (!_sections[i].isTransitable()) continue;
+            if (!_sections[i].isOneWay())
+            {
+                nTwoWay += 1;
+                continue;
+            }
+            bool flipThisSection = false;
+            bool conclusion = false;
+            for (uint j = 0; j < _sections[i].size(); ++j)
+            {
+                // Deduction 1 - Based on the next lanes, figure out whether we need to flip this section
+                auto [nls, nlSize] = _sections[i][j]->getNextLanes();
+                for (uint k = 0; k < nlSize; ++k)
+                {
+                    if ((nls[k]->getSection()->isOneWay()) &&
+                        (std::find(knowledge.begin(), knowledge.end(), nls[k]->getSection()->getID()) == knowledge.end()))
+                        continue;
+                    if (!mvf::areCloseEnough(_sections[i][j]->getDestination(),
+                                             nls[k]->getOrigin(), 1e-6))
+                        flipThisSection = true;
+
+                    conclusion = true;
+                    break;
+                }
+
+                // Deduction 2 - Based on the previous lanes, figure out whether we need to flip this section
+                auto [pls, plSize] = _sections[i][j]->getPrevLanes();
+                if (!conclusion)
+                {
+                    for (uint k = 0; k < plSize; ++k)
+                    {
+                        if ((pls[k]->getSection()->isOneWay() &&
+                             (std::find(knowledge.begin(), knowledge.end(), pls[k]->getSection()->getID()) == knowledge.end())))
+                            continue;
+                        if (!mvf::areCloseEnough(_sections[i][j]->getOrigin(),
+                                                 pls[k]->getDestination(), 1e-6))
+                            flipThisSection = true;
+
+                        conclusion = true;
+                        break;
+                    }
+                }
+
+                // If a conclusion was reached, we can break.
+                if (conclusion) break;
+            }
+
+            if (conclusion)
+                knowledge.push_back(i);
+
+            if (flipThisSection)
+                _sections[i].flipBackwards();
+        }
+
+        uint totalKnowledge = knowledge.size();
+        if (nTwoWay + totalKnowledge == _sectionsSize)
+            satisfaction = true;
+        if (initialKnowledge == totalKnowledge)
+            satisfaction = true;
+    }
 }
 
 
