@@ -182,6 +182,8 @@ const char* Odr::Kind::TownPlayStreet = "townPlayStreet";
 const char* Odr::Kind::TownPrivate = "townPrivate";
 const char* Odr::Kind::Town = "town";
 
+const char* Odr::Kind::Map = "map";
+
 
 std::vector<Odr::offset> Odr::offset::simplify(const std::vector<offset> &v)
 {

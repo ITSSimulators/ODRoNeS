@@ -69,6 +69,8 @@ private:
     /*! Add previous and next lanes */
     uint linkLanes(tinyxml2::XMLElement *lXML, uint ndxS, uint ndxL, uint rPrevID, uint rNextID); //, int rPrevCP, int rNextCP);
 
+    /*! Read University of Leeds Simulator5 user data */
+    void readSim5UserData(tinyxml2::XMLElement* header);
 };
 
 } // namespace odrones;

@@ -30,6 +30,7 @@
 
 #include "cxxopts.hpp"
 #include "rnswindow.h"
+#include "Odr.h"
 using namespace odrones;
 
 static double rnsversion = 0.8;
@@ -125,12 +126,12 @@ int main(int argc, char *argv[])
 
 #ifdef QT_CORE_LIB
     QApplication app(argc, argv);
-    RNS *rns = new RNS(iFile, concepts::drivingSide::leftHand, true);
+    RNS *rns = new RNS(iFile, Odr::Kind::LHT, true);
     RNSWindow rw(rns, identifyLanes);
     rw.show();
     return app.exec();
 #else
-    RNS rns(iFile, concepts::drivingSide::leftHand, true);
+    RNS rns(iFile, Odr::Kind::LHT, true);
     rns.printLanes();
     return 0;
 #endif // QT_CORE_LIB

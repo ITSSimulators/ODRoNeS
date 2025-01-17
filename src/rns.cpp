@@ -60,7 +60,7 @@ RNS::RNS(const RNS& r)
 }
 
 
-RNS::RNS(std::string mapFile, concepts::drivingSide drivingSide, bool loadSidewalk, bool verbose)
+RNS::RNS(std::string mapFile, const char* drivingSide, bool loadSidewalk, bool verbose)
 {
     initialise();
     _verbose = verbose;
@@ -218,7 +218,7 @@ void RNS::tSigns(const std::vector<lane::tSign> &t)
 
 }
 
-bool RNS::makeRoads(std::string mapFile, concepts::drivingSide drivingSide, bool loadSidewalk)
+bool RNS::makeRoads(std::string mapFile, const char* drivingSide, bool loadSidewalk)
 {
 
     if ( !std::filesystem::path{mapFile}.extension().string().compare(".xodr"))
@@ -329,7 +329,7 @@ bool RNS::makeOneVersionRoads(std::string mapFile)
     return _ready;
 }
 
-bool RNS::makeOpenDRIVERoads(std::string odrMap, concepts::drivingSide drivingSide, bool loadSidewalk)
+bool RNS::makeOpenDRIVERoads(std::string odrMap, const char* drivingSide, bool loadSidewalk)
 {
     if (verbose())
         std::cout << "[ Warning ] work in progress; ignoring loadSidewalk value: " << loadSidewalk << std::endl;
@@ -349,14 +349,12 @@ bool RNS::makeOpenDRIVERoads(std::string odrMap, concepts::drivingSide drivingSi
     return makeOpenDRIVERoads(read, drivingSide, loadSidewalk);
 }
 
-bool RNS::makeOpenDRIVERoads(ReadOdr &read, concepts::drivingSide drivingSide, bool loadSidewalk)
+bool RNS::makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool loadSidewalk)
 {
 
     _ready = false;
 
     _letter = read;
-
-    _drivingSide = drivingSide;
 
     // Allocate and do the geometry for the lanes:
     // We will allocate as many sections as laneSections:
@@ -366,6 +364,8 @@ bool RNS::makeOpenDRIVERoads(ReadOdr &read, concepts::drivingSide drivingSide, b
     setSections(sectionsSize);
 
     uint sectionsNdx = 0;
+    std::string mapDrivingSide_g = Odr::Kind::None;
+    bool mapDrivingSideConsistency = true;
     for (uint i = 0; i < read.sections.size(); ++i)
     {
         if (!read.sections[i].lanes.size())
@@ -378,6 +378,17 @@ bool RNS::makeOpenDRIVERoads(ReadOdr &read, concepts::drivingSide drivingSide, b
             std::cerr << "PANIC!" << std::endl;
             return false;
         }
+
+        // see if the map comes with a driving side:
+        std::string mapDrivingSide_i = read.sections[i].rule;
+        if (mapDrivingSide_i != Odr::Kind::None)
+        {
+            if (mapDrivingSide_g == Odr::Kind::None)
+                mapDrivingSide_g = mapDrivingSide_i;
+            if (mapDrivingSide_g != mapDrivingSide_i)
+                mapDrivingSideConsistency = false;
+        }
+
 
         for (uint j = 0; j < read.sections[i].lsSize; ++j)
         {
@@ -397,6 +408,31 @@ bool RNS::makeOpenDRIVERoads(ReadOdr &read, concepts::drivingSide drivingSide, b
             sectionsNdx += 1;
         }
     }
+
+    // In that case, try using the map:
+    if (!strcmp(drivingSide, Odr::Kind::Map))
+    {
+        if (mapDrivingSideConsistency)
+            drivingSide = mapDrivingSide_g.c_str();
+        else
+        {
+            std::cerr << "[ Error ] When trying to use the map driving side, we found some LHT and some RHT sections, which is unsupported" << std::endl;
+            return false;
+        }
+    }
+
+    if (!strcmp(drivingSide, Odr::Kind::LHT))
+        _drivingSide = concepts::drivingSide::leftHand;
+    else if (!strcmp(drivingSide, Odr::Kind::RHT))
+        _drivingSide = concepts::drivingSide::rightHand;
+    else
+    {
+        std::cerr << "[ Error ] Driving side undefined, defaulting to left-hand driving" << std::endl;
+        _drivingSide = concepts::drivingSide::leftHand;
+    }
+
+
+
 
     // Now do the linking:
     if (read.k() == ReadOdr::kind::xodr)
@@ -433,7 +469,7 @@ bool RNS::makeOpenDRIVERoads(ReadOdr &read, concepts::drivingSide drivingSide, b
 
 
     // Set port and starboard lanes, with knowledge on the driving side:
-    setPortAndStarboard(drivingSide);
+    setPortAndStarboard(_drivingSide);
 
     // Get the traffic signs:
     for (uint i = 0; i < _sectionsSize; ++i)

@@ -209,6 +209,8 @@ namespace Odr
         static const char* TownPlayStreet;
         static const char* TownPrivate;
         static const char* Town;
+
+        static const char* Map;
     };
 
 
@@ -511,6 +513,7 @@ namespace Odr
         uint lsSize; ///< number of lane sections
         std::string name;
         std::string type;
+        std::string rule; ///< 1.8 lht or rht!
         std::vector<Odr::geometry> geom;
         std::vector<Odr::offset> loffset;
         std::vector<Odr::tsign> tsigns;
@@ -519,9 +522,16 @@ namespace Odr
     class udIndexed6DPoint
     {
     public:
+        udIndexed6DPoint()
+        {
+            px = 0; py = 0; pz = 0;
+            rx = 0; ry = 0; rz = 0;
+            id = 0;
+        }
+    public:
         double px, py, pz;
         double rx, ry, rz;
-        uint id;
+        int id;
     };
 
 

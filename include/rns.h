@@ -45,7 +45,7 @@ class RNS
 
 public:
     RNS();
-    RNS(std::string odrMap, concepts::drivingSide drivingSide, bool loadSidewalk, bool verbose = true);
+    RNS(std::string odrMap, const char* drivingSide, bool loadSidewalk, bool verbose = true);
     RNS(const RNS &r); ///< copy construct
     RNS& operator=(RNS& r); ///< copy assign
     ~RNS();
@@ -73,9 +73,9 @@ public:
     concepts::drivingSide drivingSide() const; ///< return the driving side.
     void drivingSide(concepts::drivingSide side); ///< manually set the driving side.
 
-    bool makeRoads(std::string mapFile, concepts::drivingSide drivingSide, bool loadSidewalk);
-    bool makeOpenDRIVERoads(std::string mapFile, concepts::drivingSide drivingSide, bool loadSidewalk);
-    bool makeOpenDRIVERoads(ReadOdr &read, concepts::drivingSide drivingSide, bool loadSidewalk);
+    bool makeRoads(std::string mapFile, const char* drivingSide, bool loadSidewalk);
+    bool makeOpenDRIVERoads(std::string mapFile, const char* drivingSide, bool loadSidewalk);
+    bool makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool loadSidewalk);
     bool makeOneVersionRoads(std::string mapFile);
     void printLanes() const; ///< print sections and lanes
     void write(const std::string &mapFile) const;

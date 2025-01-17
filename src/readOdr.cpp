@@ -112,6 +112,7 @@ ReadOdr& ReadOdr::operator=(const ReadOdr &r)
         _sections.back().name = r.sections[i].name;
         _sections.back().type = r.sections[i].type;
         _sections.back().geom = r.sections[i].geom;
+        _sections.back().rule = r.sections[i].rule;
         _sections.back().loffset = r.sections[i].loffset;
         _sections.back().tsigns = r.sections[i].tsigns;
         for (uint j = 0; j < r.sections[i].lanes.size(); ++j)

@@ -518,6 +518,34 @@ ReadXOdr::ReadXOdr(std::string iFile, bool isOdrFile) : ReadOdr(ReadOdr::kind::x
     if (!loadXodr(iFile, isOdrFile)) ready = true;
 }
 
+void ReadXOdr::readSim5UserData(tinyxml2::XMLElement* header)
+{
+    if (!header) return;
+
+    tinyxml2::XMLElement *userData = header->FirstChildElement(Odr::Elem::UserData);
+    if (!userData) return;
+
+    tinyxml2::XMLElement *xmlCPs = userData->FirstChildElement(Odr::Elem::UDConnectionPoints);
+    if (!xmlCPs) return;
+
+    tinyxml2::XMLElement *xmlCP = xmlCPs->FirstChildElement(Odr::Elem::UDConnectionPoint);
+    while (xmlCP)
+    {
+        Odr::udIndexed6DPoint cp;
+
+        xmlUtils::CheckResult(xmlCP->QueryIntAttribute(Odr::Attr::Id, &cp.id));
+        xmlUtils::CheckResult(xmlCP->QueryDoubleAttribute(Odr::Attr::X, &cp.px));
+        xmlUtils::CheckResult(xmlCP->QueryDoubleAttribute(Odr::Attr::Y, &cp.py));
+        xmlUtils::CheckResult(xmlCP->QueryDoubleAttribute(Odr::Attr::rZ, &cp.rz));
+
+        _udConnections.push_back(cp);
+
+        xmlCP = xmlCP->NextSiblingElement(Odr::Elem::UDConnectionPoint);
+    }
+
+    std::cout << "_udConnections: " << _udConnections.size() << std::endl;
+}
+
 int ReadXOdr::loadXodr(std::string iFile, bool isOdrFile)
 {
 
@@ -530,9 +558,14 @@ int ReadXOdr::loadXodr(std::string iFile, bool isOdrFile)
     tinyxml2::XMLElement *root = doc.FirstChildElement(Odr::Elem::OpenDrive);
     if (root == nullptr) return tinyxml2::XML_ERROR_FILE_READ_ERROR;
 
+    // User data!
+    tinyxml2::XMLElement *header = root->FirstChildElement(Odr::Elem::Header);
+    if (header) readSim5UserData(header);
+
     // Parse the roads:
     // 1 - Get the thick of it:
     std::cout << "reading the roads!" << std::endl;
+
 
     // Step 1: load all the data but the linkage:
     tinyxml2::XMLElement *r = root->FirstChildElement(Odr::Elem::Road);
@@ -551,6 +584,12 @@ int ReadXOdr::loadXodr(std::string iFile, bool isOdrFile)
 
         const char *txt = r->Attribute(Odr::Attr::Name);
         if (txt) _sections[ndxS].name = txt;
+
+        const char *rule = r->Attribute(Odr::Attr::Rule);
+        if (rule)
+            _sections[ndxS].rule = rule;
+        else
+            _sections[ndxS].rule = Odr::Kind::None;
 
         _sections[ndxS].id = ndxS;
         _sections[ndxS].odrID = static_cast<uint>(roadID);
