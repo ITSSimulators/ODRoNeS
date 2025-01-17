@@ -63,6 +63,9 @@ const char* Odr::Elem::Validity = "validity";
 const char* Odr::Elem::UserData = "userData";
 const char* Odr::Elem::Dependency = "dependency";
 
+const char* Odr::Elem::UDConnectionPoints = "udConnectionPoints";
+const char* Odr::Elem::UDConnectionPoint = "udConnectionPoint";
+
 const char* Odr::Attr::Type     = "type";
 const char* Odr::Attr::Name     = "name";
 const char* Odr::Attr::Id       = "id";
@@ -118,6 +121,8 @@ const char* Odr::Attr::bz2x = "bz2x";
 const char* Odr::Attr::bz2y = "bz2y";
 const char* Odr::Attr::bz3x = "bz3x";
 const char* Odr::Attr::bz3y = "bz3y";
+
+const char* Odr::Attr::rZ = "rz";
 
 const char* Odr::Attr::Unit = "unit";
 

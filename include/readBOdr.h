@@ -29,12 +29,16 @@
 namespace odrones 
 {
 
+
 class ReadBOdr : public ReadOdr
 {
 public:
     ReadBOdr() : ReadOdr(ReadOdr::kind::bodr) {}
 
     void addRoad(Odr::smaS &s);
+
+    void addConnection(Odr::udIndexed6DPoint &c);
+
 };
 
 } // namespace odrones;

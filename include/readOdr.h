@@ -62,8 +62,13 @@ public:
 
     static constexpr scalar defaultSpeed = 30 * constants::mphToMs; ///< default speed is 30 mph.
 
+    const std::vector<Odr::udIndexed6DPoint> &udConnections = _udConnections; ///< share a read-only version
+
+
 protected:
     std::vector<Odr::smaS> _sections;
+
+    std::vector<Odr::udIndexed6DPoint> _udConnections;
 
     kind _k;
 

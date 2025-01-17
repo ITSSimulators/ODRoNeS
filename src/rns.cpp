@@ -608,9 +608,25 @@ void RNS::write(const std::string &mapFile) const
     header->SetAttribute("vendor", "University of Leeds, Simulator5");
     // ... with some user data:
     tinyxml2::XMLElement* userData = xmlMap.NewElement(Odr::Elem::UserData);
-    userData->SetAttribute("extension", "24_11: bezier3, no junctions");
+    userData->SetAttribute("extension", "25_01: bezier3, no junctions");
+    if (_letter.udConnections.size())
+    {
+        std::cout << "rns._letter has udConnections.size()" << std::endl;
+        tinyxml2::XMLElement* connections = xmlMap.NewElement(Odr::Elem::UDConnectionPoints);
+        for (uint i = 0; i < _letter.udConnections.size(); ++i)
+        {
+            tinyxml2::XMLElement* cp = xmlMap.NewElement(Odr::Elem::UDConnectionPoint);
+            cp->SetAttribute(Odr::Attr::Id, _letter.udConnections[i].id);
+            cp->SetAttribute(Odr::Attr::X, _letter.udConnections[i].px);
+            cp->SetAttribute(Odr::Attr::Y, _letter.udConnections[i].py);
+            cp->SetAttribute(Odr::Attr::rZ, _letter.udConnections[i].rz);
+            connections->InsertEndChild(cp);
+        }
+        userData->InsertEndChild(connections);
+    }
     header->InsertEndChild(userData);
     root->InsertEndChild(header); // into root.
+
 
     // If we built that from using ReadBOdr, the original input was incomplete:
     if (_letter.k() == ReadOdr::kind::bodr)

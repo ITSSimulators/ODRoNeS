@@ -30,3 +30,9 @@ void ReadBOdr::addRoad(Odr::smaS &s)
         _sections.back().type = Odr::Kind::Unknown;
 }
 
+void ReadBOdr::addConnection(Odr::udIndexed6DPoint &c)
+{
+    _udConnections.push_back(c);
+}
+
+

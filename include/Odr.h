@@ -79,6 +79,9 @@ namespace Odr
         static const char* Validity;
         static const char* UserData;
         static const char* Dependency;
+
+        static const char* UDConnectionPoints;
+        static const char* UDConnectionPoint;
     };
 
     class Attr
@@ -142,6 +145,8 @@ namespace Odr
         static const char* bz2y;
         static const char* bz3x;
         static const char* bz3y;
+
+        static const char* rZ;
 
         static const char* Unit;
 
@@ -509,6 +514,14 @@ namespace Odr
         std::vector<Odr::geometry> geom;
         std::vector<Odr::offset> loffset;
         std::vector<Odr::tsign> tsigns;
+    };
+
+    class udIndexed6DPoint
+    {
+    public:
+        double px, py, pz;
+        double rx, ry, rz;
+        uint id;
     };
 
 

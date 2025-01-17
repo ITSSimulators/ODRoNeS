@@ -100,6 +100,7 @@ Odr::smaL* ReadOdr::getLaneWithODRIds(uint rOdrID, int lOdrID, int lsID)
 ReadOdr& ReadOdr::operator=(const ReadOdr &r)
 {
     _k = r._k;
+    _udConnections = r._udConnections;
 
     // Basics:
     for (uint i = 0; i < r.sections.size(); ++i)
