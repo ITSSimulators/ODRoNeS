@@ -169,7 +169,7 @@ endif (ODRONES_USE_ONEVERSION)
 # Build the Graphical representations, provided you have Qt available
 if (ODRONES_USE_QT)
   add_executable(rnscheck
-      ${RNS_DIR}/src/main.cpp
+      ${RNS_DIR}/src/rnscheck.cpp
       ${RNS_DIR}/src/rnswindow.cpp ${RNS_DIR}/include/rnswindow.h
   )
   target_link_libraries(rnscheck rns ${QT_LIBRARIES})
