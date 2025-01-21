@@ -21,6 +21,7 @@
 //
 
 #include "readOdr.h"
+#include "xmlUtils.h"
 using namespace odrones;
 
 

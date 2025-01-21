@@ -51,6 +51,10 @@ namespace Odr
         static const char* LaneOffset;
         static const char* LaneSection;
 
+        static const char* DefaultRegulations;
+        static const char* RoadRegulations;
+        static const char* Semantics;
+
         static const char* Junction;
         static const char* Connection;
         static const char* LaneLink;
@@ -211,6 +215,8 @@ namespace Odr
         static const char* Town;
 
         static const char* Map;
+
+        static const char* Maximum;
     };
 
 
@@ -532,6 +538,15 @@ namespace Odr
         double px, py, pz;
         double rx, ry, rz;
         int id;
+    };
+
+    class speedRegulation
+    {
+    public:
+        std::string roadType; ///< the road type that this regulation applies to
+        std::string type; ///< maximum, recommended...
+        double value; ///< value of the speed;
+        std::string unit; ///<  (e_unit)
     };
 
 

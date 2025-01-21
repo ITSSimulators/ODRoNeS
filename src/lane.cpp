@@ -20,6 +20,7 @@
 //  to publications you cite the package and its related publications. 
 //
 
+#include <sstream>
 #include "lane.h"
 #include "xmlUtils.h"
 // DEBUG //

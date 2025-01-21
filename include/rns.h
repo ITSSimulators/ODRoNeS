@@ -23,9 +23,7 @@
 #ifndef ODRONES_RNS_H
 #define ODRONES_RNS_H
 
-#include <filesystem>
 #include "rnsconcepts.h"
-#include "tinyxml2.h"
 #include "section.h"
 
 namespace odrones {

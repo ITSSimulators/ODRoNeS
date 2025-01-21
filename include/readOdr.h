@@ -28,8 +28,6 @@
 #include <vector>
 #include <utility>
 
-#include "tinyxml2.h"
-#include "xmlUtils.h"
 #include "Odr.h"
 
 namespace odrones
@@ -76,6 +74,8 @@ protected:
     std::vector<Odr::smaS> _sections;
 
     std::vector<Odr::udIndexed6DPoint> _udConnections;
+
+    std::vector<Odr::speedRegulation> _defaultSpeedLimit;
 
     kind _k;
 

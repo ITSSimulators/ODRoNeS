@@ -24,7 +24,6 @@
 #define ODRONES_READXODR_H
 
 #include "readOdr.h"
-#include "xmlUtils.h"
 
 namespace odrones 
 {
@@ -40,6 +39,8 @@ public:
 
 private:
     int loadXodr(std::string iFile, bool isOdrFile); ///< return non-zero in case of error.
+
+    void readHeader(tinyxml2::XMLElement *header);
 
     /*! Read and return a Junction, given the Junction XMLElement */
     std::vector<Odr::connection> readJunction(tinyxml2::XMLElement *c);

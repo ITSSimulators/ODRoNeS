@@ -21,6 +21,7 @@
 //
 
 #include "readXOdr.h"
+#include "xmlUtils.h"
 using namespace odrones;
 
 
@@ -41,9 +42,7 @@ std::vector<Odr::connection> ReadXOdr::readJunction(tinyxml2::XMLElement *c)
         xmlUtils::CheckResult(c->QueryIntAttribute(Odr::Attr::ConnectingRoad, &j.back().connectingRoad));
 
         // Read the contact point and assign 0 or one depending on whether it is start or end:
-        const char *txt = nullptr;
-        txt = c->Attribute(Odr::Attr::ContactPoint);
-        std::string cp = txt;
+        std::string cp = xmlUtils::ReadConstCharAttr(c, Odr::Attr::ContactPoint);
         if (cp.compare(Odr::Kind::Start) == 0) j.back().contactPoint = 0;
         else if (cp.compare(Odr::Kind::End) == 0) j.back().contactPoint = 1;
         else
@@ -92,17 +91,15 @@ std::vector<Odr::tsign> ReadXOdr::readTrafficSigns(tinyxml2::XMLElement *xmlsgns
 
     while (s)
     {
-        const char* txt = nullptr;
         tsigns.push_back(Odr::tsign());
 
         s->QueryDoubleAttribute(Odr::Attr::S, &tsigns.back().s);
         s->QueryDoubleAttribute(Odr::Attr::T, &tsigns.back().t);
-        txt = s->Attribute(Odr::Attr::Id);
-        if (txt) tsigns.back().id = txt;
-        txt = s->Attribute(Odr::Attr::Name);
-        if (txt)
-        tsigns.back().name = txt;
-        txt = s->Attribute(Odr::Attr::Dynamic);
+
+        xmlUtils::ReadConstCharAttr(s, Odr::Attr::Id, tsigns.back().id);
+        xmlUtils::ReadConstCharAttr(s, Odr::Attr::Name, tsigns.back().name);
+
+        const char* txt = s->Attribute(Odr::Attr::Dynamic);
         if (txt)
         {
             std::string dynamic = txt;
@@ -128,12 +125,11 @@ std::vector<Odr::tsign> ReadXOdr::readTrafficSigns(tinyxml2::XMLElement *xmlsgns
         }
         s->QueryDoubleAttribute(Odr::Attr::ZOffset, &tsigns.back().zOffset);
         s->QueryDoubleAttribute(Odr::Attr::Value, &tsigns.back().value);
-        txt =  s->Attribute(Odr::Attr::Unit);
-        if (txt) tsigns.back().unit = txt;
+
+        xmlUtils::ReadConstCharAttr(s, Odr::Attr::Unit, tsigns.back().unit);
         s->QueryDoubleAttribute(Odr::Attr::Height, &tsigns.back().height);
         s->QueryDoubleAttribute(Odr::Attr::Width, &tsigns.back().width);
-        txt = s->Attribute(Odr::Attr::Text);
-        if (txt) tsigns.back().text = txt;
+        xmlUtils::ReadConstCharAttr(s, Odr::Attr::Text, tsigns.back().text);
         s->QueryDoubleAttribute(Odr::Attr::HOffset, &tsigns.back().zOffset);
         s->QueryDoubleAttribute(Odr::Attr::Pitch, &tsigns.back().pitch);
         s->QueryDoubleAttribute(Odr::Attr::Roll, &tsigns.back().roll);
@@ -518,6 +514,45 @@ ReadXOdr::ReadXOdr(std::string iFile, bool isOdrFile) : ReadOdr(ReadOdr::kind::x
     if (!loadXodr(iFile, isOdrFile)) _ready = true;
 }
 
+
+void ReadXOdr::readHeader(tinyxml2::XMLElement *header)
+{
+    if (!header) return;
+
+    // Read the connection points:
+    readSim5UserData(header);
+
+    // Read the default regulations:
+    tinyxml2::XMLElement *xmlDR = header->FirstChildElement(Odr::Elem::DefaultRegulations);
+    if (!xmlDR) return;
+
+    tinyxml2::XMLElement *xmlRR_i = xmlDR->FirstChildElement(Odr::Elem::RoadRegulations);
+    while (xmlRR_i)
+    {
+        std::string roadType = xmlUtils::ReadConstCharAttr(xmlRR_i, Odr::Attr::Type);
+        if (roadType.empty())
+            continue;
+
+        tinyxml2::XMLElement *xmlSem = xmlRR_i->FirstChildElement(Odr::Elem::Semantics);
+        if (!xmlSem) continue;
+
+        tinyxml2::XMLElement *xmlSpeed_j = xmlSem->FirstChildElement(Odr::Elem::Speed);
+        while (xmlSpeed_j)
+        {
+            Odr::speedRegulation sr;
+            sr.roadType = roadType;
+            xmlUtils::ReadConstCharAttr(xmlSpeed_j, Odr::Attr::Type, sr.type);
+            xmlUtils::ReadConstCharAttr(xmlSpeed_j, Odr::Attr::Unit, sr.unit);
+            xmlUtils::CheckResult(xmlSpeed_j->QueryDoubleAttribute(Odr::Attr::Value, &sr.value));
+            _defaultSpeedLimit.push_back(sr);
+
+            xmlSpeed_j->NextSiblingElement(Odr::Elem::Speed);
+        }
+
+        xmlRR_i = xmlRR_i->NextSiblingElement(Odr::Elem::RoadRegulations);
+    }
+}
+
 void ReadXOdr::readSim5UserData(tinyxml2::XMLElement* header)
 {
     if (!header) return;
@@ -558,7 +593,7 @@ int ReadXOdr::loadXodr(std::string iFile, bool isOdrFile)
 
     // User data!
     tinyxml2::XMLElement *header = root->FirstChildElement(Odr::Elem::Header);
-    if (header) readSim5UserData(header);
+    readHeader(header);
 
     // std::cout << "reading the roads!" << std::endl;
 
@@ -577,14 +612,10 @@ int ReadXOdr::loadXodr(std::string iFile, bool isOdrFile)
         xmlUtils::CheckResult(r->QueryIntAttribute(Odr::Attr::Id, &roadID));
         xmlUtils::CheckResult(r->QueryDoubleAttribute(Odr::Attr::Length, &length));
 
-        const char *txt = r->Attribute(Odr::Attr::Name);
-        if (txt) _sections[ndxS].name = txt;
+        xmlUtils::ReadConstCharAttr(r, Odr::Attr::Name, _sections[ndxS].name);
 
-        const char *rule = r->Attribute(Odr::Attr::Rule);
-        if (rule)
-            _sections[ndxS].rule = rule;
-        else
-            _sections[ndxS].rule = Odr::Kind::None;
+        _sections[ndxS].rule = Odr::Kind::None;
+        xmlUtils::ReadConstCharAttr(r, Odr::Attr::Rule, _sections[ndxS].rule);
 
         _sections[ndxS].id = ndxS;
         _sections[ndxS].odrID = static_cast<uint>(roadID);

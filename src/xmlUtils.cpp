@@ -11,11 +11,26 @@ void xmlUtils::CheckResult(int err)
 	}
 }
 
+void xmlUtils::ReadConstCharAttr(tinyxml2::XMLElement *elem, const char *c, std::string &s)
+{
+    const char *txt = elem->Attribute(c);
+    if (txt) s = txt;
+    else s = "";
+}
+
+std::string xmlUtils::ReadConstCharAttr(tinyxml2::XMLElement *elem, const char *c)
+{
+    std::string s;
+    ReadConstCharAttr(elem, c, s);
+    return s;
+}
+
 
 void xmlUtils::setAttrDouble(tinyxml2::XMLElement *elem, const char *c, double q)
 {
     elem->SetAttribute(c, (boost::format("%.17e") % q).str().c_str());
 }
+
 
 
 void xmlUtils::setAttrOffsetS(tinyxml2::XMLElement *elem, double s, double a, double b, double c, double d)

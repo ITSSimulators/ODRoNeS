@@ -34,6 +34,10 @@ const char* Odr::Elem::Lanes = "lanes";
 const char* Odr::Elem::LaneOffset = "laneOffset";
 const char* Odr::Elem::LaneSection = "laneSection";
 
+const char* Odr::Elem::DefaultRegulations = "defaultRegulations";
+const char* Odr::Elem::RoadRegulations = "roadRegulations";
+const char* Odr::Elem::Semantics = "semantics";
+
 const char* Odr::Elem::Junction = "junction";
 const char* Odr::Elem::Connection = "connection";
 const char* Odr::Elem::LaneLink = "laneLink";
@@ -183,6 +187,9 @@ const char* Odr::Kind::TownPrivate = "townPrivate";
 const char* Odr::Kind::Town = "town";
 
 const char* Odr::Kind::Map = "map";
+
+const char* Odr::Kind::Maximum = "maximum";
+
 
 
 std::vector<Odr::offset> Odr::offset::simplify(const std::vector<offset> &v)

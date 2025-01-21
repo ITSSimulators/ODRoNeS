@@ -16,6 +16,8 @@ class xmlUtils
 {
 public:
 	static void CheckResult(int err);
+    static void ReadConstCharAttr(tinyxml2::XMLElement *elem, const char *c, std::string &s);
+    static std::string ReadConstCharAttr(tinyxml2::XMLElement *elem, const char *c);
 
     static void setAttrDouble(tinyxml2::XMLElement *elem, const char *c, double q);
     static void setAttrOffsetS(tinyxml2::XMLElement *elem, double s, double a, double b, double c, double d);

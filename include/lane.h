@@ -26,7 +26,6 @@
 #include <vector>
 #include <tuple>
 #include <vector>
-#include <sstream>
 #include "matvec.h"
 #include "geometry.h"
 #include "straight.h"
@@ -40,7 +39,6 @@
 #include "vwParamPoly3.h"
 #include "vwNumerical.h"
 #include "vwSpiral.h"
-#include "readOdr.h"
 #include "readOneVersion.h"
 #include "rnsconcepts.h"
 #include "tinyxml2.h"

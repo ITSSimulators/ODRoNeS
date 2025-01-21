@@ -20,8 +20,10 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#include "rns.h"
+#include <filesystem>
 #include <boost/format.hpp>
+#include "rns.h"
+#include "xmlUtils.h"
 #ifdef USE_ONEVERSION
 #include "readOneVersion.h"
 #endif // USE_ONEVERSION
