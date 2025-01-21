@@ -24,7 +24,7 @@
 using namespace odrones;
 
 
-void ReadOdr::printRoads()
+void ReadOdr::printRoads() const
 {
     for (uint i = 0; i < _sections.size(); ++i)
     {
@@ -67,11 +67,15 @@ void ReadOdr::printRoads()
 }
 
 
-bool ReadOdr::isReady()
+bool ReadOdr::ready() const
 {
-    return ready;
+    return _ready;
 }
 
+void ReadOdr::ready(bool r)
+{
+    _ready = r;
+}
 
 Odr::smaL* ReadOdr::getLaneWithODRIds(uint rOdrID, int lOdrID, int lsID)
 {
@@ -97,16 +101,105 @@ Odr::smaL* ReadOdr::getLaneWithODRIds(uint rOdrID, int lOdrID, int lsID)
 }
 
 
+ReadOdr& ReadOdr::operator+=(const ReadOdr &r)
+{
+    // Check that both instances are zero:
+    if ( (!r.ready()) || (!ready()))
+        throw std::invalid_argument("[ Error ] ReadOdr += doesn't work if one of the instances is not ready");
+
+
+    // Check that we're adding the same stuff:
+    if (r.k() != _k)
+        throw std::invalid_argument("[ Error ] ReadOdr += tries to add an instance of a different kind k");
+
+    // Check that there are no repeated Odr section IDs.
+    for (uint i = 0; i < r.sections.size(); ++i)
+    {
+        for (uint j = 0; j < _sections.size(); ++j)
+        {
+            if (r.sections[i].odrID == _sections[j].odrID)
+                throw std::invalid_argument("[ Error ] ReadOdr += tries to add in an instance with repeated Odr IDs. Renumber first.");
+        }
+    }
+
+    // The udConnections become the new ones:
+    _udConnections = r.udConnections;
+
+    // Add the new roads:
+    append(r);
+
+    return *this;
+}
+
+
 ReadOdr& ReadOdr::operator=(const ReadOdr &r)
 {
     _k = r._k;
     _udConnections = r._udConnections;
+    _sections.clear();
 
+    append(r);
+
+    return *this;
+}
+
+void ReadOdr::renumber(uint shift)
+{
+    for (uint i = 0; i < _sections.size(); ++i)
+    {
+        _sections[i].odrID += shift;
+    }
+}
+
+void ReadOdr::transform(const arr2& t, scalar r)
+{
+    for (uint i = 0; i < _sections.size(); ++i)
+    {
+        for (uint j = 0; j < _sections[i].geom.size(); ++j)
+        {
+            arr2 p = {_sections[i].geom[j].x, _sections[i].geom[j].y};
+            mvf::rotateVectorByAngle(p, r);
+            p = {p[0] + t[0], p[1] + t[1]};
+            _sections[i].geom[j].x = p[0];
+            _sections[i].geom[j].y = p[1];
+            _sections[i].geom[j].hdg += r;
+
+            // To be removed with the end of the Beziers.
+            arr2 bz0 = {_sections[i].geom[j].bz0x, _sections[i].geom[j].bz0y};
+            mvf::rotateVectorByAngle(bz0, r);
+            bz0 = {bz0[0] + t[0], bz0[1] + t[1]};
+            _sections[i].geom[j].bz0x = bz0[0];
+            _sections[i].geom[j].bz0y = bz0[1];
+
+            arr2 bz1 = {_sections[i].geom[j].bz1x, _sections[i].geom[j].bz1y};
+            mvf::rotateVectorByAngle(bz1, r);
+            bz1 = {bz1[0] + t[0], bz1[1] + t[1]};
+            _sections[i].geom[j].bz1x = bz1[0];
+            _sections[i].geom[j].bz1y = bz1[1];
+
+            arr2 bz2 = {_sections[i].geom[j].bz2x, _sections[i].geom[j].bz2y};
+            mvf::rotateVectorByAngle(bz2, r);
+            bz2 = {bz2[0] + t[0], bz2[1] + t[1]};
+            _sections[i].geom[j].bz2x = bz2[0];
+            _sections[i].geom[j].bz2y = bz2[1];
+
+            arr2 bz3 = {_sections[i].geom[j].bz3x, _sections[i].geom[j].bz3y};
+            mvf::rotateVectorByAngle(bz3, r);
+            bz3 = {bz3[0] + t[0], bz3[1] + t[1]};
+            _sections[i].geom[j].bz3x = bz3[0];
+            _sections[i].geom[j].bz3y = bz3[1];
+
+        }
+    }
+}
+
+void ReadOdr::append(const ReadOdr &r)
+{
     // Basics:
     for (uint i = 0; i < r.sections.size(); ++i)
     {
         _sections.push_back(Odr::smaS());
-        _sections.back().id = r.sections[i].id;
+        _sections.back().id = _sections.size() -1; // r.sections[i].id;
         _sections.back().odrID = r.sections[i].odrID;
         _sections.back().lsSize = r.sections[i].lsSize;
         _sections.back().name = r.sections[i].name;
@@ -155,9 +248,8 @@ ReadOdr& ReadOdr::operator=(const ReadOdr &r)
             }
         }
     }
-
-    return *this;
 }
+
 
 const Odr::smaS* ReadOdr::odrSection(uint odrID) const
 {

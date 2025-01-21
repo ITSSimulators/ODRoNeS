@@ -36,6 +36,7 @@ public:
      *                                    the text of the file itself (isOdrFile == false) */
     ReadXOdr(std::string iFile, bool isOdrFile);
 
+    ReadXOdr() : ReadOdr(ReadOdr::kind::xodr) {}
 
 private:
     int loadXodr(std::string iFile, bool isOdrFile); ///< return non-zero in case of error.

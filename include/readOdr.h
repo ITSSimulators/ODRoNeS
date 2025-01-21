@@ -42,14 +42,19 @@ public:
     enum class kind { none, bodr, xodr };
     ReadOdr() : _k(kind::none) {};
     ReadOdr& operator=(const ReadOdr& r);
+    ReadOdr& operator+=(const ReadOdr& r);
+
+    void renumber(uint shift); ///< renumber the Odr ids of the sections.
+    void transform(const arr2 &position, scalar angle);
 
 protected:
     ReadOdr(kind k) : _k(k) {};
 
 public:
-    void printRoads(); ///< print out the roads
+    void printRoads() const; ///< print out the roads
 
-    bool isReady(); ///< whether it has the sections ready or not.
+    bool ready() const; ///< whether it has the sections ready or not.
+    void ready(bool r); ///< set ready to r;
 
     /*! return the point to a lane that has the required OpenDRIVE IDs */
     Odr::smaL* getLaneWithODRIds(uint rOdrID, int lOdrID, int lsID);
@@ -64,6 +69,8 @@ public:
 
     const std::vector<Odr::udIndexed6DPoint> &udConnections = _udConnections; ///< share a read-only version
 
+private:
+    void append(const ReadOdr& r);
 
 protected:
     std::vector<Odr::smaS> _sections;
@@ -72,7 +79,7 @@ protected:
 
     kind _k;
 
-    bool ready;
+    bool _ready;
 
 };
 

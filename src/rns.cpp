@@ -340,7 +340,7 @@ bool RNS::makeOpenDRIVERoads(std::string odrMap, const char* drivingSide, bool l
 
     ReadXOdr read(odrMap, isOdrFile);
 
-    if (!read.isReady())
+    if (!read.ready())
     {
         std::cerr << "[ LRN ] unable to load the opendrive map" << std::endl;
         return false;

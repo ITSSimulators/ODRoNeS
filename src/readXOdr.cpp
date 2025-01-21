@@ -514,8 +514,8 @@ uint ReadXOdr::linkLanes(tinyxml2::XMLElement *lXML, uint ndxS, uint ndxL, uint 
 
 ReadXOdr::ReadXOdr(std::string iFile, bool isOdrFile) : ReadOdr(ReadOdr::kind::xodr)
 {
-    ready = false;
-    if (!loadXodr(iFile, isOdrFile)) ready = true;
+    _ready = false;
+    if (!loadXodr(iFile, isOdrFile)) _ready = true;
 }
 
 void ReadXOdr::readSim5UserData(tinyxml2::XMLElement* header)
@@ -542,8 +542,6 @@ void ReadXOdr::readSim5UserData(tinyxml2::XMLElement* header)
 
         xmlCP = xmlCP->NextSiblingElement(Odr::Elem::UDConnectionPoint);
     }
-
-    std::cout << "_udConnections: " << _udConnections.size() << std::endl;
 }
 
 int ReadXOdr::loadXodr(std::string iFile, bool isOdrFile)
@@ -562,10 +560,7 @@ int ReadXOdr::loadXodr(std::string iFile, bool isOdrFile)
     tinyxml2::XMLElement *header = root->FirstChildElement(Odr::Elem::Header);
     if (header) readSim5UserData(header);
 
-    // Parse the roads:
-    // 1 - Get the thick of it:
-    std::cout << "reading the roads!" << std::endl;
-
+    // std::cout << "reading the roads!" << std::endl;
 
     // Step 1: load all the data but the linkage:
     tinyxml2::XMLElement *r = root->FirstChildElement(Odr::Elem::Road);
@@ -648,7 +643,7 @@ int ReadXOdr::loadXodr(std::string iFile, bool isOdrFile)
     }
 
 
-    // Link the roads with next and previous:
+    // Step 2: Link the roads with next and previous:
     // We don't read the junctions tables,
     //  but we could load it into a series of vectors of connections.
     //  If needed, this:
