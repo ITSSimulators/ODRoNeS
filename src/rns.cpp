@@ -383,7 +383,7 @@ bool RNS::makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool loadSi
 
         // see if the map comes with a driving side:
         std::string mapDrivingSide_i = read.sections[i].rule;
-        if (mapDrivingSide_i != Odr::Kind::None)
+        if ((mapDrivingSide_i != Odr::Kind::None) && (!mapDrivingSide_i.empty()))
         {
             if (mapDrivingSide_g == Odr::Kind::None)
                 mapDrivingSide_g = mapDrivingSide_i;
