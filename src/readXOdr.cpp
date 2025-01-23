@@ -159,6 +159,21 @@ std::vector<Odr::tsign> ReadXOdr::readTrafficSigns(tinyxml2::XMLElement *xmlsgns
 
 }
 
+std::string readRoadType(tinyxml2::XMLElement *xmlType)
+{
+    std::string type;
+    if (!xmlType) return type;
+
+    type = xmlUtils::ReadConstCharAttr(xmlType, Odr::Attr::Type);
+
+    if (xmlType->NextSiblingElement(Odr::Elem::Type))
+    {
+        std::cerr << "[ Warning ] readXOdr::readRoadType only parses the first road type, but found several here" << std::endl;
+    }
+
+    return type;
+}
+
 std::vector<Odr::geometry> ReadXOdr::readGeometry(tinyxml2::XMLElement *pv)
 {
 
@@ -599,7 +614,7 @@ int ReadXOdr::loadXodr(std::string iFile, bool isOdrFile)
 
     // Step 1: load all the data but the linkage:
     tinyxml2::XMLElement *r = root->FirstChildElement(Odr::Elem::Road);
-                          // r = root->FirstChildElement(Odr::Elem::Road);
+
     uint ndxS = 0;
     while (r)
     {
@@ -619,6 +634,8 @@ int ReadXOdr::loadXodr(std::string iFile, bool isOdrFile)
 
         _sections[ndxS].id = ndxS;
         _sections[ndxS].odrID = static_cast<uint>(roadID);
+
+        _sections[ndxS].type = readRoadType(r->FirstChildElement(Odr::Elem::Type));
 
         _sections[ndxS].geom = readGeometry(r->FirstChildElement(Odr::Elem::PlanView));
 

@@ -32,6 +32,7 @@ section::section() :
     _bbblc = {0, 0};
     _bbtrc = {0, 0};
     _odrID = 0;
+    _type = concepts::roadType::unknown;
 }
 
 void section::set(size_t size)
@@ -80,6 +81,7 @@ void section::assignInputSectionToThis(const section &s)
 {
 
     _id = s.getID();
+    _type = s.type();
     _allocSize = s.getMaxSize();
     _writtenSize = s.size();
     if (_writtenSize > 0)
@@ -514,6 +516,8 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
         }
     }
 
+    _type = concepts::rt(sec.type.c_str());
+
     return;
 }
 
@@ -545,6 +549,11 @@ scalar section::maxSpeed() const
         if (_lanes[i].getSpeed() > speed) speed = _lanes[i].getSpeed();
 
     return speed;
+}
+
+concepts::roadType section::type() const
+{
+    return _type;
 }
 
 

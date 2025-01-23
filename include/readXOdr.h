@@ -54,6 +54,9 @@ private:
     /*! Read all the Signals gien a Signals XMLElement */
     std::vector<Odr::tsign> readTrafficSigns(tinyxml2::XMLElement *xmlsgns);
 
+    /*! Read only the first type of road; warning if more than one type found; to be upgraded */
+    std::string readRoadType(tinyxml2::XMLElement *xmlType);
+
     /*! return true if there's some laneOffset in the Lanes XMLElement */
     bool hasLaneOffset(tinyxml2::XMLElement *lanes);
 

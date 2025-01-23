@@ -21,6 +21,7 @@
 //
 
 #include "rnsconcepts.h"
+#include "Odr.h"
 using namespace odrones;
 
 std::string concepts::actorString(actor a)
@@ -31,6 +32,21 @@ std::string concepts::actorString(actor a)
         return "car";
     case actor::meeple:
         return "meeple";
+    case actor::bus:
+        return "bus";
+    case actor::motorbike:
+        return "motorbike";
+    case actor::semitrailer:
+        return "semitrailer";
+    case actor::trailer:
+        return "trailer";
+    case actor::tram:
+        return "tram";
+    case actor::truck:
+        return "truck";
+    case actor::van:
+        return "van";
+
     default:
         return "unknown";
     }
@@ -49,4 +65,44 @@ std::string concepts::drivingString(drivingSide d)
     }
 }
 
+const concepts::roadType concepts::rt(const char* c)
+{
+    if (!strcmp(c, Odr::Kind::Bicycle))
+        return roadType::bicycle;
 
+    if (!strcmp(c, Odr::Kind::LowSpeed))
+        return roadType::lowSpeed;
+
+    if (!strcmp(c, Odr::Kind::Motorway))
+        return roadType::motorway;
+
+    if (!strcmp(c, Odr::Kind::Pedestrian))
+        return roadType::pedestrian;
+
+    if (!strcmp(c, Odr::Kind::Rural))
+        return roadType::rural;
+
+    if (!strcmp(c, Odr::Kind::TownArterial))
+        return roadType::townArterial;
+
+    if (!strcmp(c, Odr::Kind::TownCollector))
+        return roadType::townCollector;
+
+    if (!strcmp(c, Odr::Kind::TownExpressway))
+        return roadType::townExpressway;
+
+    if (!strcmp(c, Odr::Kind::TownLocal))
+        return roadType::townLocal;
+
+    if (!strcmp(c, Odr::Kind::TownPlayStreet))
+        return roadType::townPlayStreet;
+
+    if (!strcmp(c, Odr::Kind::TownPrivate))
+        return roadType::townPrivate;
+
+    if (!strcmp(c, Odr::Kind::Town))
+        return roadType::town;
+
+
+    return roadType::unknown;
+}

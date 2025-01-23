@@ -31,12 +31,21 @@ namespace odrones
 class concepts
 {
 public:
-    enum class actor {car, meeple, none};
+    /*! meeple + OpenSCENARIO's vehicle category https://publications.pages.asam.net/standards/ASAM_OpenSCENARIO/ASAM_OpenSCENARIO_XML/latest/generated/content/VehicleCategory.html */
+    enum class actor {car, meeple, bus, motorbike, semitrailer, trailer, tram, truck, van, none};
     static std::string actorString(actor a);
+
 
     /*! whether we're on a right-hand or a left-hand driving scenario */
     enum class drivingSide { rightHand, leftHand };
     static std::string drivingString(drivingSide d);
+
+    /*! as defined by OpenDRIVE 1.8.1 - A.6.3 e_roadType.*/
+    enum class roadType { bicycle, lowSpeed, motorway, pedestrian, rural,
+                          townArterial, townCollector, townExpressway, townLocal,
+                          townPlayStreet, townPrivate, town, unknown };
+
+    static const roadType rt(const char* c);
 };
 
 

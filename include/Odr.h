@@ -518,7 +518,7 @@ namespace Odr
         uint odrID;
         uint lsSize; ///< number of lane sections
         std::string name;
-        std::string type;
+        std::string type; ///< to be turned into a vector of types, which have the starting s, and the type itself.
         std::string rule; ///< 1.8 lht or rht!
         std::vector<Odr::geometry> geom;
         std::vector<Odr::offset> loffset;

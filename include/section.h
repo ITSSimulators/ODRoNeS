@@ -133,6 +133,8 @@ public:
 
     scalar maxSpeed() const;
 
+    concepts::roadType type() const;
+
 private:
     void updateBoundingBox(uint ndx); ///< update the bounding box defined by _bbblc, bbtrc with the box of lane _sections[ndx];
 
@@ -145,6 +147,7 @@ private:
     size_t _allocSize;
     arr2 _bbblc, _bbtrc; ///< bounding box bottom left corner, bounding box top right corner.
     uint _odrID;
+    concepts::roadType _type; ///< as defined by OpenDRIVE 1.8.1 - a.6.3 e_roadType
     OneVersion::OVID _ovID;
 };
 
