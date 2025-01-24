@@ -138,7 +138,6 @@ if (ODRONES_PYTHON_BINDINGS)
 	find_package(SWIG REQUIRED)
 	include(UseSWIG)
 	include_directories(${Python_INCLUDE_DIRS})
-	set(USE_SWIG_FLAGS "-py3")
 
    set_source_files_properties(${RNS_DIR}/include/odrones.i
 	             PROPERTIES CPLUSPLUS ON USE_SWIG_DEPENDENCIES ON)
