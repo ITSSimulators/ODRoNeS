@@ -40,12 +40,6 @@ public:
     enum class drivingSide { rightHand, leftHand };
     static std::string drivingString(drivingSide d);
 
-    /*! as defined by OpenDRIVE 1.8.1 - A.6.3 e_roadType.*/
-    enum class roadType { bicycle, lowSpeed, motorway, pedestrian, rural,
-                          townArterial, townCollector, townExpressway, townLocal,
-                          townPlayStreet, townPrivate, town, unknown };
-
-    static const roadType rt(const char* c);
 };
 
 

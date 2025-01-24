@@ -100,6 +100,7 @@ lane::lane(const std::vector<arr2> &bzrp, mvf::shape s, scalar width,
 void lane::base()
 {
     _width = 3;
+    _constantWidth = true;
     _speed = 30 * ct::mphToMs;
     _isPermanent = true;
 
@@ -115,6 +116,7 @@ void lane::base()
     _prevLaneSize = 0;
     _portLane = nullptr;
     _starboardLane = nullptr;
+    _odrZero = nullptr;
     _length = 0;
 
     _shape = mvf::shape::unknown;
@@ -245,11 +247,13 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
 {
     _odrID = odrL.odrID;
 
-    lane::sign s = lane::sign::o;
-    if (odrL.sign == -1) s = lane::sign::n;
-    else if (odrL.sign == 1) s = lane::sign::p;
+    _sign = lane::sign::o;
+    if (odrL.sign == -1) _sign = lane::sign::n;
+    else if (odrL.sign == 1) _sign = lane::sign::p;
 
-    initialise(width[0].a, odrL.speed, mvf::shape::opendrive, s);
+    _width = width[0].a;
+    _isPermanent = true;
+    _shape = mvf::shape::opendrive;
 
     if (odrL.kind.compare(Odr::Kind::Driving) == 0)
         _kind = kind::tarmac;
@@ -265,6 +269,7 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
     _odrWidth = width;
 
     bool geomPrint = false;
+    _constantWidth = true;
 
     _length = 0;
     scalar so = odrL.startingS;
@@ -306,6 +311,7 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
         }
         else
         {
+            _constantWidth = false;
             if (odrg[i].g == Odr::Attr::Geometry::line)
                 _geom.push_back(new vwStraight(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
             else if (odrg[i].g == Odr::Attr::Geometry::arc)
@@ -345,106 +351,118 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
     calcBoundingBox();
 
 
-    if (geomPrint)
+    for (uint i = 0; i < odrL.speed.size(); ++i)
     {
-        std::cout << "lane " << getCSUID()
-                  << " origin: (" << getOrigin()[0] << ", " << getOrigin()[1] << ")"
-                  << " _dest: (" << getDestination()[0] << ", " << getDestination()[1] << ")"
-                  << std::endl;
-
-        std::ofstream f;
-        std::string basename = getCSUID();
-#if _WINDOWS
-        std::replace(basename.begin(), basename.end(), ':', ';'); // we cannot have a filename with colons on Windows...
-#endif
-
-        f.open(basename);
-        for (uint i = 0; i < _pointsSize; ++i)
-        {
-            f << boost::format("%10d %12.3f %12.3f") %
-                 i % _pointsX[i] % _pointsY[i] << std::endl;
-        }
-        f.close();
-
-        f.open(basename + ".box");
-        f << boost::format("%12.3f %12.3f") %
-             _bbblc[0] % _bbblc[1] << std::endl;
-        f << boost::format("%12.3f %12.3f") %
-             _bbblc[0] % _bbtrc[1] << std::endl;
-        f << boost::format("%12.3f %12.3f") %
-             _bbtrc[0] % _bbtrc[1] << std::endl;
-        f << boost::format("%12.3f %12.3f") %
-             _bbtrc[0] % _bbblc[1] << std::endl;
-        f << boost::format("%12.3f %12.3f") %
-             _bbblc[0] % _bbblc[1] << std::endl;
-        f.close();
-
-
-        f.open(basename + ".geom");
-        for (uint i = 0; i < _geom.size(); ++i)
-        {
-            f << boost::format("%12.3f %12.3f") %
-                 _geom[i]->origin()[0] % _geom[i]->origin()[1] << std::endl;
-            f << boost::format("%12.3f %12.3f") %
-                 _geom[i]->dest()[0] % _geom[i]->dest()[1] << std::endl;
-        }
-        f.close();
-
-        f.open(basename + ".geom.boxes");
-        for (uint i = 0; i < _geom.size(); ++i)
-        {
-            f << "#" << mvf::shapeString( _geom[i]->shape() ) << std::endl;
-            f << boost::format("%12.3f %12.3f") %
-                 _geom[i]->blc()[0] % _geom[i]->blc()[1] << std::endl;
-            f << boost::format("%12.3f %12.3f") %
-                 _geom[i]->blc()[0] % _geom[i]->trc()[1] << std::endl;
-            f << boost::format("%12.3f %12.3f") %
-                 _geom[i]->trc()[0] % _geom[i]->trc()[1] << std::endl;
-            f << boost::format("%12.3f %12.3f") %
-                 _geom[i]->trc()[0] % _geom[i]->blc()[1] << std::endl;
-            f << boost::format("%12.3f %12.3f") %
-                 _geom[i]->blc()[0] % _geom[i]->blc()[1] << std::endl;
-            f << std::endl << std::endl;
-        }
-        f.close();
-
-        f.open(basename + ".geom.numerical");
-        std::ofstream ff;
-        ff.open(basename + ".geom.S");
-        for (uint i = 0; i < _geom.size(); ++i)
-        {
-            if (!_geom[i]->isNumerical()) continue;
-            f << "#" << mvf::shapeString( _geom[i]->shape() ) << std::endl;
-            std::vector<arr2> p;
-            std::vector<scalar> s;
-            if ((_geom[i]->shape() == mvf::shape::vwStraight) ||
-                (_geom[i]->shape() == mvf::shape::vwArc) ||
-                (_geom[i]->shape() == mvf::shape::vwParamPoly3) ||
-                (_geom[i]->shape() == mvf::shape::vwSpiral))
-
-            {
-                p = static_cast<vwNumerical*>(_geom[i])->points();
-                s = static_cast<vwNumerical*>(_geom[i])->S();
-            }
-            else if (_geom[i]->shape() == mvf::shape::paramPoly3)
-            {
-                p = static_cast<paramPoly3*>(_geom[i])->points();
-                s = static_cast<paramPoly3*>(_geom[i])->S();
-            }
-
-            for (uint j = 0; j < p.size(); ++j)
-                f << boost::format("%12.3f %12.3f") %
-                     p[j][0] % p[j][1] << std::endl;
-
-            for (uint j = 0; j < s.size(); ++j)
-                ff << boost::format("%12.3f") % s[j] << std::endl;
-        }
-        f.close();
-        ff.close();
+        if (mvf::areSameValues(odrL.speed[i].value, 0.)) continue;
+        _odrSpeed.push_back(odrL.speed[i]);
+        _odrSpeed.back().s = sli(odrL.speed[i].s);
     }
+
+
+    if (geomPrint)
+        writeDown();
 
     return;
 
+}
+
+
+void lane::writeDown()
+{
+    std::cout << "lane " << getCSUID()
+              << " origin: (" << getOrigin()[0] << ", " << getOrigin()[1] << ")"
+              << " _dest: (" << getDestination()[0] << ", " << getDestination()[1] << ")"
+              << std::endl;
+
+    std::ofstream f;
+    std::string basename = getCSUID();
+#if _WINDOWS
+    std::replace(basename.begin(), basename.end(), ':', ';'); // we cannot have a filename with colons on Windows...
+#endif
+
+    f.open(basename);
+    for (uint i = 0; i < _pointsSize; ++i)
+    {
+        f << boost::format("%10d %12.3f %12.3f") %
+                 i % _pointsX[i] % _pointsY[i] << std::endl;
+    }
+    f.close();
+
+    f.open(basename + ".box");
+    f << boost::format("%12.3f %12.3f") %
+             _bbblc[0] % _bbblc[1] << std::endl;
+    f << boost::format("%12.3f %12.3f") %
+             _bbblc[0] % _bbtrc[1] << std::endl;
+    f << boost::format("%12.3f %12.3f") %
+             _bbtrc[0] % _bbtrc[1] << std::endl;
+    f << boost::format("%12.3f %12.3f") %
+             _bbtrc[0] % _bbblc[1] << std::endl;
+    f << boost::format("%12.3f %12.3f") %
+             _bbblc[0] % _bbblc[1] << std::endl;
+    f.close();
+
+
+    f.open(basename + ".geom");
+    for (uint i = 0; i < _geom.size(); ++i)
+    {
+        f << boost::format("%12.3f %12.3f") %
+                 _geom[i]->origin()[0] % _geom[i]->origin()[1] << std::endl;
+        f << boost::format("%12.3f %12.3f") %
+                 _geom[i]->dest()[0] % _geom[i]->dest()[1] << std::endl;
+    }
+    f.close();
+
+    f.open(basename + ".geom.boxes");
+    for (uint i = 0; i < _geom.size(); ++i)
+    {
+        f << "#" << mvf::shapeString( _geom[i]->shape() ) << std::endl;
+        f << boost::format("%12.3f %12.3f") %
+                 _geom[i]->blc()[0] % _geom[i]->blc()[1] << std::endl;
+        f << boost::format("%12.3f %12.3f") %
+                 _geom[i]->blc()[0] % _geom[i]->trc()[1] << std::endl;
+        f << boost::format("%12.3f %12.3f") %
+                 _geom[i]->trc()[0] % _geom[i]->trc()[1] << std::endl;
+        f << boost::format("%12.3f %12.3f") %
+                 _geom[i]->trc()[0] % _geom[i]->blc()[1] << std::endl;
+        f << boost::format("%12.3f %12.3f") %
+                 _geom[i]->blc()[0] % _geom[i]->blc()[1] << std::endl;
+        f << std::endl << std::endl;
+    }
+    f.close();
+
+    f.open(basename + ".geom.numerical");
+    std::ofstream ff;
+    ff.open(basename + ".geom.S");
+    for (uint i = 0; i < _geom.size(); ++i)
+    {
+        if (!_geom[i]->isNumerical()) continue;
+        f << "#" << mvf::shapeString( _geom[i]->shape() ) << std::endl;
+        std::vector<arr2> p;
+        std::vector<scalar> s;
+        if ((_geom[i]->shape() == mvf::shape::vwStraight) ||
+            (_geom[i]->shape() == mvf::shape::vwArc) ||
+            (_geom[i]->shape() == mvf::shape::vwParamPoly3) ||
+            (_geom[i]->shape() == mvf::shape::vwSpiral))
+
+        {
+            p = static_cast<vwNumerical*>(_geom[i])->points();
+            s = static_cast<vwNumerical*>(_geom[i])->S();
+        }
+        else if (_geom[i]->shape() == mvf::shape::paramPoly3)
+        {
+            p = static_cast<paramPoly3*>(_geom[i])->points();
+            s = static_cast<paramPoly3*>(_geom[i])->S();
+        }
+
+        for (uint j = 0; j < p.size(); ++j)
+            f << boost::format("%12.3f %12.3f") %
+                     p[j][0] % p[j][1] << std::endl;
+
+        for (uint j = 0; j < s.size(); ++j)
+            ff << boost::format("%12.3f") % s[j] << std::endl;
+    }
+    f.close();
+    ff.close();
 }
 
 void lane::set(const OneVersion::smaS &sec, uint index)
@@ -846,6 +864,9 @@ void lane::clearMemory()
     _conflicts.clear();
     _tSigns.clear();
 
+    _odrSpeed.clear();
+    _odrWidth.clear();
+
     base();
 }
 
@@ -866,8 +887,9 @@ lane& lane::operator=(const lane& t)
 
 void lane::assignInputLaneToThis(const lane &t)
 {
-    _width = t._width;
     _id = t._id;
+    _width = t._width;
+    _constantWidth = t._constantWidth;
     _length = t._length;
     _speed = t._speed;
     _isPermanent = t._isPermanent;
@@ -928,6 +950,8 @@ void lane::assignInputLaneToThis(const lane &t)
     }
     _odrSo = t._odrSo;
     _odrWidth = t._odrWidth;
+    _odrSpeed = t._odrSpeed;
+    _odrZero = t._odrZero;
 
 
     _portLane = t._portLane;
@@ -1905,8 +1929,21 @@ void lane::setSpeed(const scalar speed)
 
 scalar lane::getSpeed() const
 {
-    return _speed;
+    return getSpeed(0);
+    // return _speed;
 }
+
+scalar lane::getSpeed(scalar d) const
+{
+    scalar speed = _speed;
+    for (uint i = 0; i < _odrSpeed.size(); ++i)
+    {
+        if (d  < _odrSpeed[i].s) break;
+        speed = _odrSpeed[i].value;
+    }
+    return speed;
+}
+
 
 scalar lane::getWidth() const
 {
@@ -1915,7 +1952,7 @@ scalar lane::getWidth() const
 
 scalar lane::getWidth(scalar d) const
 {
-    if (!isOpenDrive())
+    if (_constantWidth)
         return _width;
 
     scalar w = 0;
@@ -1939,7 +1976,6 @@ scalar lane::getWidth(scalar d) const
     }
 
     return w;
-
 }
 
 void lane::addTSign(tSign ts)
@@ -2316,6 +2352,34 @@ bool lane::isToMerge() const
 bool lane::isInOdrRange(scalar s) const
 {
     return mvf::isInRangeLR(s, _odrSo, _geom.back()->roadSe());
+}
+
+void lane::setZero(const lane* z)
+{
+    _odrZero = z;
+}
+
+scalar lane::sli(scalar s0) const
+{
+    if (mvf::areCloseEnough(s0, 0., 1e-8)) return 0;
+
+    if (!_odrZero)
+    {
+        std::cerr << "[ Error ] lane::sli can't calculate with _odrZero set to nullptr" << std::endl;
+        return 0;
+    }
+
+    if (mvf::areCloseEnough(s0, _odrZero->getLength(), 1e-8))
+        return _length;
+
+    arr2 p0;
+    if (!_odrZero->getPointAtDistance(p0, s0))
+    {
+        std::cerr << "[ Error ] lane::sli couldn't find a point at distance " << s0 << " for lane " << getCSUID() << std::endl;
+        return 0;
+    }
+    arr2 pi = projectPointOntoLane(p0);
+    return unsafeDistanceFromTheBoL(pi);
 }
 
 bool lane::actorsSupport(lane::kind k) const

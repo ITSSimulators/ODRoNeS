@@ -26,7 +26,6 @@
 #include <vector>
 #include <string>
 #include <iostream>
-#include <algorithm>
 #include "tinyxml2.h"
 
 #include "constants.h"
@@ -213,6 +212,10 @@ namespace Odr
         static const char* TownPlayStreet;
         static const char* TownPrivate;
         static const char* Town;
+
+        enum class RoadType { bicycle, lowSpeed, motorway, pedestrian, rural,
+                              townArterial, townCollector, townExpressway, townLocal,
+                              townPlayStreet, townPrivate, town, unknown };
 
         static const char* Map;
 
@@ -472,6 +475,22 @@ namespace Odr
         std::string text; ///< more text.
     };
 
+    class speedLimit
+    {
+    public:
+        speedLimit()
+        {
+            value = 0; s = 0;
+        }
+    public:
+        double value; ///< stored in m/s;
+        double s; ///< starting s coordinate;
+    };
+
+    extern std::string geomString(const Odr::Attr::Geometry &g);
+    extern bool isRoadTypeValid(const std::string &rt);
+    extern Odr::Kind::RoadType roadTypeFromCString(const char* c);
+    extern std::string roadTypeString(Odr::Kind::RoadType rt);
 
 
     class smaL  ///< smartActors Lane
@@ -480,7 +499,7 @@ namespace Odr
         smaL()
         {
             id = 0; sID = 0; ndxLS = 0;  odrID = 0; sign = 0;
-            length = 0; speed = 0; startingS = 0;
+            length = 0; startingS = 0;
             kind = "";
         }
 
@@ -496,8 +515,8 @@ namespace Odr
         int odrID; ///< positive and ascending on the left
         int sign; ///< -1, 0, or 1;
         double length;
-        double speed;
         double startingS; ///< given by the laneSection.
+        std::vector<speedLimit> speed;
         std::vector<smaL*> prevLane;
         std::vector<smaL*> nextLane;
         std::vector<Odr::offset> w; ///< width of the lane; -- that should be a vector.
@@ -512,20 +531,35 @@ namespace Odr
         {
             id = 0; odrID = 0; lsSize = 0; name = "";
         }
+
+        void setRoadType(const std::string &str)
+        {
+            type = roadTypeFromCString(str.c_str());
+        }
+
     public:
         std::vector<smaL> lanes;
         uint id;
         uint odrID;
         uint lsSize; ///< number of lane sections
         std::string name;
-        std::string type; ///< to be turned into a vector of types, which have the starting s, and the type itself.
+        Odr::Kind::RoadType type; ///< to be turned into a vector of types, which have the starting s, and the type itself.
         std::string rule; ///< 1.8 lht or rht!
         std::vector<Odr::geometry> geom;
         std::vector<Odr::offset> loffset;
         std::vector<Odr::tsign> tsigns;
     };
 
-    class udIndexed6DPoint
+    class speedRegulation
+    {
+    public:
+        Odr::Kind::RoadType roadType;  ///< the road type that this regulation applies to
+        std::string type; ///< maximum, recommended...
+        double value; ///< value of the speed;
+    };
+
+
+    class udIndexed6DPoint  ///< User Data (UD) indexed point.
     {
     public:
         udIndexed6DPoint()
@@ -540,19 +574,6 @@ namespace Odr
         int id;
     };
 
-    class speedRegulation
-    {
-    public:
-        std::string roadType; ///< the road type that this regulation applies to
-        std::string type; ///< maximum, recommended...
-        double value; ///< value of the speed;
-        std::string unit; ///<  (e_unit)
-    };
-
-
-// public:
-    extern std::string geomString(const Odr::Attr::Geometry &g);
-    extern bool isRoadTypeValid(const std::string &rt);
 
 };
 

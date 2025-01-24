@@ -67,6 +67,8 @@ public:
 
     const std::vector<Odr::udIndexed6DPoint> &udConnections = _udConnections; ///< share a read-only version
 
+    const std::vector<Odr::speedRegulation> &speedRegulation = _defaultSpeedLimit; ///< share a read-only version
+
 private:
     void append(const ReadOdr& r);
 

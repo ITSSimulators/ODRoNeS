@@ -26,8 +26,6 @@ using namespace odrones;
 void ReadBOdr::addRoad(Odr::smaS &s)
 {
     _sections.push_back(s);
-    if (!Odr::isRoadTypeValid(s.type))
-        _sections.back().type = Odr::Kind::Unknown;
 }
 
 void ReadBOdr::addConnection(Odr::udIndexed6DPoint &c)

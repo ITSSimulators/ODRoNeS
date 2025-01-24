@@ -21,6 +21,7 @@
 //
 
 #include "Odr.h"
+#include <algorithm>
 using namespace odrones;
 
 const char* Odr::Elem::OpenDrive = "OpenDRIVE";
@@ -260,6 +261,79 @@ bool Odr::isRoadTypeValid(const std::string &rt)
         return true;
 
     return false;
+}
+
+std::string Odr::roadTypeString(Odr::Kind::RoadType rt)
+{
+    if (rt == Odr::Kind::RoadType::bicycle)
+        return "bicycle";
+    else if (rt == Odr::Kind::RoadType::lowSpeed)
+        return "lowSpeed";
+    else if (rt == Odr::Kind::RoadType::motorway)
+        return "motorway";
+    else if (rt == Odr::Kind::RoadType::pedestrian)
+        return "pedestrian";
+    else if (rt == Odr::Kind::RoadType::rural)
+        return "rural";
+    else if (rt == Odr::Kind::RoadType::townArterial)
+        return "townArterial";
+    else if (rt == Odr::Kind::RoadType::townCollector)
+        return "townCollector";
+    else if (rt == Odr::Kind::RoadType::townExpressway)
+        return "townExpressway";
+    else if (rt == Odr::Kind::RoadType::townLocal)
+        return "townLocal";
+    else if (rt == Odr::Kind::RoadType::townPlayStreet)
+        return "townPlayStreet";
+    else if (rt == Odr::Kind::RoadType::townPrivate)
+        return "townPrivate";
+    else if (rt == Odr::Kind::RoadType::town)
+        return "town";
+
+    return "unknown";
+
+}
+
+Odr::Kind::RoadType Odr::roadTypeFromCString(const char* c)
+{
+    if (!strcmp(c, Odr::Kind::Bicycle))
+        return Odr::Kind::RoadType::bicycle;
+
+    if (!strcmp(c, Odr::Kind::LowSpeed))
+        return Odr::Kind::RoadType::lowSpeed;
+
+    if (!strcmp(c, Odr::Kind::Motorway))
+        return Odr::Kind::RoadType::motorway;
+
+    if (!strcmp(c, Odr::Kind::Pedestrian))
+        return Odr::Kind::RoadType::pedestrian;
+
+    if (!strcmp(c, Odr::Kind::Rural))
+        return Odr::Kind::RoadType::rural;
+
+    if (!strcmp(c, Odr::Kind::TownArterial))
+        return Odr::Kind::RoadType::townArterial;
+
+    if (!strcmp(c, Odr::Kind::TownCollector))
+        return Odr::Kind::RoadType::townCollector;
+
+    if (!strcmp(c, Odr::Kind::TownExpressway))
+        return Odr::Kind::RoadType::townExpressway;
+
+    if (!strcmp(c, Odr::Kind::TownLocal))
+        return Odr::Kind::RoadType::townLocal;
+
+    if (!strcmp(c, Odr::Kind::TownPlayStreet))
+        return Odr::Kind::RoadType::townPlayStreet;
+
+    if (!strcmp(c, Odr::Kind::TownPrivate))
+        return Odr::Kind::RoadType::townPrivate;
+
+    if (!strcmp(c, Odr::Kind::Town))
+        return Odr::Kind::RoadType::town;
+
+
+    return Odr::Kind::RoadType::unknown;
 }
 
 

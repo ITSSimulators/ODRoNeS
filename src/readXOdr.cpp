@@ -436,22 +436,28 @@ int ReadXOdr::addLane(tinyxml2::XMLElement *road, tinyxml2::XMLElement *lane, ui
 
 
     tinyxml2::XMLElement *speed = lane->FirstChildElement(Odr::Elem::Speed);
-    if (speed)
+    while (speed)
     {
-        xmlUtils::CheckResult(speed->QueryDoubleAttribute(Odr::Attr::Max, &(_sections[ndxS].lanes.back().speed)));
+        _sections[ndxS].lanes.back().speed.push_back(Odr::speedLimit());
+        xmlUtils::CheckResult(speed->QueryDoubleAttribute(Odr::Attr::Max, &(_sections[ndxS].lanes.back().speed.back().value)));
+        xmlUtils::CheckResult(speed->QueryDoubleAttribute(Odr::Attr::sOffset, &(_sections[ndxS].lanes.back().speed.back().s)));
 
         std::string units = speed->Attribute(Odr::Attr::Unit);
         if (units.compare(Odr::Kind::mph) == 0)
-            _sections[ndxS].lanes.back().speed *= ct::mphToMs;
+            _sections[ndxS].lanes.back().speed.back().value *= ct::mphToMs;
         else if (units.compare(Odr::Kind::kmh) == 0)
-            _sections[ndxS].lanes.back().speed *= ct::kmhToMs;
+            _sections[ndxS].lanes.back().speed.back().value *= ct::kmhToMs;
         else if (units.compare(Odr::Kind::ms) != 0)
             std::cerr << "[ Error ] unknown speed units: " << units << std::endl;
 
         if (speed->NextSiblingElement(Odr::Elem::Speed))
             std::cout << "[ Warning ] there's more than one speed limit to be parsed, but we only do one." << std::endl;
     }
-    else _sections[ndxS].lanes.back().speed = defaultSpeed;
+    if (_sections[ndxS].lanes.back().speed.empty())
+    {
+        _sections[ndxS].lanes.back().speed.push_back(Odr::speedLimit());
+        _sections[ndxS].lanes.back().speed.back().value = defaultSpeed;
+    }
 
 
     ndxL += 1;
@@ -555,10 +561,19 @@ void ReadXOdr::readHeader(tinyxml2::XMLElement *header)
         while (xmlSpeed_j)
         {
             Odr::speedRegulation sr;
-            sr.roadType = roadType;
+            sr.roadType = Odr::roadTypeFromCString(roadType.c_str());
             xmlUtils::ReadConstCharAttr(xmlSpeed_j, Odr::Attr::Type, sr.type);
-            xmlUtils::ReadConstCharAttr(xmlSpeed_j, Odr::Attr::Unit, sr.unit);
             xmlUtils::CheckResult(xmlSpeed_j->QueryDoubleAttribute(Odr::Attr::Value, &sr.value));
+
+            std::string units;
+            xmlUtils::ReadConstCharAttr(xmlSpeed_j, Odr::Attr::Unit, units);
+            if (units.compare(Odr::Kind::mph) == 0)
+                sr.value *= ct::mphToMs;
+            else if (units.compare(Odr::Kind::kmh) == 0)
+                sr.value *= ct::kmhToMs;
+            else if (units.compare(Odr::Kind::ms) != 0)
+                std::cerr << "[ Error ] unknown speed units: " << units << std::endl;
+
             _defaultSpeedLimit.push_back(sr);
 
             xmlSpeed_j->NextSiblingElement(Odr::Elem::Speed);
@@ -592,6 +607,19 @@ void ReadXOdr::readSim5UserData(tinyxml2::XMLElement* header)
 
         xmlCP = xmlCP->NextSiblingElement(Odr::Elem::UDConnectionPoint);
     }
+}
+
+Odr::Kind::RoadType ReadXOdr::readRoadType(tinyxml2::XMLElement *xmlRT)
+{
+    if (!xmlRT) return Odr::Kind::RoadType::unknown;
+
+    std::string sRT = xmlUtils::ReadConstCharAttr(xmlRT, Odr::Attr::Type);
+
+    if (xmlRT->NextSiblingElement(Odr::Elem::Type))
+        std::cout << "[ ReadXOdr ] warning - there's a road with more than one types. Currently, unsupported." << std::endl;
+
+    return Odr::roadTypeFromCString(sRT.c_str());
+
 }
 
 int ReadXOdr::loadXodr(std::string iFile, bool isOdrFile)

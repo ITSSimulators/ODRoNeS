@@ -132,8 +132,9 @@ public:
     bool setZero(const std::vector<Odr::geometry> &g, scalar so, scalar se); ///< return false if it was already configured.
 
     scalar maxSpeed() const;
+    void setSpeed(scalar speed);
 
-    concepts::roadType type() const;
+    Odr::Kind::RoadType type() const;
 
 private:
     void updateBoundingBox(uint ndx); ///< update the bounding box defined by _bbblc, bbtrc with the box of lane _sections[ndx];
@@ -147,7 +148,7 @@ private:
     size_t _allocSize;
     arr2 _bbblc, _bbtrc; ///< bounding box bottom left corner, bounding box top right corner.
     uint _odrID;
-    concepts::roadType _type; ///< as defined by OpenDRIVE 1.8.1 - a.6.3 e_roadType
+    Odr::Kind::RoadType _type; ///< as defined by OpenDRIVE 1.8.1 - a.6.3 e_roadType
     OneVersion::OVID _ovID;
 };
 

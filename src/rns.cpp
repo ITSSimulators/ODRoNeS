@@ -433,6 +433,20 @@ bool RNS::makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool loadSi
         _drivingSide = concepts::drivingSide::leftHand;
     }
 
+    // See if there's a default speed section:
+    if (read.speedRegulation.size())
+    {
+        for (uint i = 0; i < _sectionsSize; ++i)
+        {
+            for (uint j = 0; j < read.speedRegulation.size(); ++j)
+            {
+                if (_sections[i].type() == read.speedRegulation[j].roadType)
+                    _sections[i].setSpeed(read.speedRegulation[j].value);
+
+            }
+        }
+    }
+
 
 
 
@@ -649,7 +663,7 @@ void RNS::write(const std::string &mapFile) const
     userData->SetAttribute("extension", "25_01: bezier3, no junctions");
     if (_letter.udConnections.size())
     {
-        std::cout << "rns._letter has udConnections.size()" << std::endl;
+        // std::cout << "rns._letter has udConnections.size()" << std::endl;
         tinyxml2::XMLElement* connections = xmlMap.NewElement(Odr::Elem::UDConnectionPoints);
         for (uint i = 0; i < _letter.udConnections.size(); ++i)
         {
@@ -692,7 +706,7 @@ void RNS::write(const std::string &mapFile) const
             // Road -> Type:
             tinyxml2::XMLElement* type = xmlMap.NewElement(Odr::Elem::Type);
             xmlUtils::setAttrDouble(type, Odr::Attr::S, 0.00);
-            type->SetAttribute(Odr::Attr::Type, smas->type.c_str());
+            type->SetAttribute(Odr::Attr::Type, Odr::roadTypeString( smas->type ).c_str());
             // Road -> type -> speed:
             tinyxml2::XMLElement* speed = xmlMap.NewElement(Odr::Elem::Speed);
             xmlUtils::setAttrDouble(speed, Odr::Attr::Max, _sections[i].maxSpeed());

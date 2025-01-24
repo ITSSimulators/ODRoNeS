@@ -32,7 +32,7 @@ section::section() :
     _bbblc = {0, 0};
     _bbtrc = {0, 0};
     _odrID = 0;
-    _type = concepts::roadType::unknown;
+    _type = Odr::Kind::RoadType::unknown;
 }
 
 void section::set(size_t size)
@@ -233,6 +233,7 @@ int section::addLane(const std::vector<Odr::geometry> &geom, const std::vector<O
     {
         _lanes[_writtenSize].setID(static_cast<int>(_writtenSize));
         _lanes[_writtenSize].setOdrSectionID(_odrID);
+        _lanes[_writtenSize].setZero(&_zero);
         _lanes[_writtenSize].set(geom, off, width, odrL, se);
         updateBoundingBox(static_cast<uint>(_writtenSize));
         _writtenSize += 1;
@@ -289,6 +290,7 @@ void section::setOneVersionRoad(const OneVersion::smaS &sec, uint lgID)
 void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
 {
     _odrID = sec.odrID;
+    _type = sec.type;
 
     // Lanes within the same laneSection start at the same so and end at the same se,
     //  so start finding out these values:
@@ -311,6 +313,11 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
         }
     }
     // std::cout << "sec: " << sec.odrID << " starts in " << so << " and finishes in " << se << std::endl;
+
+
+    // Eventually, we'll need to configure a laneZero in _zero if it has not happened yet:
+    if ((_zero.getSign() == lane::sign::o) && (_zero.getKind() != lane::kind::none))
+        setZero(sec.geom, so, se);
 
 
     // Now, for every lane, get an array with all the offsets,
@@ -482,10 +489,6 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
         }
     }
 
-    // Now we need to configure a laneZero in _zero if it has not happened yet:
-    if ((_zero.getSign() == lane::sign::o) && (_zero.getKind() != lane::kind::none))
-        setZero(sec.geom, so, se);
-
     // Now use getPointWithOffset(p, d, offset) to get the xy
     //   and calculate st's/
     for (uint i = 0; i < sec.tsigns.size(); ++i)
@@ -516,7 +519,6 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
         }
     }
 
-    _type = concepts::rt(sec.type.c_str());
 
     return;
 }
@@ -532,7 +534,7 @@ bool section::setZero(const std::vector<Odr::geometry> &g, scalar so, scalar se)
     Odr::smaL odrl0;
     odrl0.startingS = so;
     odrl0.sign = 1;
-    odrl0.speed = 0;
+    odrl0.speed.push_back(Odr::speedLimit());
     odrl0.odrID = 0;
     odrl0.kind = Odr::Kind::None;
     _zero.set(g, {Odr::offset(0.,0.,0.,0.,so,se)},
@@ -551,7 +553,13 @@ scalar section::maxSpeed() const
     return speed;
 }
 
-concepts::roadType section::type() const
+void section::setSpeed(scalar speed)
+{
+    for (uint i = 0; i < _writtenSize; ++i)
+        _lanes[i].setSpeed(speed);
+}
+
+Odr::Kind::RoadType section::type() const
 {
     return _type;
 }

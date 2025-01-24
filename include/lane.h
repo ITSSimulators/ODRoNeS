@@ -56,7 +56,6 @@ class conflict;
 typedef odrones::scalar scalar;
 typedef odrones::arr2 arr2;
 typedef odrones::mvf mvf;
-//typedef odrones::Odr Odr;
 typedef odrones::bezier2 bezier2;
 typedef odrones::bezier3 bezier3;
 typedef odrones::conflict conflict;
@@ -259,6 +258,7 @@ public:
     scalar getWidth(scalar d) const; ///< get the width at a certain distance down the lane.
 
     scalar getSpeed() const;
+    scalar getSpeed(scalar d) const; ///< get the speed at a certain distance down the lane... assuming it's a car.
     void setSpeed(const scalar speed);
 
 
@@ -272,6 +272,7 @@ public:
     bool isArc() const;
     bool isArc(mvf::shape s) const;
 
+
     // ... and kind:
     void setKind(kind k);
     kind getKind() const;
@@ -284,6 +285,7 @@ public:
     bool actorsSupport(lane::kind k) const;
     bool actorsSupport(odrones::concepts::actor k) const;
     // bool actorsOverlap(const lane *l) const;
+    bool isPermanent() const;
 
 
     // Traffic Signs:
@@ -406,8 +408,7 @@ public:
     int getSectionID() const;
 
 
-    bool isPermanent() const;
-
+    //! Lane Sign:
     bool hasDefinedSign() const; // true if _sign != sign::o
     sign getSign() const;
     std::string getSignString() const;
@@ -425,17 +426,13 @@ public:
     bool isOdrShapeSupported(mvf::shape s) const; ///< return true if the shape is supported;
     bool xmlPlanView(tinyxml2::XMLElement *planView, tinyxml2::XMLDocument &doc) const; ///< fill in the planView with geometries ONLY IF IT's LANE 0! (false otherwise).
     bool xmlLaneAttributesAndLinks(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const;
+    void setZero(const lane* z);
+    scalar sli(scalar s0) const; ///< return s on this lane, given s0 on lane 0;
 
 
-private:
-    //! Find the correct geometry:
-    int getGeometryIndex(const arr2 &p) const;  ///< get the geometry index for this point; return -1 if the point is not there for some tol.
-    int getGeometryIndex(scalar d) const; ///< get the geometry index for this point; return -1 if out of bounds;
-
-    void numericalSetup();
 
 
-public:
+    //! Qt Plotting:
 #ifdef QT_CORE_LIB
     QPainterPath getEdgeQPainterPath(uint n, int e); ///< e = -1 for left edge and e = 1 for right edge.
     QPainterPath getQPainterPath(uint n) const; ///< get a QPainterPath with n points per Bezier line.
@@ -444,9 +441,21 @@ public:
                                  std::vector<int> &indexSize, std::vector<int> &vertexSize) const; ///< as the method states: allocate and fill in the required 3D data.
 #endif
 
+    //! Writing:
+    void writeDown(); ///< For debugging purposes: write down getCSUID.box, getCSUID.geom, getCSUID.geom.boxes, getCSUID.geom.numerical, getCSUID.geom.S
+
+
+
 private:
+    //! Find the correct geometry:
+    int getGeometryIndex(const arr2 &p) const;  ///< get the geometry index for this point; return -1 if the point is not there for some tol.
+    int getGeometryIndex(scalar d) const; ///< get the geometry index for this point; return -1 if out of bounds;
+
+    //! Numerical:
+    void numericalSetup();
     //! fill in the _pointsX/Y arrays
     void nSetupPointsXYUniformly(scalar ds) override;
+
 
 
 private:
@@ -487,6 +496,10 @@ private:
     /// Variables needed for the OpenDRIVE variable width:
     scalar _odrSo; ///< start of the lane section (metres), needed for the variable width, variable speed, elevation...
     std::vector<Odr::offset> _odrWidth; ///< the 5 parametres that define the width;
+    std::vector<Odr::speedLimit> _odrSpeed; ///< a vector of speed limits along s;
+    const lane* _odrZero; ///< a pointer to section._zero for you to enjoy :)
+
+    bool _constantWidth; ///< whether the width is constant along the lane.
 
     OneVersion::OVID _ovID; ///< the OneVersion id of the lane.
 
