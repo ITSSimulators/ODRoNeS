@@ -63,8 +63,6 @@ public:
 
     const Odr::smaS* odrSection(uint odrID) const; ///< return the section with ID = OdrID.
 
-    static constexpr scalar defaultSpeed = 30 * constants::mphToMs; ///< default speed is 30 mph.
-
     const std::vector<Odr::udIndexed6DPoint> &udConnections = _udConnections; ///< share a read-only version
 
     const std::vector<Odr::speedRegulation> &speedRegulation = _defaultSpeedLimit; ///< share a read-only version

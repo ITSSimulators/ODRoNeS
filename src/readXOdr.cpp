@@ -453,11 +453,6 @@ int ReadXOdr::addLane(tinyxml2::XMLElement *road, tinyxml2::XMLElement *lane, ui
         if (speed->NextSiblingElement(Odr::Elem::Speed))
             std::cout << "[ Warning ] there's more than one speed limit to be parsed, but we only do one." << std::endl;
     }
-    if (_sections[ndxS].lanes.back().speed.empty())
-    {
-        _sections[ndxS].lanes.back().speed.push_back(Odr::speedLimit());
-        _sections[ndxS].lanes.back().speed.back().value = defaultSpeed;
-    }
 
 
     ndxL += 1;
