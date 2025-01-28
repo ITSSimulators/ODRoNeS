@@ -62,11 +62,11 @@ RNS::RNS(const RNS& r)
 }
 
 
-RNS::RNS(std::string mapFile, const char* drivingSide, bool loadSidewalk, bool verbose)
+RNS::RNS(std::string mapFile, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk, bool verbose)
 {
     initialise();
     _verbose = verbose;
-    _ready = makeRoads(mapFile, drivingSide, loadSidewalk);
+    _ready = makeRoads(mapFile, drivingSide, exhaustiveLinking, loadSidewalk);
     return;
 }
 
@@ -220,11 +220,11 @@ void RNS::tSigns(const std::vector<lane::tSign> &t)
 
 }
 
-bool RNS::makeRoads(std::string mapFile, const char* drivingSide, bool loadSidewalk)
+bool RNS::makeRoads(std::string mapFile, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk)
 {
 
     if ( !std::filesystem::path{mapFile}.extension().string().compare(".xodr"))
-        return makeOpenDRIVERoads(mapFile, drivingSide, loadSidewalk);
+        return makeOpenDRIVERoads(mapFile, drivingSide, exhaustiveLinking, loadSidewalk);
     else if ( !std::filesystem::path{mapFile}.extension().string().compare(".bin"))
 #ifdef USE_ONEVERSION
         return makeOneVersionRoads(mapFile);
@@ -331,7 +331,7 @@ bool RNS::makeOneVersionRoads(std::string mapFile)
     return _ready;
 }
 
-bool RNS::makeOpenDRIVERoads(std::string odrMap, const char* drivingSide, bool loadSidewalk)
+bool RNS::makeOpenDRIVERoads(std::string odrMap, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk)
 {
     if (verbose())
         std::cout << "[ Warning ] work in progress; ignoring loadSidewalk value: " << loadSidewalk << std::endl;
@@ -348,10 +348,10 @@ bool RNS::makeOpenDRIVERoads(std::string odrMap, const char* drivingSide, bool l
         return false;
     }
 
-    return makeOpenDRIVERoads(read, drivingSide, loadSidewalk);
+    return makeOpenDRIVERoads(read, drivingSide, exhaustiveLinking, loadSidewalk);
 }
 
-bool RNS::makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool loadSidewalk)
+bool RNS::makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk)
 {
 
     _ready = false;
@@ -451,7 +451,7 @@ bool RNS::makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool loadSi
 
 
     // Now do the linking:
-    if (read.k() == ReadOdr::kind::xodr)
+    if ((read.k() == ReadOdr::kind::xodr) && (!exhaustiveLinking))
     {
         for (uint i = 0; i < read.sections.size(); ++i)
         {

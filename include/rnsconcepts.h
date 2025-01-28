@@ -24,6 +24,7 @@
 #define ODRONES_RNSCONCEPTS_H
 
 #include <string>
+#include <vector>
 
 namespace odrones
 {
@@ -34,6 +35,10 @@ public:
     /*! meeple + OpenSCENARIO's vehicle category https://publications.pages.asam.net/standards/ASAM_OpenSCENARIO/ASAM_OpenSCENARIO_XML/latest/generated/content/VehicleCategory.html */
     enum class actor {car, meeple, bus, motorbike, semitrailer, trailer, tram, truck, van, none};
     static std::string actorString(actor a);
+
+    inline static const std::vector<actor> actorV {
+        actor::car, actor::meeple, actor::bus, actor::motorbike, actor::semitrailer,
+        actor::trailer, actor::tram, actor::truck, actor::van };
 
 
     /*! whether we're on a right-hand or a left-hand driving scenario */

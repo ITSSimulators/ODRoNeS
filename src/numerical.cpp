@@ -75,7 +75,7 @@ bool numerical::isSet() const
 
 scalar numerical::defaultDs(scalar length)
 {
-    return std::min(0.05, length / static_cast<scalar>(minPointsSize - 1)); // we need these many points to be able to differentiate.
+    return std::min(0.50, length / static_cast<scalar>(minPointsSize - 1)); // we need these many points to be able to differentiate.
 }
 
 uint numerical::pointsSize() const

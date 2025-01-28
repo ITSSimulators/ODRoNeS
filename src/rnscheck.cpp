@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 
 #ifdef QT_CORE_LIB
     QApplication app(argc, argv);
-    RNS *rns = new RNS(iFile, Odr::Kind::LHT, true);
+    RNS *rns = new RNS(iFile, Odr::Kind::LHT, false, true);
     RNSWindow rw(rns, identifyLanes);
     rw.show();
     return app.exec();

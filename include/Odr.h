@@ -217,6 +217,13 @@ namespace Odr
                               townArterial, townCollector, townExpressway, townLocal,
                               townPlayStreet, townPrivate, town, unknown };
 
+        inline static const std::vector<RoadType> roadTypeV { RoadType::bicycle,
+                              RoadType::lowSpeed, RoadType::motorway,
+                              RoadType::pedestrian, RoadType::rural,
+                              RoadType::townArterial, RoadType::townCollector,
+                              RoadType::townExpressway, RoadType::townLocal,
+                              RoadType::townPlayStreet, RoadType::townPrivate, RoadType::town};
+
         static const char* Map;
 
         static const char* Maximum;
