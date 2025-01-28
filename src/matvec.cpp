@@ -678,26 +678,43 @@ bool mvf::boxesOverlap(const arr2 &blci, const arr2 &trci, const arr2 &blcj, con
     if (isPointInBoxBLcTRc({trcj[0], blcj[1]}, blci, trci)) return true;
 
     // if no corner is within the other box, then it still may be that the boxes are:
-    //        ---
-    //        | |
-    //   ------------
-    //   |    | |   |
-    //   ------------
-    //        | |
-    //        ---
-    //   which means that there has to be double intersection, so it does not matter which one we check.
-    arr2 tmp;
-    if ( (intersectionBetweenSegments(tmp, blci, {trci[0], blci[1]}, blcj, {blcj[0], trcj[1]})) &&
-         (intersectionBetweenSegments(tmp, blci, {trci[0], blci[1]}, {trcj[0], blcj[1]}, trcj)) )
+    //        ---             ---
+    //        | |             | |
+    //   ------------       |---------|
+    //   |    | |   |  , or | | |     | , or...
+    //   ------------       | ---     |
+    //        | |           |         |
+    //        ---           -----------
+    //   which means that two of the perpendicular edges intersect:
+    std::vector<segment> vertical_i = { {blci, {blci[0], trci[1]}}, {{trci[0], blci[1]}, trci} };
+    std::vector<segment> horizontal_j = { {blcj, {trcj[0], blcj[1]}}, {{blcj[0], trcj[1]}, trcj}  };
+    if (figuresOverlap(vertical_i, horizontal_j))
         return true;
 
-    if ( (intersectionBetweenSegments(tmp, blcj, {trcj[0], blcj[1]}, blci, {blci[0], trci[1]})) &&
-         (intersectionBetweenSegments(tmp, blcj, {trcj[0], blcj[1]}, {trci[0], blci[1]}, trci)) )
+    std::vector<segment> horizontal_i = { {blci, {trci[0], blci[1]}}, {{blci[0], trci[1]}, trci}  };
+    std::vector<segment> vertical_j = { {blcj, {blcj[0], trcj[1]}}, {{trcj[0], blcj[1]}, trcj} };
+    if (figuresOverlap(horizontal_i, vertical_j))
         return true;
 
     return false;
 }
 
+
+bool mvf::figuresOverlap(const std::vector<segment> &fig1, const std::vector<segment> &fig2)
+{
+    for (uint i = 0; i < fig1.size(); ++i)
+    {
+        for (uint j = 0; j < fig2.size(); ++j)
+        {
+            arr2 x;
+            if (intersectionBetweenSegments(x, fig1[i].p1, fig1[i].p2, fig2[j].p1, fig2[j].p2))
+                return true;
+        }
+    }
+
+    return false;
+
+}
 
 void mvf::numericalIntersections(std::vector<arr2> &intersections,
                                  const scalar *pointsAx, const scalar *pointsAy, uint ndxOA, uint ndxEA,

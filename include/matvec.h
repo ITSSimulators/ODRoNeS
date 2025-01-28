@@ -37,6 +37,11 @@ namespace odrones
 
 // typedef odrones::scalar scalar;
 typedef std::array<scalar, 2> arr2;
+struct segment {
+    arr2 p1 {0., 0.};
+    arr2 p2 {0., 0.};
+};
+
 // typedef std::array<scalar, 3> arr3;
 
 class mvf
@@ -120,6 +125,8 @@ public:
     static void boundingBoxForArc(arr2 &blc, arr2 &trc, const arr2 &o, const arr2 &e, const arr2 &c, scalar r, shape s);
     //! do the two bounding boxes overlap?
     static bool boxesOverlap(const arr2 &blci, const arr2 &trci, const arr2 &blcj, const arr2 &trcj);
+    //! see if any pair of edges intersect.
+    static bool figuresOverlap(const std::vector<segment> &fig1, const std::vector<segment> &fig2);
     //! rotate the 2D vector v around the z axis, by angle radians.
     static void rotateVectorByAngle(arr2 &v, scalar angle);
     //! return a new vector that results from rotating the point p around the cm by an angle (in radians)
