@@ -74,7 +74,6 @@ int main(int argc, char *argv[])
     {
         iFile = result["map"].as<std::string>();
         std::filesystem::path fsIFile = iFile;
-        fsIFile = std::filesystem::canonical(fsIFile);
         std::ostringstream em;
 
         // check that it exists:
@@ -107,6 +106,7 @@ int main(int argc, char *argv[])
             return 1;
         }
 
+        fsIFile = std::filesystem::canonical(fsIFile);
         iFile = fsIFile.string();
     }
     else
