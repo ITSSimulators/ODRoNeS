@@ -513,6 +513,10 @@ namespace Odr
         void writeXML(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const;
         void writeXMLWidth(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const;
         void writeXMLBorder(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const;
+        std::string print() const
+        {
+            return "laneSection: " + std::to_string(ndxLS) + ", lane: " + std::to_string(odrID);
+        };
 
 
     public:
@@ -542,6 +546,11 @@ namespace Odr
         void setRoadType(const std::string &str)
         {
             type = roadTypeFromCString(str.c_str());
+        }
+
+        std::string print() const
+        {
+            return "road: " + std::to_string(odrID);
         }
 
     public:
