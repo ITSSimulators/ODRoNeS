@@ -173,6 +173,10 @@ public:
             if (!l) return -1;
             return l->getLength() - s;
         }
+        std::string print() const
+        {
+            return l->getCSUID() + " s: " + std::to_string(s) + " loff: " + std::to_string(loff);
+        }
     };
 
     static constexpr scalar odrTol = 1e-2;
