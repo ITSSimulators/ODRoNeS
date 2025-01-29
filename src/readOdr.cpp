@@ -237,15 +237,29 @@ void ReadOdr::append(const ReadOdr &r)
             for (uint k = 0; k < r.sections[i].lanes[j].prevLane.size(); ++k)
             {
                 Odr::smaL *lk = r.sections[i].lanes[j].prevLane[k];
-                Odr::smaL *l = getLaneWithODRIds(_sections[lk->sID].odrID, lk->odrID, lk->ndxLS);
-                _sections[i].lanes[j].prevLane.push_back(l);
+                if (lk != nullptr)
+                {
+                    Odr::smaL* l = getLaneWithODRIds(_sections[lk->sID].odrID, lk->odrID, lk->ndxLS);
+                    _sections[i].lanes[j].prevLane.push_back(l);
+                }
+                else
+                {
+                    std::cerr << "Warning team:Null lk for prevLane\n";
+                }
             }
 
             for (uint k = 0; k < r.sections[i].lanes[j].nextLane.size(); ++k)
             {
                 Odr::smaL *lk = r.sections[i].lanes[j].nextLane[k];
-                Odr::smaL *l = getLaneWithODRIds(_sections[lk->sID].odrID, lk->odrID, lk->ndxLS);
-                _sections[i].lanes[j].nextLane.push_back(l);
+                if (lk != nullptr)
+                {
+                    Odr::smaL* l = getLaneWithODRIds(_sections[lk->sID].odrID, lk->odrID, lk->ndxLS);
+                    _sections[i].lanes[j].nextLane.push_back(l);
+                }
+                else
+                {
+                    std::cerr << "Warning team:Null lk for nextLane\n";
+                }
             }
         }
     }
