@@ -335,7 +335,7 @@ bool ReadXOdr::hasComplicatedOffset(Odr::offset &o)
 
 
 
-int ReadXOdr::getRoadLinkData(uint &rLinkID, uint &rLinkCP, tinyxml2::XMLElement *fbLinkXML)
+int ReadXOdr::getRoadLinkData(int &rLinkID, uint &rLinkCP, tinyxml2::XMLElement *fbLinkXML)
 {
     if (!fbLinkXML) return 0;
 
@@ -350,7 +350,6 @@ int ReadXOdr::getRoadLinkData(uint &rLinkID, uint &rLinkCP, tinyxml2::XMLElement
     {
         int linkID;
         xmlUtils::CheckResult(fbLinkXML->QueryIntAttribute(Odr::Attr::ElementId, &linkID));
-        rLinkID = static_cast<uint>(linkID);
 
         const char* txt = fbLinkXML->Attribute(Odr::Attr::ContactPoint);
         if (!txt) rLinkCP = 2;
@@ -459,7 +458,7 @@ int ReadXOdr::addLane(tinyxml2::XMLElement *road, tinyxml2::XMLElement *lane, ui
     return static_cast<int>(ndxL);
 }
 
-uint ReadXOdr::linkLanes(tinyxml2::XMLElement *lXML, uint ndxS, uint ndxL, uint rPrevID, uint rNextID) //, int rPrevCP, int rNextCP)
+uint ReadXOdr::linkLanes(tinyxml2::XMLElement *lXML, uint ndxS, uint ndxL, int rPrevID, int rNextID) //, int rPrevCP, int rNextCP)
 {
 
     while (lXML)
@@ -471,7 +470,7 @@ uint ReadXOdr::linkLanes(tinyxml2::XMLElement *lXML, uint ndxS, uint ndxL, uint 
         if (lLink)
         {
             tinyxml2::XMLElement *lPrev = lLink->FirstChildElement(Odr::Elem::Predecessor);
-            if (lPrev)
+            if ((lPrev) && (rPrevID > -1))
             {
                 int lPrevID = 0;
                 xmlUtils::CheckResult(lPrev->QueryIntAttribute(Odr::Attr::Id, &lPrevID));
@@ -486,12 +485,17 @@ uint ReadXOdr::linkLanes(tinyxml2::XMLElement *lXML, uint ndxS, uint ndxL, uint 
                     lsLink = ndxLS - 1;
                 }
                 Odr::smaL *l = getLaneWithODRIds(rLink, lPrevID, lsLink);
-                _sections[ndxS].lanes[ndxL].prevLane.push_back(l);
+                if (l)
+                    _sections[ndxS].lanes[ndxL].prevLane.push_back(l);
+                else
+                    std::cerr << "[ Warning ] failed to link " << _sections[ndxS].print()
+                              << _sections[ndxS].lanes[ndxL].print()
+                              << " to a predecessor: " << rLink << ", " << lsLink << ", " << lPrevID << ")" << std::endl;
             }
 
 
             tinyxml2::XMLElement *lNext = lLink->FirstChildElement(Odr::Elem::Successor);
-            if (lNext)
+            if ((lNext) && (rNextID > -1))
             {
                 int lNextID = 0;
                 xmlUtils::CheckResult(lNext->QueryIntAttribute(Odr::Attr::Id, &lNextID));
@@ -510,7 +514,12 @@ uint ReadXOdr::linkLanes(tinyxml2::XMLElement *lXML, uint ndxS, uint ndxL, uint 
                     }
                 }
                 Odr::smaL *l = getLaneWithODRIds(rLink, lNextID, lsLink);
-                _sections[ndxS].lanes[ndxL].nextLane.push_back(l);
+                if (l)
+                    _sections[ndxS].lanes[ndxL].nextLane.push_back(l);
+                else
+                    std::cerr << "[ Warning ] failed to link " << _sections[ndxS].print()
+                              << _sections[ndxS].lanes[ndxL].print()
+                              << " to a predecessor: " << rLink << ", " << lsLink << ", " << lNextID << ")" << std::endl;
             }
         }
 
@@ -730,8 +739,8 @@ int ReadXOdr::loadXodr(std::string iFile, bool isOdrFile)
         xmlUtils::CheckResult(r->QueryIntAttribute(Odr::Attr::Id, &roadID));
 
         // Get the Links at the road level:
-        uint rPrevID = 0;
-        uint rNextID = 0;
+        int rPrevID = -1;
+        int rNextID = -1;
         uint rPrevCP = 2; // contact point
         uint rNextCP = 2; // contact point
         tinyxml2::XMLElement *rLink = r->FirstChildElement(Odr::Elem::Link);

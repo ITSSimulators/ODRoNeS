@@ -64,7 +64,7 @@ private:
     bool hasComplicatedOffset(Odr::offset &o);
 
     /*! Get the LinkID and Link Connection Point out of a Road Link XMLElement */
-    int getRoadLinkData(uint &rLinkID, uint &rLinkCP, tinyxml2::XMLElement *fbLinkXML);
+    int getRoadLinkData(int &rLinkID, uint &rLinkCP, tinyxml2::XMLElement *fbLinkXML);
 
     /*! Given the lane XMLElement, consider adding a lane to the section, in ndxL
      *   with laneSection index ndxLS and starting at startingS.
@@ -72,7 +72,7 @@ private:
     int addLane(tinyxml2::XMLElement *road, tinyxml2::XMLElement *lane, uint ndxS, uint ndxL, uint ndxLS, double startingS);
 
     /*! Add previous and next lanes */
-    uint linkLanes(tinyxml2::XMLElement *lXML, uint ndxS, uint ndxL, uint rPrevID, uint rNextID); //, int rPrevCP, int rNextCP);
+    uint linkLanes(tinyxml2::XMLElement *lXML, uint ndxS, uint ndxL, int rPrevID, int rNextID); //, int rPrevCP, int rNextCP);
 
     /*! Read University of Leeds Simulator5 user data */
     void readSim5UserData(tinyxml2::XMLElement* header);
