@@ -37,7 +37,14 @@ namespace odrones
 
 // typedef odrones::scalar scalar;
 typedef std::array<scalar, 2> arr2;
-struct segment {
+class segment {
+public:
+    segment(const std::array<scalar, 2> &a1, const std::array<scalar, 2> &a2)
+    {
+        p1 = a1; p2 = a2;
+    }
+
+public:
     arr2 p1 {0., 0.};
     arr2 p2 {0., 0.};
 };
@@ -170,6 +177,40 @@ public:
     static scalar minimumTimeForDx(scalar Dx, scalar vo, scalar vmax, scalar a);
     // static scalar minimumTimeForDxVoNonNeg(scalar Dx, scalar vo, scalar vmax, scalar a);
 };
+
+
+class vec2
+{
+
+public:
+    vec2(){ assign(0., 0.); };
+    vec2( scalar t0, scalar t1 ) { assign(t0, t1); }
+    vec2( const std::array<scalar,2> &p) { assign(p[0], p[1]); }
+    // vec2( const arr2 &p) { assign( p[0], p[1]); }
+    scalar& operator [](std::size_t i) { return _data[i]; }
+    scalar operator*(const vec2 &b) const { return _data[0] * b._data[0] + _data[1] * b._data[1]; }
+    vec2 operator*(scalar x) const { return vec2(x * _data[0], x * _data[1]); }
+    // friend vec2 operator*(const scalar s, const vec2& v);
+    vec2 operator+(const vec2 &b) const { return vec2(_data[0] + b._data[0], _data[1] + b._data[1]); }
+    vec2 operator-(const vec2 &b) const { return vec2(_data[0] - b._data[0], _data[1] - b._data[1]); }
+    void assign( scalar t0, scalar t1 ) { _data[0] = t0; _data[1] = t1; }
+
+    scalar magnitude() const { return mvf::magnitude(_data); }
+    void normalise() { mvf::normalise(_data); };
+    scalar distance(vec2 &b) const { return mvf::distance(_data, b._data); }
+    bool areSamePoints(vec2 &b) const { return mvf::areSamePoints(_data, b._data); }
+
+    const std::array<scalar, 2> &data = _data;
+
+private:
+    std::array<scalar,2> _data={0., 0.};
+};
+/*
+vec2 operator*(const double s, const vec2& v)
+{
+    return vec2(v._data[0] * s, v._data[1] * s);
+}
+*/
 
 
 } // namespace odrones
