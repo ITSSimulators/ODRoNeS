@@ -1394,6 +1394,12 @@ int lane::getID() const
     return _id;
 }
 
+int lane::odrSectionID() const
+{
+    if (!isOpenDrive()) return -1;
+    return _odrSectionID;
+}
+
 int lane::odrID() const
 {
     return _odrID;
