@@ -395,6 +395,7 @@ public:
 
     //! Lane IDs
     int getID() const;
+    int odrSectionID() const;
     int odrID() const;
     OneVersion::OVID ovID() const;
     void setOVID(OneVersion::OVID id);
