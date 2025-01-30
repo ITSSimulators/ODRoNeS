@@ -24,6 +24,7 @@
 #include "matvec.h"
 
 #include <cstring>
+#include <iostream>
 
 using namespace odrones;
 
@@ -708,7 +709,9 @@ bool mvf::figuresOverlap(const std::vector<segment> &fig1, const std::vector<seg
         {
             arr2 x;
             if (intersectionBetweenSegments(x, fig1[i].p1, fig1[i].p2, fig2[j].p1, fig2[j].p2))
+            {
                 return true;
+            }
         }
     }
 
@@ -772,8 +775,8 @@ void mvf::numericalIntersections(std::vector<arr2> &intersections,
     }
 
     // Calculate the bounding box of A1, A2, B1 and B2
-    auto [ mxA1, MxA1 ] = std::minmax_element(pointsAx+ndxOA1, pointsAx+ndxEA1);
-    auto [ myA1, MyA1 ] = std::minmax_element(pointsAy+ndxOA1, pointsAy+ndxEA1);
+    auto [ mxA1, MxA1 ] = std::minmax_element(pointsAx+ndxOA1, pointsAx+ndxEA1+1);
+    auto [ myA1, MyA1 ] = std::minmax_element(pointsAy+ndxOA1, pointsAy+ndxEA1+1);
     arr2 blA1 = {*mxA1, *myA1};
     arr2 trA1 = {*MxA1, *MyA1};
 
@@ -782,15 +785,15 @@ void mvf::numericalIntersections(std::vector<arr2> &intersections,
     arr2 blA2, trA2;
     if (splitA)
     {
-        std::tie(mxA2, MxA2) = std::minmax_element(pointsAx+ndxOA2, pointsAx+ndxEA2);
-        std::tie(myA2, MyA2) = std::minmax_element(pointsAy+ndxOA2, pointsAy+ndxEA2);
+        std::tie(mxA2, MxA2) = std::minmax_element(pointsAx+ndxOA2, pointsAx+ndxEA2+1);
+        std::tie(myA2, MyA2) = std::minmax_element(pointsAy+ndxOA2, pointsAy+ndxEA2+1);
         blA2 = {*mxA2, *myA2};
         trA2 = {*MxA2, *MyA2};
     }
 
 
-    auto [ mxB1, MxB1 ] = std::minmax_element(pointsBx+ndxOB1, pointsBx+ndxEB1);
-    auto [ myB1, MyB1 ] = std::minmax_element(pointsBy+ndxOB1, pointsBy+ndxEB1);
+    auto [ mxB1, MxB1 ] = std::minmax_element(pointsBx+ndxOB1, pointsBx+ndxEB1+1);
+    auto [ myB1, MyB1 ] = std::minmax_element(pointsBy+ndxOB1, pointsBy+ndxEB1+1);
     arr2 blB1 = {*mxB1, *myB1};
     arr2 trB1 = {*MxB1, *MyB1};
 
@@ -799,8 +802,8 @@ void mvf::numericalIntersections(std::vector<arr2> &intersections,
     arr2 blB2, trB2;
     if (splitB)
     {
-        std::tie(mxB2, MxB2) = std::minmax_element(pointsBx+ndxOB2, pointsBx+ndxEB2);
-        std::tie(myB2, MyB2) = std::minmax_element(pointsBy+ndxOB2, pointsBy+ndxEB2);
+        std::tie(mxB2, MxB2) = std::minmax_element(pointsBx+ndxOB2, pointsBx+ndxEB2+1);
+        std::tie(myB2, MyB2) = std::minmax_element(pointsBy+ndxOB2, pointsBy+ndxEB2+1);
         blB2 = {*mxB2, *myB2};
         trB2 = {*MxB2, *MyB2};
     }
