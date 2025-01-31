@@ -22,6 +22,7 @@
 
 #include "readOdr.h"
 #include "xmlUtils.h"
+#include "bezier3.h"
 using namespace odrones;
 
 
@@ -148,8 +149,24 @@ void ReadOdr::renumber(uint shift)
 {
     for (uint i = 0; i < _sections.size(); ++i)
     {
+        std::cout << "renumber shift: " << shift << std::endl;
         _sections[i].odrID += shift;
     }
+}
+
+bool ReadOdr::uniqueSectionOdrIDs()
+{
+    std::vector<uint> ids;
+    for (uint i = 0; i < _sections.size(); ++i)
+    {
+        if (std::find(ids.begin(), ids.end(), _sections[i].odrID) != ids.end())
+        {
+            std::cout << "[ ReadOdr ] has a repeated section.odrID: " << _sections[i].odrID << std::endl;
+            return false;
+        }
+        ids.push_back(_sections[i].odrID);
+    }
+    return true;
 }
 
 void ReadOdr::transform(const arr2& t, scalar r)
@@ -320,3 +337,68 @@ void Odr::smaL::writeXML(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc)
     writeXMLWidth(elem, doc);
 }
 
+
+void ReadOdr::simplifyGeometries(Odr::smaS &s)
+{
+    return;
+
+    /*
+    // swap Beziers with straights and arcs:
+    for (uint i = 0; i < s.geom.size(); ++i)
+    {
+        if (s.geom[i].g != Odr::Attr::Geometry::bezier3)
+            continue;
+
+        std::vector<arr2> cp;
+        cp.push_back({s.geom[i].bz0x, s.geom[i].bz0y});
+        cp.push_back({s.geom[i].bz1x, s.geom[i].bz1y});
+        cp.push_back({s.geom[i].bz2x, s.geom[i].bz2y});
+        cp.push_back({s.geom[i].bz3x, s.geom[i].bz3y});
+
+        // 2 - Arcs:
+        // Check if the curvature is constant:
+        bool arc = true;
+        std::cout << "maybe an arc?" << std::endl;
+        bezier3 bz3(cp[0], cp[1], cp[2], cp[3]);
+        scalar curv_o = bz3.getCurvature(0);
+        for (uint j = 1; j < 5; ++j)
+        {
+            scalar curv_i = bz3.getCurvature(0.25 * j * bz3.length());
+            if (!mvf::areCloseEnough(curv_o, curv_i, 1e-4))
+            {
+                arc = false;
+                break;
+            }
+        }
+        if ((arc) && (!mvf::areSameValues(curv_o, 0)))
+        {
+            s.geom[i].zeroBezier();
+            s.geom[i].g = Odr::Attr::Geometry::arc;
+            s.geom[i].curvature = curv_o;
+            continue;
+        }
+
+        // 1 - Straigths:
+        // 1.1 -- check if the 4 points are aligned, and later, check the length:
+        if (mvf::areAligned(cp))
+        {
+            for (uint j = 0; j < cp.size(); ++j)
+            {
+                std::cout << cp[j][0] << "  " << cp[j][1] << std::endl;
+            }
+            std::cout << std::endl << std::endl;;
+            s.geom[i].zeroBezier();
+            s.geom[i].g = Odr::Attr::Geometry::line;
+            arr2 tg = mvf::tangent(cp[0], cp[3]);
+            s.geom[i].hdg = std::atan2(tg[1], tg[0]);
+            if (!mvf::areCloseEnough(s.geom[i].length, mvf::distance(cp[0], cp[3]), 1e-4))
+                std::cout << "[ ReadBOdr ] simplified straight has different length: "
+                          << s.geom[i].length << " vs " << mvf::distance(cp[0], cp[3]) << std::endl;
+            // else
+                // std::cout << "[ ReadOdr ] this Bezier was a straight!" << std::endl;
+            continue;
+        }
+
+    }
+    */
+}

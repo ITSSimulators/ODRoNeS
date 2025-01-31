@@ -45,6 +45,8 @@ public:
     void renumber(uint shift); ///< renumber the Odr ids of the sections.
     void transform(const arr2 &position, scalar angle);
 
+    bool uniqueSectionOdrIDs(); ///< check whether there are sections with repeated odrIDs
+
 protected:
     ReadOdr(kind k) : _k(k) {};
 
@@ -69,6 +71,9 @@ public:
 
 private:
     void append(const ReadOdr& r);
+
+protected:
+    void simplifyGeometries(Odr::smaS &s); ///< will consider whether any of s.geom[i] can be swapped for
 
 protected:
     std::vector<Odr::smaS> _sections;
