@@ -149,7 +149,6 @@ void ReadOdr::renumber(uint shift)
 {
     for (uint i = 0; i < _sections.size(); ++i)
     {
-        std::cout << "renumber shift: " << shift << std::endl;
         _sections[i].odrID += shift;
     }
 }
@@ -341,8 +340,8 @@ void Odr::smaL::writeXML(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc)
 void ReadOdr::simplifyGeometries(Odr::smaS &s)
 {
     return;
-
     /*
+
     // swap Beziers with straights and arcs:
     for (uint i = 0; i < s.geom.size(); ++i)
     {
@@ -361,15 +360,20 @@ void ReadOdr::simplifyGeometries(Odr::smaS &s)
         std::cout << "maybe an arc?" << std::endl;
         bezier3 bz3(cp[0], cp[1], cp[2], cp[3]);
         scalar curv_o = bz3.getCurvature(0);
+        std::cout << "cp[3] " << cp[3][0] << ", " << cp[3][1] << ", bz3.end(): " << bz3.curvex(1) << ", " << bz3.curvey(1) << std::endl;
+        std::cout << "curv: " << curv_o;
         for (uint j = 1; j < 5; ++j)
         {
-            scalar curv_i = bz3.getCurvature(0.25 * j * bz3.length());
+            scalar curv_i = bz3.getCurvature(0.25 * j);
+            std::cout << ", " << curv_i;
             if (!mvf::areCloseEnough(curv_o, curv_i, 1e-4))
             {
                 arc = false;
-                break;
+                // break;
             }
         }
+        std::cout << std::endl;
+
         if ((arc) && (!mvf::areSameValues(curv_o, 0)))
         {
             s.geom[i].zeroBezier();
@@ -400,5 +404,6 @@ void ReadOdr::simplifyGeometries(Odr::smaS &s)
         }
 
     }
+
     */
 }
