@@ -23,6 +23,8 @@
 #include "readOdr.h"
 #include "xmlUtils.h"
 #include "bezier3.h"
+#include "arc.h"
+
 using namespace odrones;
 
 
@@ -336,13 +338,55 @@ void Odr::smaL::writeXML(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc)
     writeXMLWidth(elem, doc);
 }
 
-
-void ReadOdr::simplifyGeometries(Odr::smaS &s)
+bool ReadOdr::simplifySingleArc(Odr::smaS &s)
 {
-    return;
-    /*
+    if (s.geom.size() == 1) return false;
 
-    // swap Beziers with straights and arcs:
+    scalar tol = 2e-3;
+    std::vector<arr2> points; // real points, without the control ones.
+    for (uint i = 0; i < s.geom.size(); ++i)
+    {
+        points.push_back({s.geom[i].bz0x, s.geom[i].bz0y});
+        points.push_back({s.geom[i].bz3x, s.geom[i].bz3y});
+    }
+
+    arc a_o;
+    a_o.setWith3Points(points[0], points[1], points.back());
+    vec2 to = a_o.to();
+    uint cnt = 1;
+    if (!a_o.ready()) return false; // in this case, the three points were aligned, and creating the arc was unsuccessful.
+    // see if they're a single arc, that is they all have the same radius of curvature:
+    for (uint i = 2; i < points.size() -1; ++i)
+    {
+        arc a_i;
+        a_i.setWith3Points(points[0], points[i], points.back());
+        if (!mvf::areCloseEnough(a_o.radiusOfCurvature(), a_i.radiusOfCurvature(), tol))
+            return false;
+        to = to + a_i.to();
+    }
+
+    // Create a new arc with an averaged to
+    to.normalise();
+    arc a_f(points[0], points.back(), to.a2());
+    // a_f.printOut();
+
+    s.geom.clear();
+    s.geom.push_back( Odr::geometry() );
+    s.geom.back().g = Odr::Attr::Geometry::arc;
+    s.geom.back().s = 0;
+    s.geom.back().x = a_f.origin()[0];
+    s.geom.back().y = a_f.origin()[1];
+    s.geom.back().hdg = std::atan2(a_f.to()[1], a_f.to()[0]);
+    s.geom.back().length = a_f.length();
+    s.geom.back().curvature = 1.0 / a_o.radiusOfCurvature();
+
+    return true;
+}
+
+bool ReadOdr::simplifyStraights(Odr::smaS &s)
+{
+    // 1 - swap Beziers for straights
+    bool swaps = false;
     for (uint i = 0; i < s.geom.size(); ++i)
     {
         if (s.geom[i].g != Odr::Attr::Geometry::bezier3)
@@ -354,43 +398,9 @@ void ReadOdr::simplifyGeometries(Odr::smaS &s)
         cp.push_back({s.geom[i].bz2x, s.geom[i].bz2y});
         cp.push_back({s.geom[i].bz3x, s.geom[i].bz3y});
 
-        // 2 - Arcs:
-        // Check if the curvature is constant:
-        bool arc = true;
-        std::cout << "maybe an arc?" << std::endl;
-        bezier3 bz3(cp[0], cp[1], cp[2], cp[3]);
-        scalar curv_o = bz3.getCurvature(0);
-        std::cout << "cp[3] " << cp[3][0] << ", " << cp[3][1] << ", bz3.end(): " << bz3.curvex(1) << ", " << bz3.curvey(1) << std::endl;
-        std::cout << "curv: " << curv_o;
-        for (uint j = 1; j < 5; ++j)
-        {
-            scalar curv_i = bz3.getCurvature(0.25 * j);
-            std::cout << ", " << curv_i;
-            if (!mvf::areCloseEnough(curv_o, curv_i, 1e-4))
-            {
-                arc = false;
-                // break;
-            }
-        }
-        std::cout << std::endl;
 
-        if ((arc) && (!mvf::areSameValues(curv_o, 0)))
-        {
-            s.geom[i].zeroBezier();
-            s.geom[i].g = Odr::Attr::Geometry::arc;
-            s.geom[i].curvature = curv_o;
-            continue;
-        }
-
-        // 1 - Straigths:
-        // 1.1 -- check if the 4 points are aligned, and later, check the length:
         if (mvf::areAligned(cp))
         {
-            for (uint j = 0; j < cp.size(); ++j)
-            {
-                std::cout << cp[j][0] << "  " << cp[j][1] << std::endl;
-            }
-            std::cout << std::endl << std::endl;;
             s.geom[i].zeroBezier();
             s.geom[i].g = Odr::Attr::Geometry::line;
             arr2 tg = mvf::tangent(cp[0], cp[3]);
@@ -398,12 +408,44 @@ void ReadOdr::simplifyGeometries(Odr::smaS &s)
             if (!mvf::areCloseEnough(s.geom[i].length, mvf::distance(cp[0], cp[3]), 1e-4))
                 std::cout << "[ ReadBOdr ] simplified straight has different length: "
                           << s.geom[i].length << " vs " << mvf::distance(cp[0], cp[3]) << std::endl;
-            // else
-                // std::cout << "[ ReadOdr ] this Bezier was a straight!" << std::endl;
+            swaps = true;
             continue;
         }
-
     }
 
-    */
+    // 2 - Join straights:
+    std::vector<int> nuke;
+    for (uint i = 0; i < s.geom.size() -1; ++i)
+    {
+        if (s.geom[i].g != Odr::Attr::Geometry::line) continue;
+
+        uint io = i;
+        while ((i < s.geom.size() -1) &&
+               (s.geom[i+1].g == Odr::Attr::Geometry::line) &&
+               (mvf::areCloseEnough(s.geom[io].hdg, s.geom[i+1].hdg, 1e-6)))
+        {
+            s.geom[io].length += s.geom[i+1].length;
+            nuke.push_back(i+1);
+
+            ++i;
+        }
+    }
+
+    for (uint i = nuke.size() -1; i <= 0; --i)
+        s.geom.erase(s.geom.begin()+nuke[i]);
+
+
+    return swaps;
+}
+
+void ReadOdr::simplifyGeometries(Odr::smaS &s)
+{
+
+    if (simplifySingleArc(s))
+        return;
+
+    simplifyStraights(s);
+
+
+
 }

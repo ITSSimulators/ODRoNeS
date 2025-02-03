@@ -75,6 +75,10 @@ private:
 protected:
     void simplifyGeometries(Odr::smaS &s); ///< will consider whether any of s.geom[i] can be swapped for
 
+    bool simplifySingleArc(Odr::smaS &s); ///< if equivalent, modify s.geom into a single arc and return true;
+
+    bool simplifyStraights(Odr::smaS &s); ///< simplify every straight bezier into a real straight.
+
 protected:
     std::vector<Odr::smaS> _sections;
 

@@ -25,6 +25,7 @@ using namespace odrones;
 
 void ReadBOdr::addRoad(Odr::smaS &s)
 {
+    simplifyGeometries(s);
     _sections.push_back(s);
 }
 
@@ -32,5 +33,6 @@ void ReadBOdr::addConnection(Odr::udIndexed6DPoint &c)
 {
     _udConnections.push_back(c);
 }
+
 
 

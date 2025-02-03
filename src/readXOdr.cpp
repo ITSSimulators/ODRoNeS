@@ -670,6 +670,7 @@ int ReadXOdr::loadXodr(std::string iFile, bool isOdrFile)
         _sections[ndxS].type = readRoadType(r->FirstChildElement(Odr::Elem::Type));
 
         _sections[ndxS].geom = readGeometry(r->FirstChildElement(Odr::Elem::PlanView));
+        simplifyGeometries(_sections[ndxS]);
 
         tinyxml2::XMLElement *tSigns = r->FirstChildElement(Odr::Elem::Signals);
         if (tSigns) _sections[ndxS].tsigns = readTrafficSigns(tSigns);
