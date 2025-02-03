@@ -45,6 +45,17 @@ void arc::base()
     _pending = false;
 }
 
+void arc::printOut() const
+{
+    std::cout << mvf::shapeString(_shape)
+              << ", orig: (" << _origin[0] << ", " << _origin[1] << ")"
+              << ", dest: (" << _dest[0] << ", " << _dest[1] << ")"
+              << ", length: " << _length
+              << ", centre: (" << _centre[0] << ", " << _centre[1] << ")"
+              << ", radius: " << _radiusOfCurvature
+              << std::endl;
+}
+
 
 arc::arc(const OneVersion::segment &sgm, scalar offset)
 {
@@ -474,6 +485,66 @@ arc::arc(const arr2& origin, const arr2& dest, const arr2& to)
 
     _ready = true;
 
+}
+
+
+void arc::setWith3Points(const arr2& origin, const arr2& dest, const arr2& third)
+{
+    _ready = false;
+
+    _origin = origin;
+    _o = origin;
+    _dest = dest;
+    _d = dest;
+
+    arr2 ot_t = mvf::tangent(origin, third);
+    scalar ot_d = mvf::distance(origin, third);
+    arr2 ot_h = {_origin[0] + 0.5 * ot_d * ot_t[0],
+                 _origin[1] + 0.5 * ot_d * ot_t[1] };
+    arr2 ot_n = {-ot_t[1], ot_t[0]};
+
+    arr2 od_t = mvf::tangent(origin, dest);
+    scalar od_d = mvf::distance(origin, dest);
+    arr2 od_h = {_origin[0] + 0.5 * od_d * od_t[0],
+                 _origin[1] + 0.5 * od_d * od_t[1] };
+    arr2 od_n = {-od_t[1], od_t[0]};
+
+    scalar d_ot, d_od;
+    if (!mvf::intersectionBetweenLines(d_ot, d_od, ot_h, ot_n, od_h, od_n))
+        return;
+
+    _centre = { ot_h[0] + d_ot * ot_n[0], ot_h[1] + d_ot *  ot_n[1] };
+
+    _co = mvf::tangent(_centre, _origin);
+    _cd = mvf::tangent(_centre, _dest);
+
+    _alpha = mvf::subtendedAngle(_co, _cd);
+    _radiusOfCurvature = mvf::distance(_centre, _origin);
+
+    if (_alpha < 0)
+    {
+        _shape = mvf::shape::clockwise;
+        _radiusOfCurvature *= -1;
+    }
+    else
+        _shape = mvf::shape::counterclockwise;
+
+    _length = std::abs(_alpha * _radiusOfCurvature);
+
+    // Finally, _to:
+    scalar theta = std::atan2(_origin[1] - _centre[1], _origin[0] - _centre[0]);
+    _to = {-std::sin(theta), std::cos(theta)};
+    if (_shape == mvf::shape::clockwise) _to = { -_to[0], -_to[1] };
+
+    mvf::boundingBoxForArc(_blc, _trc, _origin, _dest, _centre, mvf::distance(_origin, _centre), _shape);
+
+    _roadSo = 0;
+    _roadSe = _length;
+
+    _odrRoOR = 1;
+
+    _pending = false;
+    _ready = true;
 }
 
 

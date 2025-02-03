@@ -279,6 +279,13 @@ namespace Odr
             }
 
         }
+
+        void zeroBezier()
+        {
+            bz0x = 0; bz0y = 0; bz1x = 0; bz1y = 0;
+            bz2x = 0; bz2y = 0; bz3x = 0; bz3y = 0;
+        }
+
     public:
         Attr::Geometry g; ///< shape
         double s;      ///< initial s

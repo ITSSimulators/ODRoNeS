@@ -42,9 +42,11 @@ public:
     void assignInputGeomToThis(const arc& a);
 
     void setTo(arr2 to);
+    void setWith3Points(const arr2& origin, const arr2& dest, const arr2& third);
 
     void base() override;
     void invert() override;
+    void printOut() const override;
     bool isArc() const override {return true;}
     bool isNumerical() const override {return false;}
     scalar sl0(scalar s) const override;
