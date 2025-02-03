@@ -60,7 +60,7 @@ public:
 
     virtual void base(); ///< initialise all the variables.
     virtual void invert() = 0; ///< invert, and go from end to origin.
-    void printOut() const;
+    virtual void printOut() const;
 
     virtual bool isArc() const = 0; ///< return whether it is arc or not;
     virtual bool isNumerical() const = 0; ///< return true if it derives from numerical too;
