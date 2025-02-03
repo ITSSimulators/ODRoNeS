@@ -80,7 +80,7 @@ public:
     /*! returns - atan2(x, y) in degrees */
     static scalar qtHeading(const arr2 &t);
 
-    /*! return the quadrant in which the vector would fall in */
+    /*! return the quadrant in which the vector would fall in (see the code) */
     static int quadrant(const arr2 &v);
 
 
@@ -116,8 +116,12 @@ public:
     enum class intersectionToSegment {none, forward, backward};
     //! whether point p on the segment determined by a---b.
     static bool isPointOnSegment(const arr2 &p, const arr2 &a, const arr2 &b);
+    //! whether points (1, ..., n - 1) are on the segment 0---n.
+    static bool areAligned(const std::vector<arr2>& v);
     //! whether point p is on the arc with centre c, unit vector from centre to origin co, radius R, length alpha, within some small but non-zero tolerance.
     static bool isPointOnArc(const arr2 &p, const arr2 &c, const arr2 &co, scalar R, scalar alpha, scalar tol = 1e-9);
+    //! whether points (1, ..., n - 1) form an arc starting at 1 and finishing at (n-1).
+    static bool areAnArc(const std::vector<arr2> &v, scalar tol);
     //! whether point p is on the "horizontal" box defined by tlc (top-left corner) and brc (bottom-right corner) points.
     static bool isPointInBoxTLcBRc(const arr2 &p, const arr2 &tlc, const arr2 &brc);
     //! whether point p is on the "horizontal" box defined by blc (bottom-left corner) and trc (top-right corner) points.
@@ -186,12 +190,18 @@ public:
     vec2(){ assign(0., 0.); };
     vec2( scalar t0, scalar t1 ) { assign(t0, t1); }
     vec2( const std::array<scalar,2> &p) { assign(p[0], p[1]); }
+    vec2& operator=(const vec2& b) { assign(b._data[0], b._data[1]);  return *this; };
+    vec2& operator=(const arr2& b) { assign(b[0], b[1]); return *this; }
+    vec2& operator+=(const vec2& b) { _data[0] += b._data[0]; _data[1] += b._data[1]; return *this; }
+    vec2& operator+=(const arr2& b) { _data[0] += b[0]; _data[1] += b[1]; return *this; }
     // vec2( const arr2 &p) { assign( p[0], p[1]); }
-    scalar& operator [](std::size_t i) { return _data[i]; }
+    const scalar& operator [](std::size_t i) const { return _data[i]; }
     scalar operator*(const vec2 &b) const { return _data[0] * b._data[0] + _data[1] * b._data[1]; }
     vec2 operator*(scalar x) const { return vec2(x * _data[0], x * _data[1]); }
+    vec2 operator/=(scalar x) { _data[0] /= x; _data[1] /= x; return *this;}
     // friend vec2 operator*(const scalar s, const vec2& v);
     vec2 operator+(const vec2 &b) const { return vec2(_data[0] + b._data[0], _data[1] + b._data[1]); }
+    vec2 operator+(const arr2 &b) const { return vec2(_data[0] + b[0], _data[1] + b[1]); }
     vec2 operator-(const vec2 &b) const { return vec2(_data[0] - b._data[0], _data[1] - b._data[1]); }
     void assign( scalar t0, scalar t1 ) { _data[0] = t0; _data[1] = t1; }
 
@@ -201,6 +211,7 @@ public:
     bool areSamePoints(vec2 &b) const { return mvf::areSamePoints(_data, b._data); }
 
     const std::array<scalar, 2> &data = _data;
+    arr2 a2() const { return {_data[0], data[1]}; } // arr2 compatibility
 
 private:
     std::array<scalar,2> _data={0., 0.};

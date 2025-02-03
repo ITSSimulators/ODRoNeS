@@ -22,6 +22,7 @@
 
 
 #include "matvec.h"
+#include "arc.h"
 
 #include <cstring>
 #include <iostream>
@@ -410,6 +411,38 @@ bool mvf::isPointOnSegment(const arr2 &p, const arr2 &a, const arr2 &b)
 
     // if (d > distance(a, b)) return false;
     if ( (d > distance(a, b)) || (d < 0) ) return false;
+
+    return true;
+}
+
+bool mvf::areAligned(const std::vector<arr2> &v)
+{
+    if (v.size() <= 2) return true;
+
+    for (uint i = 1; i < v.size() - 1; ++i)
+    {
+        if (!isPointOnSegment(v[i], v[0], v.back()))
+            return false;
+    }
+
+    return true;
+}
+
+bool mvf::areAnArc(const std::vector<arr2> &v, scalar tol)
+{
+    if (v.size() < 2) return false;
+
+    arc A;
+    A.setWith3Points(v[0], v[1], v.back());
+    if (!A.ready()) return false;
+
+    for (uint i = 2; i < v.size() -1; ++i)
+    {
+        arc A2;
+        A2.setWith3Points(v[0], v[i], v.back());
+        if (!mvf::areCloseEnough(A.radiusOfCurvature(), A2.radiusOfCurvature(), tol))
+            return false;
+    }
 
     return true;
 }
