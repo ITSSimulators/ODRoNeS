@@ -342,7 +342,7 @@ bool ReadOdr::simplifySingleArc(Odr::smaS &s)
 {
     if (s.geom.size() == 1) return false;
 
-    scalar tol = 2e-3;
+    scalar tol = 3e-2;
     std::vector<arr2> points; // real points, without the control ones.
     for (uint i = 0; i < s.geom.size(); ++i)
     {
@@ -362,8 +362,10 @@ bool ReadOdr::simplifySingleArc(Odr::smaS &s)
         a_i.setWith3Points(points[0], points[i], points.back());
         if (!mvf::areCloseEnough(a_o.radiusOfCurvature(), a_i.radiusOfCurvature(), tol))
             return false;
+
         to = to + a_i.to();
     }
+
 
     // Create a new arc with an averaged to
     to.normalise();
