@@ -358,6 +358,8 @@ public:
     bool hasPrevLane() const; ///< true if _prevLane != nullptr.
     bool hasMultiplePrevLanes() const; ///< true if _prevLaneSize > 1;
 
+    //! Numerical:
+    void numericalSetup();
 
     // Geometry in lanes:
     void getTangentInPoint(arr2 &t, const arr2 &p) const;
@@ -461,8 +463,6 @@ private:
     int getGeometryIndex(const arr2 &p) const;  ///< get the geometry index for this point; return -1 if the point is not there for some tol.
     int getGeometryIndex(scalar d) const; ///< get the geometry index for this point; return -1 if out of bounds;
 
-    //! Numerical:
-    void numericalSetup();
     //! fill in the _pointsX/Y arrays
     void nSetupPointsXYUniformly(scalar ds) override;
 
