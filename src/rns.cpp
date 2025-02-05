@@ -480,12 +480,14 @@ bool RNS::makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool exhaus
             }
         }
     }
-    else
-        linkLanesGeometrically();
 
 
     // Set port and starboard lanes, with knowledge on the driving side:
     setPortAndStarboard(_drivingSide);
+
+    if (exhaustiveLinking)
+        linkLanesGeometrically();
+
 
     // Get the traffic signs:
     for (uint i = 0; i < _sectionsSize; ++i)
@@ -643,6 +645,21 @@ void RNS::printLanes() const
 
         }
     }
+
+    /*
+    std::cout << "--- Zero Lanes ---" << std::endl;
+    std::cout << "------------------" << std::endl;
+    for (uint i = 0; i < _sectionsSize; ++i)
+    {
+        const lane *l = _sections[i].zero();
+        std::cout << l->getShapeString() << " lane: " << l->getCSUID();
+        arr2 o = l->getOrigin();
+        arr2 d = l->getDestination();
+        std::cout << " starts in: (" << o[0] << ", " << o[1] <<  "), ends in: (" << d[0] << ", " << d[1] << ")"
+                  << ", _to: (" << l->getTo()[0] << ", " << l->getTo()[1] << ")"
+                  << ", is " << l->getLength() << " m long" << std::endl;
+    }
+    */
 
 }
 
@@ -841,32 +858,100 @@ void RNS::write(const std::string &mapFile) const
 
 void RNS::linkLanesGeometrically(scalar tol)
 {
+    // 1 - Link two-way sections, we've already run setPortAndStarboard which flips them correctly.
     for (uint i = 0; i < sectionsSize(); ++i)
     {
+        if (_sections[i].isOneWay()) continue;
         for (uint j = i + 1; j < sectionsSize(); ++j)
-            linkLanesInSections(_sections[i], _sections[j], tol);
+        {
+            if (_sections[j].isOneWay()) continue;
+            linkLanesInSectionsOD(_sections[i], _sections[j], tol);
+        }
     }
+
+    // 2 - Link one-way to two-way sections and flip them
+    for (uint si = 0; si < sectionsSize(); ++si)
+    {
+        for (uint sj = si + 1; sj < sectionsSize(); ++sj)
+        {
+            if (!(( (_sections[si].isOneWay()) && (!_sections[sj].isOneWay()) ) ||
+                 ( (!_sections[si].isOneWay()) && (_sections[sj].isOneWay()) ) ) )
+                continue;
+
+            // From here on, either _section[si] or _sections[sj] is oneWay.
+            for (uint li = 0; li < _sections[si].size(); ++li)
+            {
+                for (uint lj = 0; lj < _sections[sj].size(); ++lj)
+                {
+                    uint linkErr = linkLanesIfInRange(_sections[si][li], _sections[sj][lj]);
+                    if (linkErr != 2)
+                        continue;
+
+                    if (_sections[si].isOneWay())
+                        _sections[si].flipBackwards();
+                    else
+                        _sections[sj].flipBackwards();
+                }
+            }
+        }
+    }
+
+    // 3 - Link one-way to one-way ones
+    for (uint i = 0; i < sectionsSize(); ++i)
+    {
+        if (!_sections[i].isOneWay()) continue;
+        for (uint j = i + 1; j < sectionsSize(); ++j)
+        {
+            if (!_sections[j].isOneWay()) continue;
+            linkLanesInSections(_sections[i], _sections[j], tol);
+        }
+    }
+
+    // And flip the missing one-way sections:
+    flipOneWaySections();
+
     return;
 }
 
-
-void RNS::linkLanesIfInRange(lane *li, lane *lj, scalar tol)
+bool RNS::linkLanesIfInRangeAndOD(lane *li, lane *lj, scalar tol)
 {
-    if ((mvf::areCloseEnough(li->getDestination(), lj->getOrigin(), tol)) ||
-            (mvf::areCloseEnough(li->getDestination(), lj->getDestination(), tol)))
-        li->setNextLane(lj, false);
 
-    if ((mvf::areCloseEnough(li->getOrigin(), lj->getOrigin(), tol)) ||
-            (mvf::areCloseEnough(li->getOrigin(), lj->getDestination(), tol)))
-        li->setPrevLane(lj, false);
+    if (mvf::areCloseEnough(li->getDestination(), lj->getOrigin(), tol))
+    {
+        li->setNextLane(lj, true);
+        return true;
+    }
 
-    if ((mvf::areCloseEnough(lj->getDestination(), li->getOrigin(), tol)) ||
-            (mvf::areCloseEnough(lj->getDestination(), li->getDestination(), tol)))
+    if (mvf::areCloseEnough(li->getOrigin(), lj->getDestination(), tol))
+    {
+        li->setPrevLane(lj, true);
+        return true;
+    }
+    return false;
+}
+
+uint RNS::linkLanesIfInRange(lane *li, lane *lj, scalar tol)
+{
+    if (linkLanesIfInRangeAndOD(li, lj, tol))
+        return 1;
+
+
+    if (mvf::areCloseEnough(li->getDestination(), lj->getDestination(), tol))
+    {
         lj->setNextLane(li, false);
+        li->setNextLane(lj, false);
+        return 2;
+    }
 
-    if ((mvf::areCloseEnough(lj->getOrigin(), li->getOrigin(), tol)) ||
-            (mvf::areCloseEnough(lj->getOrigin(), li->getDestination(), tol)))
+    if (mvf::areCloseEnough(li->getOrigin(), lj->getOrigin(), tol))
+    {
+        li->setPrevLane(lj, false);
         lj->setPrevLane(li, false);
+        return 2;
+    }
+
+    return 0;
+
 }
 
 void RNS::linkLanesInSections(section &si, section &sj, scalar tol)
@@ -875,6 +960,15 @@ void RNS::linkLanesInSections(section &si, section &sj, scalar tol)
     {
         for (uint j = 0; j < sj.size(); ++j)
             linkLanesIfInRange(si[i], sj[j]);
+    }
+}
+
+void RNS::linkLanesInSectionsOD(section &si, section &sj, scalar tol)
+{
+    for (uint i = 0; i < si.size(); ++i)
+    {
+        for (uint j = 0; j < sj.size(); ++j)
+            linkLanesIfInRangeAndOD(si[i], sj[j]);
     }
 }
 

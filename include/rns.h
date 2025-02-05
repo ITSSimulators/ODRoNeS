@@ -43,7 +43,7 @@ class RNS
 
 public:
     RNS();
-    RNS(std::string odrMap, const char* drivingSide, bool exhaustivLinking, bool loadSidewalk, bool verbose = true);
+    RNS(std::string odrMap, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk, bool verbose = false);
     RNS(const RNS &r); ///< copy construct
     RNS& operator=(RNS& r); ///< copy assign
     ~RNS();
@@ -80,6 +80,7 @@ public:
 
     void setPortAndStarboard(concepts::drivingSide drivingSide); ///< sets Port and Starboard for every section AND flips two-way sections if drivingSide is known.
     void setPortAndStarboard(); ///< it uses _drivingSide
+
     void flipOneWaySections(); ///< flips one way sections after, using the knowledge gained from two-way sections in setPortAndStarboard.
 
 
@@ -145,10 +146,12 @@ private:
 
     //! Assign li as nextLane to lj or lj as nextLane to li, and set the corresponding prevLanes,
     //!   as long as the end / start of li and lj are closer than tol.
-    void linkLanesIfInRange(lane *li, lane *lj, scalar tol = lane::odrTol);
+    uint linkLanesIfInRange(lane *li, lane *lj, scalar tol = lane::odrTol);
+    bool linkLanesIfInRangeAndOD(lane *li, lane *lj, scalar tol = lane::odrTol);
 
     //! Assign nextLanes and prevLanes to the lanes in sections si and sj by calling linkLanesIfInRange on a double loop.
     void linkLanesInSections(section &si, section &sj, scalar tol = lane::odrTol);
+    void linkLanesInSectionsOD(section &si, section &sj, scalar tol = lane::odrTol);
 
     /*! arrange conflicts and default priorities for lanes in different sections and same ending: priority is to the right */
     bool makePrioritiesSameEndingDifferentSectionLanes(scalar anticipationTime);

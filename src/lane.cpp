@@ -977,6 +977,7 @@ void lane::assignInputLaneToThis(const lane &t)
 void lane::setPrevLane(const lane *l)
 {
     if (isPrevLane(l)) return;
+    // if (isNextLane(l)) return;
 
     if (_prevLaneSize == 0)
         _prevLane = new const lane*[1];
@@ -1012,6 +1013,76 @@ void lane::setPrevLane(const lane *l)
     }
 }
 
+/*
+void lane::removeNextLane(const lane *l)
+{
+    std::cout << "remove " << l->getCSUID() << " from next lanes in " << getCSUID() << std::endl;
+    return;
+
+    int rmNdx = -1;
+    for (uint i = 0; i < _nextLaneSize; ++i)
+    {
+        if (_nextLane[i]->isCSUID(l->getCSUID()))
+        {
+            rmNdx = i;
+            break;
+        }
+    }
+
+    if (rmNdx < 0) return;
+
+    for (uint i = rmNdx; i < _nextLaneSize -1; ++i)
+        _nextLane[i] = _nextLane[i+1];
+
+    _nextLane[_nextLaneSize-1] = nullptr;
+
+    _nextLaneSize -= 1;
+}
+
+void lane::removeNextLane(lane *l, bool crosslink)
+{
+    removeNextLane(l);
+
+    if (crosslink)
+        l->removePrevLane(this);
+}
+
+
+void lane::removePrevLane(const lane *l)
+{
+    std::cout << "remove " << l->getCSUID() << " from prev lanes in " << getCSUID() << std::endl;
+    return;
+    int rmNdx = -1;
+    for (uint i = 0; i < _prevLaneSize; ++i)
+    {
+        if (_prevLane[i]->isCSUID(l->getCSUID()))
+        {
+            rmNdx = i;
+            break;
+        }
+    }
+
+    if (rmNdx < 0) return;
+
+    for (uint i = rmNdx; i < _prevLaneSize -1; ++i)
+        _prevLane[i] = _prevLane[i+1];
+
+    _prevLane[_prevLaneSize-1] = nullptr;
+
+    _prevLaneSize -= 1;
+}
+
+
+void lane::removePrevLane(lane *l, bool crosslink)
+{
+    removePrevLane(l);
+
+    if (crosslink)
+        l->removeNextLane(this);
+}
+*/
+
+
 void lane::setPrevLane(lane *l, bool crosslink)
 {
     setPrevLane(l);
@@ -1022,9 +1093,11 @@ void lane::setPrevLane(lane *l, bool crosslink)
 }
 
 
+
 void lane::setNextLane(const lane *l)
 {
     if (isNextLane(l)) return;
+    // if (isPrevLane(l)) return;
 
     if (_nextLaneSize == 0)
        _nextLane = new const lane*[1];

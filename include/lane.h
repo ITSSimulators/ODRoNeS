@@ -217,6 +217,11 @@ public:
     void setPrevLane(const lane *l); ///< setPrevLane and don't crosslink.
     void setPrevLane(lane *l, bool crosslink); ///< set the previous lane in the Logical Road Network
     void setPrevLane(uint ndx, lane *l); ///< set the ndxth prev lane in the _prevLanes array with minimal checks;
+    /* Untested
+    void removeNextLane(const lane *l); ///< remove l from _nextLanes and don't crosslink
+    void removeNextLane(lane *l, bool crosslink);
+    void removePrevLane(const lane *l); ///< remove l from _prevLanes and don't crosslink
+    void removePrevLane(lane *l, bool crosslink); */
     void setPortLane(const lane *l); ///< set the Port (left) lane.
     void setStarboardLane(const lane *l); ///< set the Starboard (right) lane.
     void setSection(section &s); ///< set the section where this lane sits on.

@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
     rw.show();
     return app.exec();
 #else
-    RNS rns(iFile, Odr::Kind::LHT, true);
+    RNS rns(iFile, Odr::Kind::LHT, true, true);
     rns.printLanes();
     return 0;
 #endif // QT_CORE_LIB
