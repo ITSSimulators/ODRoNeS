@@ -449,8 +449,7 @@ int ReadXOdr::addLane(tinyxml2::XMLElement *road, tinyxml2::XMLElement *lane, ui
         else if (units.compare(Odr::Kind::ms) != 0)
             std::cerr << "[ Error ] unknown speed units: " << units << std::endl;
 
-        if (speed->NextSiblingElement(Odr::Elem::Speed))
-            std::cout << "[ Warning ] there's more than one speed limit to be parsed, but we only do one." << std::endl;
+        speed = speed->NextSiblingElement(Odr::Elem::Speed);
     }
 
 
