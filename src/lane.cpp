@@ -251,7 +251,10 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
     if (odrL.sign == -1) _sign = lane::sign::n;
     else if (odrL.sign == 1) _sign = lane::sign::p;
 
-    _width = width[0].a;
+    if (!width.empty())
+        _width = width[0].a;
+    else                // if a lane has width zero, it will be width will be empty here.
+        _width = 0;
     _isPermanent = true;
     _shape = mvf::shape::opendrive;
 
