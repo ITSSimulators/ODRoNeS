@@ -1618,7 +1618,8 @@ void RNS::makePrioritiesDifferentEndingDifferentSectionCrossingLanes(scalar anti
                         lane *portLane, *starboardLane;
                         if (findPortAndStarboardLanes(portLane, starboardLane, _sections[i][li], _sections[j][lj], dToEoLi, dToEoLj) > 0)
                         {
-                            std::cerr << "[ Error ] unable to find out which one is port between: " <<
+                            if (verbose())
+                                std::cerr << "[ Warning ] unable to find out which one is port between: " <<
                                          _sections[i][li]->getCSUID() << " and " << _sections[j][lj]->getCSUID() <<
                                          " at the intersection point (" << v[ck][0] << ", " << v[ck][1] << ")" << std::endl;
                             continue;
