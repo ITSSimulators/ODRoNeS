@@ -177,7 +177,7 @@ scalar bezier::tangentSize(scalar t) const
 
 bool bezier::getTgivenD(scalar &t, scalar d, scalar epsilon) const
 {
-    constexpr bool rungeKutta = true;
+    constexpr bool rungeKutta = false;
     if (rungeKutta) return getTgivenDRungeKutta(t, d, epsilon);
     else return getTgivenDNewtonRoot(t, d, epsilon); // this one does not quite work yet.
 }
@@ -218,7 +218,6 @@ bool bezier::getTgivenDRungeKutta(scalar &t, scalar d, scalar epsilon) const
     return true;
 }
 
-// I don't think that using tangentSize as dFdt is correct.
 bool bezier::getTgivenDNewtonRoot(scalar &t, scalar d, scalar epsilon) const
 {
     t = d / _length;
@@ -234,28 +233,23 @@ bool bezier::getTgivenDNewtonRoot(scalar &t, scalar d, scalar epsilon) const
         }
         scalar dFdt = tangentSize(t);
 
-        /*
-        scalar dFdt = 0;
-        for (uint i = 0; i < 30; ++i)
-        {
+        bool dFdt_zero = false;
+        scalar ti = t;
+        if (mvf::areCloseEnough(dFdt, 0., 1e-16))
+            dFdt_zero = true;
+        else
+            ti = t - F/dFdt;
 
-            auto [dx, dy] = curvePxy(0.5*(ct::gc::A20[i]+1))
-
-        }
-        */
-
-
-        scalar ti = (t - F)/dFdt;
         if (F > 0)
         {
             tmax = t;
-            if (ti <= tmin) t = (tmax + tmin) / 2.;
+            if ((ti <= tmin) || (dFdt_zero)) t = (tmax + tmin) / 2.;
             else t = ti;
         }
         else
         {
             tmin = t;
-            if (ti >= tmax) t = (tmax + tmin) / 2.;
+            if ((ti >= tmax) || (dFdt_zero)) t = (tmax + tmin) / 2.;
             else t = ti;
         }
     }
