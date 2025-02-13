@@ -47,7 +47,7 @@ public:
 
 private:
 
-    scalar randomUnif01();
+    odrones::scalar randomUnif01();
     std::minstd_rand _randomGenerator;
     std::uniform_real_distribution<> _unifDist01;
 };

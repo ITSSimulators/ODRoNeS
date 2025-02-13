@@ -123,7 +123,7 @@ add_library(rns
     # Some tests:
     # ${RNS_DIR}/src/testArcLane.cpp ${RNS_DIR}/include/testArcLane.h
     # ${RNS_DIR}/src/testLane.cpp ${RNS_DIR}/include/testLane.h
-    ${RNS_DIR}/src/testBezier.cpp ${RNS_DIR}/include/testBezier.h
+    # ${RNS_DIR}/src/testBezier.cpp ${RNS_DIR}/include/testBezier.h
     # Qt plots:
     ${RNS_DIR}/src/graphicalrns.cpp ${RNS_DIR}/include/graphicalrns.h
     ${RNS_DIR}/src/graphicalZoom.cpp ${RNS_DIR}/include/graphicalZoom.h
