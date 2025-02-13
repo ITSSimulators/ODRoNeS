@@ -175,6 +175,22 @@ namespace Odr
         static const char* Driving;
         static const char* Sidewalk;
         static const char* Walking;
+
+        static const char* Shoulder;
+        static const char* Border;
+        static const char* Stop;
+        static const char* Restricted;
+        static const char* Parking;
+        static const char* Median;
+        static const char* Biking;
+        static const char* Curb;
+        static const char* Entry;
+        static const char* Exit;
+        static const char* OnRamp;
+        static const char* OffRamp;
+        static const char* ConnectingRamp;
+        static const char* SlipLane;
+
         static const char* Unknown;
 
         static const char* Start;
