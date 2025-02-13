@@ -123,7 +123,7 @@ add_library(rns
     # Some tests:
     # ${RNS_DIR}/src/testArcLane.cpp ${RNS_DIR}/include/testArcLane.h
     # ${RNS_DIR}/src/testLane.cpp ${RNS_DIR}/include/testLane.h
-    # ${RNS_DIR}/src/testBezier.cpp ${RNS_DIR}/include/testBezier.h
+    ${RNS_DIR}/src/testBezier.cpp ${RNS_DIR}/include/testBezier.h
     # Qt plots:
     ${RNS_DIR}/src/graphicalrns.cpp ${RNS_DIR}/include/graphicalrns.h
     ${RNS_DIR}/src/graphicalZoom.cpp ${RNS_DIR}/include/graphicalZoom.h
@@ -139,12 +139,12 @@ if (ODRONES_PYTHON_BINDINGS)
 	include(UseSWIG)
 	include_directories(${Python_INCLUDE_DIRS})
 
-   set_source_files_properties(${RNS_DIR}/include/odrones.i
-	             PROPERTIES CPLUSPLUS ON USE_SWIG_DEPENDENCIES ON)
-	set_property(SOURCE ${RNS_DIR}/include/odrones.i
-	             PROPERTY SWIG_FLAGS ${USE_SWIG_FLAGS})
+   set_source_files_properties(${RNS_DIR}/swig/odrones_python.i PROPERTIES 
+	                            CPLUSPLUS ON 
+										 USE_SWIG_DEPENDENCIES ON
+										 SWIG_FLAGS "-I${RNS_DIR}/include")
 	swig_add_library(odrones TYPE SHARED LANGUAGE python
-                    SOURCES ${RNS_DIR}/include/odrones.i)
+                    SOURCES ${RNS_DIR}/swig/odrones_python.i)
 	swig_link_libraries(odrones ${Python_LIBRARIES} rns clothoids)
 
 	message(STATUS "ODRoNeS: ${RNS_INSTALL_DIR}")
