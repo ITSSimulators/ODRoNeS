@@ -562,7 +562,7 @@ bool lane::xmlPlanView(tinyxml2::XMLElement *planView, tinyxml2::XMLDocument &do
         xmlUtils::setAttrDouble(geometry, Odr::Attr::X, _geom[i]->o()[0]);
         xmlUtils::setAttrDouble(geometry, Odr::Attr::Y,  _geom[i]->o()[1]);
         xmlUtils::setAttrDouble(geometry, Odr::Attr::Hdg,
-                                std::atan2(-_geom[i]->to()[1], _geom[i]->to()[0]));
+                                std::atan2(_geom[i]->to()[1], _geom[i]->to()[0]));
         xmlUtils::setAttrDouble(geometry, Odr::Attr::Length,
                                _geom[i]->roadSe() - _geom[i]->roadSo());
         if (_geom[i]->shape() == mvf::shape::straight)
