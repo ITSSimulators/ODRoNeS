@@ -258,7 +258,8 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
     _isPermanent = true;
     _shape = mvf::shape::opendrive;
 
-    if (odrL.kind.compare(Odr::Kind::Driving) == 0)
+    if ((odrL.kind.compare(Odr::Kind::Driving) == 0) ||
+        (odrL.kind.compare(Odr::Kind::Entry) == 0) || (odrL.kind.compare(Odr::Kind::Exit) == 0))
         _kind = kind::tarmac;
     else if ((odrL.kind.compare(Odr::Kind::Sidewalk) == 0) || (odrL.kind.compare(Odr::Kind::Walking) == 0))
         _kind = kind::pavement;
@@ -656,15 +657,12 @@ bool lane::xmlPlanView(tinyxml2::XMLElement *planView, tinyxml2::XMLDocument &do
 }
 
 
-bool lane::xmlLaneAttributesAndLinks(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const
+bool lane::xmlLaneAttributesAndLinks(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc, const std::string &type) const
 {
     if (!elem) return false;
 
     elem->SetAttribute(Odr::Attr::Id, _odrID);
-    if (_kind == kind::tarmac)
-        elem->SetAttribute(Odr::Attr::Type, Odr::Kind::Driving);
-    else if (_kind == kind::pavement)
-        elem->SetAttribute(Odr::Attr::Type, Odr::Kind::Walking);
+    elem->SetAttribute(Odr::Attr::Type, type.c_str());
     elem->SetAttribute(Odr::Attr::Level, Odr::Kind::False);
 
     tinyxml2::XMLElement* link = doc.NewElement(Odr::Elem::Link);
@@ -686,6 +684,22 @@ bool lane::xmlLaneAttributesAndLinks(tinyxml2::XMLElement *elem, tinyxml2::XMLDo
     elem->InsertEndChild(link);
 
     return true;
+}
+
+
+bool lane::xmlLaneAttributesAndLinks(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const
+{
+    if (!elem) return false;
+
+    std::string laneType;
+    if (_kind == kind::tarmac)
+        laneType = Odr::Kind::Driving;
+    else if (_kind == kind::pavement)
+        laneType = Odr::Kind::Walking;
+    else
+        laneType = "none";
+
+    return xmlLaneAttributesAndLinks(elem, doc, laneType);
 }
 
 bool lane::flipBackwards()

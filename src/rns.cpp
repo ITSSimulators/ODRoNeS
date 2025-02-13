@@ -808,7 +808,7 @@ void RNS::write(const std::string &mapFile) const
                     std::cerr << "[ Error ] RNS::write - lane not found" << std::endl;
                     return;
                 }
-                l->xmlLaneAttributesAndLinks(laneXML, xmlMap);
+                l->xmlLaneAttributesAndLinks(laneXML, xmlMap, smas->lanes[rightUint[j]].kind);
                 smas->lanes[rightUint[j]].writeXMLWidth(laneXML, xmlMap);
                 smas->lanes[rightUint[j]].writeXMLBorder(laneXML, xmlMap);
                 rightXML->InsertEndChild(laneXML);

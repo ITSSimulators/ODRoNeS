@@ -437,6 +437,7 @@ public:
     bool isOdrFwd() const; ///< return _odrFwd
     bool isOdrShapeSupported(mvf::shape s) const; ///< return true if the shape is supported;
     bool xmlPlanView(tinyxml2::XMLElement *planView, tinyxml2::XMLDocument &doc) const; ///< fill in the planView with geometries ONLY IF IT's LANE 0! (false otherwise).
+    bool xmlLaneAttributesAndLinks(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc, const std::string &type) const;
     bool xmlLaneAttributesAndLinks(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const;
     void setZero(const lane* z);
     scalar sli(scalar s0) const; ///< return s on this lane, given s0 on lane 0;
