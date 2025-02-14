@@ -1,5 +1,5 @@
 %include "std_array.i"
-%template(arr2) std::array<double, 2>
+%template(arr2) std::array<double, 2>;
 
 %include "constants.h"
 %include "matvec.h"
