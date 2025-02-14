@@ -1,3 +1,5 @@
+%include "std_array.i"
+%template(arr2) std::array<double, 2>
 
 %include "constants.h"
 %include "matvec.h"
@@ -5,7 +7,6 @@
 %ignore odrones::geometry::operator=;
 %ignore odrones::bezier::operator=;
 %ignore odrones::Odr::offset::operator=;
-// %ignore odrones::Odr::offset::operator*;
 %rename (_print) odrones::Odr::offset::print;
 %rename (_print) odrones::Odr::geometry::print;
 %ignore odrones::ReadOdr::operator=;

@@ -17,10 +17,8 @@ using namespace odrones;
 %include "std_string.i"
 %include "stdint.i"
 %include "std_vector.i"
-%include "std_array.i"
 
 typedef odrones::uint uint;
-%template(arr2) std::array<double, 2>;
 %rename(Odr_geometry) odrones::Odr::geometry;
 %template(GeometryVector) std::vector<odrones::Odr::geometry>;
 %template(OffsetVector) std::vector<odrones::Odr::offset>;
