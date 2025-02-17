@@ -41,11 +41,16 @@
 #include "vwSpiral.h"
 #include "readOneVersion.h"
 #include "rnsconcepts.h"
-#include "tinyxml2.h"
 
 #ifdef QT_CORE_LIB
 #include <QPainterPath>
 #endif
+
+namespace tinyxml2
+{
+    class XMLDocument;
+    class XMLElement;
+}
 
 namespace odrones {
 

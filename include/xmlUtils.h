@@ -4,10 +4,15 @@
 
 
 #include <iostream> 
-#include "tinyxml2.h"
+
 #include "boost/format.hpp"
 
 #include "Odr.h"
+
+namespace tinyxml2
+{
+    class XMLElement;
+}
 
 namespace odrones
 {
