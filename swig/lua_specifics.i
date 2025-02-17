@@ -7,7 +7,9 @@
 // %template(arr2) std::array<double, 2>
 
 // Option 3:
+typedef double scalar;
 namespace odrones {
+
 class arr2 
 {
 public:
