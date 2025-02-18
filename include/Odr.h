@@ -23,13 +23,18 @@
 #ifndef ODRONES_ODR_H
 #define ODRONES_ODR_H
 
+#include "constants.h"
+#include "matvec.h"
+
 #include <vector>
 #include <string>
 #include <iostream>
-#include "tinyxml2.h"
 
-#include "constants.h"
-#include "matvec.h"
+namespace tinyxml2
+{
+    class XMLDocument;
+    class XMLElement;
+}
 
 namespace odrones 
 {

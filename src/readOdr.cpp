@@ -25,6 +25,8 @@
 #include "bezier3.h"
 #include "arc.h"
 
+#include <tinyxml2.h>
+
 using namespace odrones;
 
 

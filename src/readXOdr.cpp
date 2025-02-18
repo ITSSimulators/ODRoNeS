@@ -22,6 +22,9 @@
 
 #include "readXOdr.h"
 #include "xmlUtils.h"
+
+#include <tinyxml2.h>
+
 using namespace odrones;
 
 

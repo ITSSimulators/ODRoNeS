@@ -28,6 +28,8 @@
 #include "readOneVersion.h"
 #endif // USE_ONEVERSION
 
+#include <tinyxml2.h>
+
 using namespace odrones;
 
 RNS::RNS()

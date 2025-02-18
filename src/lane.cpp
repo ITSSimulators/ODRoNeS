@@ -26,6 +26,8 @@
 // DEBUG //
 #include <fstream>
 #include <boost/format.hpp>
+#include <tinyxml2.h>
+
 using namespace odrones;
 
 // Static methods:
