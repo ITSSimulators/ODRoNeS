@@ -258,8 +258,7 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
     _isPermanent = true;
     _shape = mvf::shape::opendrive;
 
-    if ((odrL.kind.compare(Odr::Kind::Driving) == 0) ||
-        (odrL.kind.compare(Odr::Kind::Entry) == 0) || (odrL.kind.compare(Odr::Kind::Exit) == 0))
+    if (isOdrTransitable(odrL.kind.c_str()))
         _kind = kind::tarmac;
     else if ((odrL.kind.compare(Odr::Kind::Sidewalk) == 0) || (odrL.kind.compare(Odr::Kind::Walking) == 0))
         _kind = kind::pavement;
@@ -2426,6 +2425,24 @@ bool lane::isPavement() const
 {
     if (_kind == kind::pavement) return true;
     return false;
+}
+
+bool lane::isOdrTransitable(Odr::Kind::LaneType lt) const
+{
+    if ((lt == Odr::Kind::LaneType::driving) || (lt == Odr::Kind::LaneType::slipLane) ||
+        (lt == Odr::Kind::LaneType::entry) || (lt == Odr::Kind::LaneType::exit) ||
+        (lt == Odr::Kind::LaneType::onRamp) || (lt == Odr::Kind::LaneType::connectingRamp) ||
+        (lt == Odr::Kind::LaneType::slipLane) )
+        return true;
+
+    return false;
+
+}
+
+bool lane::isOdrTransitable(const char* c) const
+{
+    Odr::Kind::LaneType lt = Odr::laneTypeFromCString(c);
+    return isOdrTransitable(lt);
 }
 
 bool lane::isTransitable() const

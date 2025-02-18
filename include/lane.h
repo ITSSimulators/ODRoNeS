@@ -289,6 +289,8 @@ public:
     bool isCrosswalk() const;
     bool isPavement() const;
     bool isTransitable() const;
+    bool isOdrTransitable(Odr::Kind::LaneType lt) const;
+    bool isOdrTransitable(const char* odrLaneType) const;
     bool isToMerge() const;
     bool isInOdrRange(scalar s) const;
     bool actorsSupport(lane::kind k) const;

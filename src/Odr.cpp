@@ -305,8 +305,106 @@ std::string Odr::roadTypeString(Odr::Kind::RoadType rt)
         return "town";
 
     return "unknown";
+}
+
+std::string Odr::laneTypeString(Odr::Kind::LaneType lt)
+{
+    if (lt == Odr::Kind::LaneType::driving)
+        return "driving";
+    else if (lt == Odr::Kind::LaneType::sidewalk)
+        return "sidewalk";
+    else if (lt == Odr::Kind::LaneType::walking)
+        return "walking";
+    else if (lt == Odr::Kind::LaneType::shoulder)
+        return "shoulder";
+    else if (lt == Odr::Kind::LaneType::border)
+        return "border";
+    else if (lt == Odr::Kind::LaneType::stop)
+        return "stop";
+    else if (lt == Odr::Kind::LaneType::restricted)
+        return "restricted";
+    else if (lt == Odr::Kind::LaneType::parking)
+        return "parking";
+    else if (lt == Odr::Kind::LaneType::median)
+        return "median";
+    else if (lt == Odr::Kind::LaneType::biking)
+        return "biking";
+    else if (lt == Odr::Kind::LaneType::curb)
+        return "curb";
+    else if (lt == Odr::Kind::LaneType::entry)
+        return "entry";
+    else if (lt == Odr::Kind::LaneType::exit)
+        return "exit";
+    else if (lt == Odr::Kind::LaneType::onRamp)
+        return "onRamp";
+    else if (lt == Odr::Kind::LaneType::offRamp)
+        return "offRamp";
+    else if (lt == Odr::Kind::LaneType::connectingRamp)
+        return "connectingRamp";
+    else if (lt == Odr::Kind::LaneType::slipLane)
+        return "slipLane";
+
+    else
+        return "unknown";
+}
+
+Odr::Kind::LaneType Odr::laneTypeFromCString(const char* c)
+{
+    if (!strcmp(c, Odr::Kind::Driving))
+        return Odr::Kind::LaneType::driving;
+
+    if (!strcmp(c, Odr::Kind::Sidewalk))
+        return Odr::Kind::LaneType::sidewalk;
+
+    if (!strcmp(c, Odr::Kind::Walking))
+        return Odr::Kind::LaneType::walking;
+
+    if (!strcmp(c, Odr::Kind::Shoulder))
+        return Odr::Kind::LaneType::shoulder;
+
+    if (!strcmp(c, Odr::Kind::Border))
+        return Odr::Kind::LaneType::border;
+
+    if (!strcmp(c, Odr::Kind::Stop))
+        return Odr::Kind::LaneType::stop;
+
+    if (!strcmp(c, Odr::Kind::Restricted))
+        return Odr::Kind::LaneType::restricted;
+
+    if (!strcmp(c, Odr::Kind::Parking))
+        return Odr::Kind::LaneType::parking;
+
+    if (!strcmp(c, Odr::Kind::Median))
+        return Odr::Kind::LaneType::median;
+
+    if (!strcmp(c, Odr::Kind::Biking))
+        return Odr::Kind::LaneType::biking;
+
+    if (!strcmp(c, Odr::Kind::Curb))
+        return Odr::Kind::LaneType::curb;
+
+    if (!strcmp(c, Odr::Kind::Entry))
+        return Odr::Kind::LaneType::entry;
+
+    if (!strcmp(c, Odr::Kind::Exit))
+        return Odr::Kind::LaneType::exit;
+
+    if (!strcmp(c, Odr::Kind::OnRamp))
+        return Odr::Kind::LaneType::onRamp;
+
+    if (!strcmp(c, Odr::Kind::OffRamp))
+        return Odr::Kind::LaneType::offRamp;
+
+    if (!strcmp(c, Odr::Kind::ConnectingRamp))
+        return Odr::Kind::LaneType::connectingRamp;
+
+    if (!strcmp(c, Odr::Kind::SlipLane))
+        return Odr::Kind::LaneType::slipLane;
+
+    return Odr::Kind::LaneType::unknown;
 
 }
+
 
 Odr::Kind::RoadType Odr::roadTypeFromCString(const char* c)
 {

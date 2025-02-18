@@ -191,6 +191,17 @@ namespace Odr
         static const char* ConnectingRamp;
         static const char* SlipLane;
 
+        enum class LaneType {driving, sidewalk, walking, shoulder, border, stop,
+                              restricted, parking, median, biking, curb, entry,
+                              exit, onRamp, offRamp, connectingRamp, slipLane, unknown };
+
+        inline static const std::vector<LaneType> laneTypeV { LaneType::driving,
+                LaneType::sidewalk, LaneType::walking, LaneType::shoulder,
+                LaneType::border, LaneType::stop, LaneType::restricted,
+                LaneType::parking, LaneType::median, LaneType::biking, LaneType::curb,
+                LaneType::entry, LaneType::exit, LaneType::onRamp, LaneType::offRamp,
+                LaneType::connectingRamp, LaneType::slipLane };
+
         static const char* Unknown;
 
         static const char* Start;
@@ -521,6 +532,8 @@ namespace Odr
     extern bool isRoadTypeValid(const std::string &rt);
     extern Odr::Kind::RoadType roadTypeFromCString(const char* c);
     extern std::string roadTypeString(Odr::Kind::RoadType rt);
+    extern Odr::Kind::LaneType laneTypeFromCString(const char* c);
+    extern std::string laneTypeString(Odr::Kind::LaneType lt);
 
 
     class smaL  ///< smartActors Lane
