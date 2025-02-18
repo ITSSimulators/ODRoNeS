@@ -541,15 +541,23 @@ void RNS::flipOneWaySections()
     {
         uint initialKnowledge = knowledge.size();
         uint nTwoWay = 0;
+        uint nonTransitable = 0;
 
         for (uint i = 0; i < _sectionsSize; ++i)
         {
-            if (!_sections[i].isTransitable()) continue;
+            if (std::find(knowledge.begin(), knowledge.end(), i) != knowledge.end())
+                continue;
+            if (!_sections[i].isTransitable())
+            {
+                nonTransitable += 1;
+                continue;
+            }
             if (!_sections[i].isOneWay())
             {
                 nTwoWay += 1;
                 continue;
             }
+
             bool flipThisSection = false;
             bool conclusion = false;
             for (uint j = 0; j < _sections[i].size(); ++j)
@@ -599,7 +607,7 @@ void RNS::flipOneWaySections()
         }
 
         uint totalKnowledge = knowledge.size();
-        if (nTwoWay + totalKnowledge == _sectionsSize)
+        if (nTwoWay + nonTransitable + totalKnowledge == _sectionsSize)
             satisfaction = true;
         if (initialKnowledge == totalKnowledge)
             satisfaction = true;
