@@ -2538,7 +2538,7 @@ std::vector<QPainterPath> lane::getQPainterPaths(uint n) const
     return qpp;
 }
 
-QPainterPath lane::getEdgeQPainterPath(uint n, int e)
+QPainterPath lane::getEdgeQPainterPath(uint n, int e) const
 {
     QPainterPath qpp;
     if ((e != -1) && (e != 1))

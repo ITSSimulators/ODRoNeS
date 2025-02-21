@@ -27,12 +27,19 @@
 
 #include <QGraphicsItem>
 #include <QPainter>
-#include <random>
 
 #include "rns.h"
 #include "constants.h"
 
 namespace odrones {
+
+struct graphicalSettings
+{
+    bool identify{false};
+    bool zero{false};
+    bool zeroOnly{false};
+    bool allButZero{false};
+};
 
 class graphicalRNS : public QGraphicsItem
 {
@@ -44,7 +51,7 @@ class graphicalRNS : public QGraphicsItem
 
 public:
     graphicalRNS();
-    graphicalRNS(const RNS &rns, bool identify);
+    graphicalRNS(const RNS &rns, const graphicalSettings &gSettings);
     ~graphicalRNS();
 
     void initialise();
@@ -57,17 +64,18 @@ public:
 
     bool isReady() const;
 
-    void setup(const RNS &rns, bool identify);
+    void setup(const RNS &rns, const graphicalSettings &gSettings);
 
 private:
     void initialiseBoundingRect(const RNS &rns);
     void setupRoadsAndLabels(const RNS &rns);
+    void setupLaneAndLabel(const lane *l, uint ndx, scalar s);
     QPainterPath giveWay(const arr2 &o) const;
     QPainterPath stop(const arr2 &o) const;
     QPainterPath crossWalk(const arr2 &c, const arr2 &tg, scalar width, scalar length) const;
 
 private:
-    bool _identifyLanes;
+    graphicalSettings _gs;
     uint _numberOfLanes;
     QColor *_laneColours;
     Label *_labels;

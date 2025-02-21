@@ -49,7 +49,10 @@ int main(int argc, char *argv[])
 	    ("h,help", "Print usage message") 
             ("m,map", "Input file map", cxxopts::value<std::string>())
             ("v,version", "Print RNS version")
-            ("i,identify", "Identify lanes");
+            ("i,identify", "Identify lanes")
+            ("z,zero", "Include the centre lane")
+            ("c,zero-only", "Consider the centre lane only")
+            ("a,all-but-zero", "Consider the centre lane only");
 
     options.parse_positional("map");
 
@@ -115,19 +118,30 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    graphicalSettings gSettings;
+
     // Option 3 - Identify lanes
-    bool identifyLanes = false;
     if (result.count("identify"))
-        identifyLanes = true;
+        gSettings.identify = true;
 
+    // Option 4 - Identify lanes
+    if (result.count("zero"))
+        gSettings.zero = true;
 
+    // Option 5 - Identify lanes
+    if (result.count("zero-only"))
+        gSettings.zeroOnly = true;
+
+    // Option 6 - Every other lane.
+    if (result.count("all-but-zero"))
+        gSettings.allButZero = true;
 
 
 
 #ifdef QT_CORE_LIB
     QApplication app(argc, argv);
     RNS *rns = new RNS(iFile, Odr::Kind::LHT, false, true);
-    RNSWindow rw(rns, identifyLanes);
+    RNSWindow rw(rns, gSettings);
     rw.show();
     return app.exec();
 #else

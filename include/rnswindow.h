@@ -44,7 +44,7 @@ class RNSWindow : public QMainWindow
 
 public:
     // explicit RNSWindow(std::string iFile, bool identifyLanes, QWidget *parent = nullptr);
-    explicit RNSWindow(RNS *rns, bool identifyLanes, QWidget *parent = nullptr);
+    explicit RNSWindow(RNS *rns, const graphicalSettings &gSettings, QWidget *parent = nullptr);
     ~RNSWindow();
 
 private:

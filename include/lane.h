@@ -454,7 +454,7 @@ public:
 
     //! Qt Plotting:
 #ifdef QT_CORE_LIB
-    QPainterPath getEdgeQPainterPath(uint n, int e); ///< e = -1 for left edge and e = 1 for right edge.
+    QPainterPath getEdgeQPainterPath(uint n, int e) const; ///< e = -1 for left edge and e = 1 for right edge.
     QPainterPath getQPainterPath(uint n) const; ///< get a QPainterPath with n points per Bezier line.
     std::vector<QPainterPath> getQPainterPaths(uint n) const; ///< get a vector with the QPainterPaths of each Bezier line in the lane.
     int fillInVerticesAndIndices(scalar step, std::vector<QByteArray> &indexBytes, std::vector<QByteArray> &vertexBytes,

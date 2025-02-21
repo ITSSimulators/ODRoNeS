@@ -22,6 +22,7 @@
 
 #ifdef QT_CORE_LIB
 
+#include <random>
 #include "graphicalrns.h"
 using namespace odrones;
 
@@ -30,10 +31,10 @@ graphicalRNS::graphicalRNS()
     initialise();
 }
 
-graphicalRNS::graphicalRNS(const RNS &rns, bool identify)
+graphicalRNS::graphicalRNS(const RNS &rns, const graphicalSettings &gSettings)
 {
     initialise();
-    setup(rns, identify);
+    setup(rns, gSettings);
 }
 
 void graphicalRNS::initialise()
@@ -52,16 +53,23 @@ graphicalRNS::~graphicalRNS()
         delete[] _subRoads;
         delete[] _penStyle;
         delete[] _ignore;
-        if (_identifyLanes) delete[] _labels;
+        if (_gs.identify) delete[] _labels;
     }
 
 }
 
-void graphicalRNS::setup(const RNS &rns, bool identify)
+void graphicalRNS::setup(const RNS &rns, const graphicalSettings &gSettings)
 {
-    _identifyLanes = identify;
+    _gs = gSettings;
 
-    _numberOfLanes = rns.lanesSize();
+    if (_gs.zeroOnly)
+        _numberOfLanes = rns.sectionsSize();
+    else if (_gs.zero)
+         _numberOfLanes = rns.lanesSize() + rns.sectionsSize(); // that way we can plot lane 0
+    else
+        _numberOfLanes = rns.lanesSize();
+
+
     if (_numberOfLanes == 0)
     {
         std::cerr << "[ gRNS ] there's nothing to plot, lrn->getNumberOfLanes() returned zero. " << std::endl;
@@ -102,8 +110,9 @@ bool graphicalRNS::isReady() const
 
 void graphicalRNS::setupRoadsAndLabels(const RNS &rns)
 {
-    if (_identifyLanes)
+    if (_gs.identify)
         _labels = new Label[_numberOfLanes];
+
     _subRoads = new uint[_numberOfLanes];
     _penStyle = new Qt::PenStyle[_numberOfLanes];
     _ignore = new bool[_numberOfLanes];
@@ -118,44 +127,17 @@ void graphicalRNS::setupRoadsAndLabels(const RNS &rns)
     uint laneNumber = 0;
     for (unsigned int i=0; i<rns.sectionsSize(); ++i)
     {
+        if ((_gs.zero) || (_gs.zeroOnly))
+        {
+            setupLaneAndLabel(rns.sections(i).zero(), laneNumber, u01(rg));
+            laneNumber += 1;
+        }
+
+        if (_gs.zeroOnly) continue;
+
         for (unsigned int j=0; j<rns.sections(i).size(); ++j)
         {
-            lane *l = rns.sections(i)[j];
-            if ( (l->getKind() == lane::kind::tarmac) || (l->getKind() == lane::kind::roundabout) )
-                _penStyle[laneNumber] = Qt::DashLine;
-            else if ( ( l->getKind() == lane::kind::pavement) || (l->getKind() == lane::kind::crosswalk) )
-                _penStyle[laneNumber] = Qt::DotLine;
-            else
-            {
-                _ignore[laneNumber] = true;
-                _penStyle[laneNumber] = Qt::SolidLine;
-            }
-
-
-            if (_identifyLanes) // put an ID to every lane:
-            {
-                arr2 halfway;
-                l->getPointAfterDistance(halfway, l->getOrigin(), 0.5*l->getLength() + u01(rg)); //  + l->getID());
-                _labels[laneNumber].pos = {ct::mToPix * halfway[0], - ct::mToPix * halfway[1]};
-                std::string laneID = l->getCSUID();
-                _labels[laneNumber].id = laneID.c_str();
-            }
-
-            if (l->getGeometrySize() < 2)
-            {
-                _roads.push_back(l->getQPainterPath(50));
-                _subRoads[laneNumber] = 1;
-            }
-            else
-            {
-                std::vector<QPainterPath> qpp = l->getQPainterPaths(50);
-                _subRoads[laneNumber] = static_cast<uint>(qpp.size());
-                for (unsigned int k=0; k < qpp.size(); ++k)
-                    _roads.push_back(qpp[k]);
-            }
-            _leRoads.push_back(l->getEdgeQPainterPath(50, -1));
-            _reRoads.push_back(l->getEdgeQPainterPath(50, 1));
-
+            setupLaneAndLabel(rns.sections(i)[j], laneNumber, u01(rg));
             laneNumber += 1;
         }
     }
@@ -164,6 +146,49 @@ void graphicalRNS::setupRoadsAndLabels(const RNS &rns)
     // _sObjs = glrn->getStaticObjs();
 
     crossingPoints = rns.crossingPoints;
+}
+
+void graphicalRNS::setupLaneAndLabel(const lane *l, uint ndx, scalar s)
+{
+
+    if ( (l->getKind() == lane::kind::tarmac) || (l->getKind() == lane::kind::roundabout) )
+        _penStyle[ndx] = Qt::DashLine;
+    else if ( ( l->getKind() == lane::kind::pavement) || (l->getKind() == lane::kind::crosswalk) )
+        _penStyle[ndx] = Qt::DotLine;
+    else if ( l->odrID() == 0 )
+        _penStyle[ndx] = Qt::SolidLine;
+    else
+    {
+        if (!_gs.allButZero)
+            _ignore[ndx] = true;
+        _penStyle[ndx] = Qt::SolidLine;
+    }
+
+
+    if (_gs.identify) // put an ID to every lane:
+    {
+        arr2 halfway;
+        l->getPointAtDistance(halfway, 0.5*l->getLength() + s); //  + l->getID());
+        _labels[ndx].pos = {ct::mToPix * halfway[0], - ct::mToPix * halfway[1]};
+        std::string laneID = l->getCSUID();
+        _labels[ndx].id = laneID.c_str();
+    }
+
+    if (l->getGeometrySize() < 2)
+    {
+        _roads.push_back(l->getQPainterPath(50));
+        _subRoads[ndx] = 1;
+    }
+    else
+    {
+        std::vector<QPainterPath> qpp = l->getQPainterPaths(50);
+        _subRoads[ndx] = static_cast<uint>(qpp.size());
+        for (unsigned int k=0; k < qpp.size(); ++k)
+            _roads.push_back(qpp[k]);
+    }
+    _leRoads.push_back(l->getEdgeQPainterPath(50, -1));
+    _reRoads.push_back(l->getEdgeQPainterPath(50, 1));
+
 }
 
 void graphicalRNS::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
@@ -184,7 +209,7 @@ void graphicalRNS::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QW
     for (uint i = 0; i < _numberOfLanes; ++i)
     {
         pen.setStyle(_penStyle[i]); // dashLine for roads, dashDotLines for sidewalks.
-        if (_identifyLanes)
+        if (_gs.identify)
         {
             pen.setColor(_laneColours[i]);
             painter->setPen(pen);
