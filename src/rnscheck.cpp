@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
             ("i,identify", "Identify lanes")
             ("z,zero", "Include the centre lane")
             ("c,zero-only", "Consider the centre lane only")
-            ("a,all-but-zero", "Consider the centre lane only");
+            ("a,all-but-zero", "Include every lane");
 
     options.parse_positional("map");
 
