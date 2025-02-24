@@ -445,8 +445,7 @@ bool ReadOdr::simplifyStraights(Odr::smaS &s)
 void ReadOdr::simplifyGeometries(Odr::smaS &s)
 {
 
-    if (simplifySingleArc(s))
-        return;
+    simplifySingleArc(s);
 
     simplifyStraights(s);
 

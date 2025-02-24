@@ -98,7 +98,7 @@ public:
     void getDimensions(int &minX, int &minY, int &maxX, int &maxY) const;
     void getDimensions(scalar &minX, scalar &minY, scalar &maxX, scalar &maxY) const;
 
-public:
+
     std::vector<lane::tSign> tSigns() const;
 private:
     void tSigns(const std::vector<lane::tSign> &t);

@@ -35,7 +35,7 @@ class ReadBOdr : public ReadOdr
 public:
     ReadBOdr() : ReadOdr(ReadOdr::kind::bodr) {}
 
-    void addRoad(Odr::smaS &s);
+    void addRoad(Odr::smaS &s, bool simplify);
 
     void addConnection(Odr::udIndexed6DPoint &c);
 
