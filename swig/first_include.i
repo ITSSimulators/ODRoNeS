@@ -18,6 +18,9 @@ using namespace odrones;
 %include "stdint.i"
 %include "std_vector.i"
 
+%include "typemaps.i"
+%apply double & OUTPUT { scalar &d1, scalar &d2 };
+
 %include "matvec.h"
 
 typedef odrones::uint uint;
