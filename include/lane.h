@@ -302,6 +302,7 @@ public:
     bool actorsSupport(odrones::concepts::actor k) const;
     // bool actorsOverlap(const lane *l) const;
     bool isPermanent() const;
+    void permanent(bool p);
 
 
     // Traffic Signs:

@@ -1174,12 +1174,14 @@ void lane::setNextLane(uint ndx, lane* l)
 
 
 
-
-
-
 bool lane::isPermanent() const
 {
     return _isPermanent;
+}
+
+void lane::permanent(bool p)
+{
+    _isPermanent = p;
 }
 
 bool lane::hasDefinedSign() const
