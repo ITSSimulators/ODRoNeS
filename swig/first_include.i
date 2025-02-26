@@ -18,6 +18,8 @@ using namespace odrones;
 %include "stdint.i"
 %include "std_vector.i"
 
+%include "matvec.h"
+
 typedef odrones::uint uint;
 %rename(Odr_geometry) odrones::Odr::geometry;
 %template(GeometryVector) std::vector<odrones::Odr::geometry>;
