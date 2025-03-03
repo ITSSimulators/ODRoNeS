@@ -451,6 +451,7 @@ public:
     scalar sli(scalar s0) const; ///< return s on this lane, given s0 on lane 0;
 
 
+    std::vector<arr2>* getEdgePath(uint n, int e) const;
 
 
     //! Qt Plotting:

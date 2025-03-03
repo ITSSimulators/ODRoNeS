@@ -2593,6 +2593,59 @@ QPainterPath lane::getEdgeQPainterPath(uint n, int e) const
     return qpp;
 }
 
+ std::vector<arr2> * lane::getEdgePath(uint n, int e) const
+{
+    if ((e != -1) && (e != 1))
+    {
+        std::cerr << "[ Error ] getEdgePath means neither left nor right" << std::endl;
+        return nullptr;
+    }
+
+//    if (!path)
+//    {
+//        std::cerr << "[ Error ] getEdgePath given null path\n";
+
+//        return nullptr;
+//    }
+    auto path = new std::vector<arr2>;
+    if (n == 0) n = _length; // so that later appDs is 1m.
+    scalar appDs = _length / n;
+
+    scalar s = 0; // total distance down the road.
+    for (uint i = 0; i < _geom.size(); ++i)
+    {
+        scalar si = 0;
+        uint qi = std::floor(_geom[i]->length() / appDs);
+        if (qi < 4) qi = 4;
+        scalar dsi = _geom[i]->length() / qi;
+        bool quit = false;
+        for (uint j = 0; j <= qi; ++j)
+        {
+            arr2 ci;
+            if (!_geom[i]->getPointAfterDistance(ci, _geom[i]->origin(), si))
+            {
+                ci = _geom[i]->dest();
+                si = _geom[i]->length();
+                quit = true;
+            }
+            arr2 ti = _geom[i]->getTangentInPoint(ci);
+            arr2 ni;
+            if (e == -1) ni = {-ti[1], ti[0]};
+            else ni = {ti[1], -ti[0]};
+            scalar w = getWidth(s + si);
+            arr2 pi = {ci[0] + 0.5 * w * ni[0], ci[1] + 0.5 * w * ni[1]};
+
+            path->push_back(pi);
+            si += dsi;
+            if (quit)
+                break;
+        }
+        s += _geom[i]->length();
+    }
+
+    return path;
+}
+
 
 
 
