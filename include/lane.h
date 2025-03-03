@@ -180,7 +180,10 @@ public:
         }
         std::string print() const
         {
-            return l->getCSUID() + " s: " + std::to_string(s) + " loff: " + std::to_string(loff);
+            if (l)
+                return l->getCSUID() + " s: " + std::to_string(s) + " loff: " + std::to_string(loff);
+            else
+                return "invalid lane";
         }
     };
 
