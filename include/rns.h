@@ -1,31 +1,41 @@
-// 
+//
 //  This file is part of the ODRoNeS (OpenDRIVE Road Network System) package.
-//  
+//
 //  Copyright (c) 2023 Albert Solernou, University of Leeds.
-// 
+//
 //  GTSmartActors is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation, either version 3 of the License, or
 //  (at your option) any later version.
-// 
+//
 //  GTSmartActors is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU General Public License for more details.
-// 
+//
 //  You should have received a copy of the GNU General Public License
 //  along with ODRoNeS. If not, see <http://www.gnu.org/licenses/>.
-// 
-//  We would appreciate that if you use this software for work leading 
-//  to publications you cite the package and its related publications. 
+//
+//  We would appreciate that if you use this software for work leading
+//  to publications you cite the package and its related publications.
 //
 
-#ifndef RNS_H
-#define RNS_H
+#ifndef ODRONES_RNS_H
+#define ODRONES_RNS_H
 
-#include <filesystem>
 #include "rnsconcepts.h"
 #include "section.h"
+
+namespace odrones {
+
+typedef odrones::concepts concepts;
+typedef odrones::lane lane;
+typedef odrones::section section;
+typedef odrones::scalar scalar;
+typedef odrones::arr2 arr2;
+typedef odrones::OneVersion OneVersion;
+typedef odrones::mvf mvf;
+typedef odrones::conflict conflict;
 
 ///! The Road Network System:
 class RNS
@@ -33,7 +43,7 @@ class RNS
 
 public:
     RNS();
-    RNS(std::string odrMap, concepts::drivingSide drivingSide, bool loadSidewalk);
+    RNS(std::string odrMap, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk, bool verbose = false);
     RNS(const RNS &r); ///< copy construct
     RNS& operator=(RNS& r); ///< copy assign
     ~RNS();
@@ -55,26 +65,40 @@ public:
     bool ready() const; /*! return true if _sections are ready */
     void ready(bool r); ///< manually set _ready to r.
 
+    bool verbose() const { return _verbose; }
+    void verbose(bool v) { _verbose = v; }
+
     concepts::drivingSide drivingSide() const; ///< return the driving side.
     void drivingSide(concepts::drivingSide side); ///< manually set the driving side.
 
-    bool makeRoads(std::string mapFile, concepts::drivingSide drivingSide, bool loadSidewalk);
-    bool makeOpenDRIVERoads(std::string mapFile, concepts::drivingSide drivingSide, bool loadSidewalk);
+    bool makeRoads(std::string mapFile, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk);
+    bool makeOpenDRIVERoads(std::string mapFile, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk);
+    bool makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk);
     bool makeOneVersionRoads(std::string mapFile);
     void printLanes() const; ///< print sections and lanes
+    void write(const std::string &mapFile) const;
+
+    void setPortAndStarboard(concepts::drivingSide drivingSide); ///< sets Port and Starboard for every section AND flips two-way sections if drivingSide is known.
+    void setPortAndStarboard(); ///< it uses _drivingSide
+
+    void flipOneWaySections(); ///< flips one way sections after, using the knowledge gained from two-way sections in setPortAndStarboard.
+
 
     /*! establish the priorities, essentially through the methods below: */
     bool makePriorities(scalar anticipationTime);
 
-    //! Given the point o, find the set of lane coordinates l, p (projected point) and loff (lateral offset)
+    //! Given the point o, find the set of lane coordinates l, p (projected point), s, and loff (lateral offset)
     //!   that is not farther from o than tol. lCoord.l will be nullptr if nothing was found closer than tol.
     lane::lCoord getLaneCoordsForPoint(const arr2 &o, scalar tol) const;
+
+    arr2 getPosForLaneCoords(const lane::lCoord &lc) const;
+    arr2 getPosForRoadCoords(uint rID, scalar s, scalar offset, scalar height) const;
 
     //! get the size of whole map rounded "up".
     void getDimensions(int &minX, int &minY, int &maxX, int &maxY) const;
     void getDimensions(scalar &minX, scalar &minY, scalar &maxX, scalar &maxY) const;
 
-public:
+
     std::vector<lane::tSign> tSigns() const;
 private:
     void tSigns(const std::vector<lane::tSign> &t);
@@ -83,10 +107,15 @@ private:
     lane* getLaneWithODRIds(uint rID, int lID) const;
     lane* getLaneWithOVId(const OneVersion::OVID &lID) const;
     section* getSectionWithOVId(const OneVersion::OVID &sID) const;
+
 public:
+    const lane* getCLaneWithODRIds(uint rID, int lID) const;
+
     std::vector<uint> getSectionIDsWithOVRoadNodeId(const OneVersion::OVID &rnID) const; ///< returning a vector because a node may have a number of laneGroups, and rns store each one in a different section. That will be an empty vector if roadIDM or roadIDm are < 0
     std::vector<uint> getSectionIDsWithOVRoadNodeId(int rnMID, int rnmID) const; ///< returning a vector because a node may have a number of laneGroups, and rns store each one in a different section. That will be an empty vector if roadIDM or roadIDm are < 0
     std::vector<uint> getSectionIDsWithOVNodeId(int nID) const; ///< returning a vector because a node may have a number of laneGroups, and rns store each one in a different section. That will result in an empty vector if nID is < 0;
+
+    int getSectionIDWithODRIDWithRoadCoord(uint rID, scalar s) const; ///< -1 if not found.
 
 
     // Order ids.
@@ -104,6 +133,8 @@ public:
     bool swapConflictPriority(lane *l, scalar s); ///< overload
 
 
+    void linkLanesGeometrically(scalar tol = lane::odrTol); ///< Go over all the section pairs, and link all the lanes if in range
+
 private:
     //! Given two lanes l1 and l2, take a point on each one that is at a fraction (scalar between 0 and 1)
     //!    of their length. Knowing the direction of the lanes in this points,
@@ -111,14 +142,16 @@ private:
     int findPortAndStarboardLanes(lane* &port, lane* &starboard, lane* l1, lane* l2, scalar dToEoL1, scalar dToEoL2) const;
 
     //! Currently unused...
-    lane* getLaneWithPoint(const arr2 &p, scalar tol = mvf::absolutePrecision) const;
+    const lane* getLaneWithPoint(const arr2 &p, scalar tol = mvf::absolutePrecision) const;
 
     //! Assign li as nextLane to lj or lj as nextLane to li, and set the corresponding prevLanes,
     //!   as long as the end / start of li and lj are closer than tol.
-    void linkLanesIfInRange(lane *li, lane *lj, scalar tol = lane::odrTol);
+    uint linkLanesIfInRange(lane *li, lane *lj, scalar tol = lane::odrTol);
+    bool linkLanesIfInRangeAndOD(lane *li, lane *lj, scalar tol = lane::odrTol);
 
     //! Assign nextLanes and prevLanes to the lanes in sections si and sj by calling linkLanesIfInRange on a double loop.
     void linkLanesInSections(section &si, section &sj, scalar tol = lane::odrTol);
+    void linkLanesInSectionsOD(section &si, section &sj, scalar tol = lane::odrTol);
 
     /*! arrange conflicts and default priorities for lanes in different sections and same ending: priority is to the right */
     bool makePrioritiesSameEndingDifferentSectionLanes(scalar anticipationTime);
@@ -145,10 +178,13 @@ private:
     std::vector<lane::tSign> _tSigns;  ///< a convenience vector with an instance of every traffic sign.
     // std::vector<conflict::staticObj> _sObjects; ///< a convenience vector with
 
+    ReadOdr _letter; ///< keep a copy of the ReadOdr that was used to configure the rns in case we need printing.
     bool _ready; ///< whether the RNS is ready or not.
+    bool _verbose; ///< whether to print out to std::out or not.
 
 
 };
 
+}
 
-#endif // RNS_H
+#endif // ODRONES_RNS_H

@@ -20,10 +20,17 @@
 //  to publications you cite the package and its related publications. 
 //
 
+#include <filesystem>
+#include <boost/format.hpp>
 #include "rns.h"
+#include "xmlUtils.h"
 #ifdef USE_ONEVERSION
 #include "readOneVersion.h"
 #endif // USE_ONEVERSION
+
+#include <tinyxml2.h>
+
+using namespace odrones;
 
 RNS::RNS()
 {
@@ -35,6 +42,7 @@ void RNS::initialise()
 {
     _sections = nullptr;
     _sectionsSize = 0;
+    _verbose = true;
     _ready = false;
 }
 
@@ -56,10 +64,11 @@ RNS::RNS(const RNS& r)
 }
 
 
-RNS::RNS(std::string mapFile, concepts::drivingSide drivingSide, bool loadSidewalk)
+RNS::RNS(std::string mapFile, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk, bool verbose)
 {
     initialise();
-    _ready = makeRoads(mapFile, drivingSide, loadSidewalk);
+    _verbose = verbose;
+    _ready = makeRoads(mapFile, drivingSide, exhaustiveLinking, loadSidewalk);
     return;
 }
 
@@ -213,11 +222,11 @@ void RNS::tSigns(const std::vector<lane::tSign> &t)
 
 }
 
-bool RNS::makeRoads(std::string mapFile, concepts::drivingSide drivingSide, bool loadSidewalk)
+bool RNS::makeRoads(std::string mapFile, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk)
 {
 
     if ( !std::filesystem::path{mapFile}.extension().string().compare(".xodr"))
-        return makeOpenDRIVERoads(mapFile, drivingSide, loadSidewalk);
+        return makeOpenDRIVERoads(mapFile, drivingSide, exhaustiveLinking, loadSidewalk);
     else if ( !std::filesystem::path{mapFile}.extension().string().compare(".bin"))
 #ifdef USE_ONEVERSION
         return makeOneVersionRoads(mapFile);
@@ -291,7 +300,7 @@ bool RNS::makeOneVersionRoads(std::string mapFile)
             section *si = getSectionWithOVId(ovID);
             if (!si)
             {
-                std::cout << "[ Error ] No section for: " << i << ", ovID: "
+                std::cerr << "[ Error ] No section for: " << i << ", ovID: "
                           << read.sections[i].ovID.to_string() << std::endl;
             }
 
@@ -317,39 +326,39 @@ bool RNS::makeOneVersionRoads(std::string mapFile)
         }
     }
 
-    // Set port and starboard lanes, and assume left hand driving:
-    for (uint i = 0; i < _sectionsSize; ++i)
-    {
-        if (!_sections[i].isTransitable()) continue;
-        _sections[i].setPortAndStarboard(_drivingSide); // true, false);
-    }
-
+    // Set port and starboard lanes
+    setPortAndStarboard();
 
     _ready = true;
     return _ready;
 }
 
-bool RNS::makeOpenDRIVERoads(std::string odrMap, concepts::drivingSide drivingSide, bool loadSidewalk)
+bool RNS::makeOpenDRIVERoads(std::string odrMap, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk)
 {
-    _ready = false;
-
-    _drivingSide = drivingSide;
-
-
-
-    std::cout << "[ Warning ] work in progress; ignoring loadSidewalk value: " << loadSidewalk << std::endl;
+    if (verbose())
+        std::cout << "[ Warning ] work in progress; ignoring loadSidewalk value: " << loadSidewalk << std::endl;
 
     bool isOdrFile = false;
     if ((odrMap.length() < 255) && (std::filesystem::exists(odrMap)))
         isOdrFile = true;
 
-    ReadOdr read(odrMap, isOdrFile);
+    ReadXOdr read(odrMap, isOdrFile);
 
-    if (!read.isReady())
+    if (!read.ready())
     {
         std::cerr << "[ LRN ] unable to load the opendrive map" << std::endl;
         return false;
     }
+
+    return makeOpenDRIVERoads(read, drivingSide, exhaustiveLinking, loadSidewalk);
+}
+
+bool RNS::makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk)
+{
+
+    _ready = false;
+
+    _letter = read;
 
     // Allocate and do the geometry for the lanes:
     // We will allocate as many sections as laneSections:
@@ -359,6 +368,8 @@ bool RNS::makeOpenDRIVERoads(std::string odrMap, concepts::drivingSide drivingSi
     setSections(sectionsSize);
 
     uint sectionsNdx = 0;
+    std::string mapDrivingSide_g = Odr::Kind::None;
+    bool mapDrivingSideConsistency = true;
     for (uint i = 0; i < read.sections.size(); ++i)
     {
         if (!read.sections[i].lanes.size())
@@ -368,9 +379,20 @@ bool RNS::makeOpenDRIVERoads(std::string odrMap, concepts::drivingSide drivingSi
         }
         if (static_cast<uint>(read.sections[i].id) != i)
         {
-            std::cout << "PANIC!" << std::endl;
+            std::cerr << "PANIC!" << std::endl;
             return false;
         }
+
+        // see if the map comes with a driving side:
+        std::string mapDrivingSide_i = read.sections[i].rule;
+        if ((mapDrivingSide_i != Odr::Kind::None) && (!mapDrivingSide_i.empty()))
+        {
+            if (mapDrivingSide_g == Odr::Kind::None)
+                mapDrivingSide_g = mapDrivingSide_i;
+            if (mapDrivingSide_g != mapDrivingSide_i)
+                mapDrivingSideConsistency = false;
+        }
+
 
         for (uint j = 0; j < read.sections[i].lsSize; ++j)
         {
@@ -391,42 +413,82 @@ bool RNS::makeOpenDRIVERoads(std::string odrMap, concepts::drivingSide drivingSi
         }
     }
 
-    // Now do the linking:
-    for (uint i = 0; i < read.sections.size(); ++i)
+    // In that case, try using the map:
+    if (!strcmp(drivingSide, Odr::Kind::Map))
     {
-        for (uint j = 0; j < read.sections[i].lanes.size(); ++j)
+        if (mapDrivingSideConsistency)
+            drivingSide = mapDrivingSide_g.c_str();
+        else
         {
-            lane* lij = getLaneWithODRIds(read.sections[i].odrID, read.sections[i].lanes[j].odrID);
-            // std::cout << "lane: " << lij->getCSUID() << std::endl;
-            if (!lij)
-               std::cout << "[ Error ] No lane for: " << i << ", " << j << ", segfault on the way... " << std::endl;
-            for (uint k = 0; k < read.sections[i].lanes[j].nextLane.size(); ++k)
+            std::cerr << "[ Error ] When trying to use the map driving side, we found some LHT and some RHT sections, which is unsupported" << std::endl;
+            return false;
+        }
+    }
+
+    if (!strcmp(drivingSide, Odr::Kind::LHT))
+        _drivingSide = concepts::drivingSide::leftHand;
+    else if (!strcmp(drivingSide, Odr::Kind::RHT))
+        _drivingSide = concepts::drivingSide::rightHand;
+    else
+    {
+        std::cerr << "[ Error ] Driving side undefined, defaulting to left-hand driving" << std::endl;
+        _drivingSide = concepts::drivingSide::leftHand;
+    }
+
+    // See if there's a default speed section:
+    if (read.speedRegulation.size())
+    {
+        for (uint i = 0; i < _sectionsSize; ++i)
+        {
+            for (uint j = 0; j < read.speedRegulation.size(); ++j)
             {
-                Odr::smaL *sml = read.sections[i].lanes[j].nextLane[k];
-                if (!sml) continue;
+                if (_sections[i].type() == read.speedRegulation[j].roadType)
+                    _sections[i].setSpeed(read.speedRegulation[j].value);
 
-                lane* nextLane = getLaneWithODRIds(read.sections[sml->sID].odrID, sml->odrID);
-                linkLanesIfInRange(lij, nextLane);
-            }
-
-            for (uint k = 0; k < read.sections[i].lanes[j].prevLane.size(); ++k)
-            {
-                Odr::smaL *sml = read.sections[i].lanes[j].prevLane[k];
-                if (!sml) continue;
-
-                lane* prevLane = getLaneWithODRIds(read.sections[sml->sID].odrID, sml->odrID);
-                linkLanesIfInRange(lij, prevLane);
             }
         }
     }
 
 
-    // Set port and starboard lanes, and assume left hand driving:
-    for (uint i = 0; i < _sectionsSize; ++i)
+
+
+    // Now do the linking:
+    if ((read.k() == ReadOdr::kind::xodr) && (!exhaustiveLinking))
     {
-        if (!_sections[i].isTransitable()) continue;
-        _sections[i].setPortAndStarboard(drivingSide); // true, false);
+        for (uint i = 0; i < read.sections.size(); ++i)
+        {
+            for (uint j = 0; j < read.sections[i].lanes.size(); ++j)
+            {
+                lane* lij = getLaneWithODRIds(read.sections[i].odrID, read.sections[i].lanes[j].odrID);
+                if (!lij)
+                    std::cerr << "[ Error ] No lane for: " << i << ", " << j << ", segfault on the way... " << std::endl;
+                for (uint k = 0; k < read.sections[i].lanes[j].nextLane.size(); ++k)
+                {
+                    Odr::smaL *sml = read.sections[i].lanes[j].nextLane[k];
+                    if (!sml) continue;
+
+                    lane* nextLane = getLaneWithODRIds(read.sections[sml->sID].odrID, sml->odrID);
+                    linkLanesIfInRange(lij, nextLane);
+                }
+
+                for (uint k = 0; k < read.sections[i].lanes[j].prevLane.size(); ++k)
+                {
+                    Odr::smaL *sml = read.sections[i].lanes[j].prevLane[k];
+                    if (!sml) continue;
+
+                    lane* prevLane = getLaneWithODRIds(read.sections[sml->sID].odrID, sml->odrID);
+                    linkLanesIfInRange(lij, prevLane);
+                }
+            }
+        }
     }
+
+
+    // Set port and starboard lanes, with knowledge on the driving side:
+    setPortAndStarboard(_drivingSide);
+
+    if (exhaustiveLinking)
+        linkLanesGeometrically();
 
 
     // Get the traffic signs:
@@ -447,6 +509,111 @@ bool RNS::makeOpenDRIVERoads(std::string odrMap, concepts::drivingSide drivingSi
 
     _ready = true;
     return true;
+}
+
+
+void RNS::setPortAndStarboard(concepts::drivingSide drivingSide)
+{
+
+    // Set port and starboard lanes, and assume left hand driving:
+    for (uint i = 0; i < _sectionsSize; ++i)
+    {
+        if (!_sections[i].isTransitable()) continue;
+        _sections[i].setPortAndStarboard(drivingSide); // true, false);
+    }
+
+    flipOneWaySections();
+
+}
+
+void RNS::setPortAndStarboard()
+{
+    return setPortAndStarboard(_drivingSide);
+}
+
+
+void RNS::flipOneWaySections()
+{
+
+    // Flip lanes in one-way sections linked to two-way sections
+    //   for which "prev" and "next" don't match.
+    bool satisfaction = false;
+    std::vector<uint> knowledge; // vector of one-way section ids for which we know the direction.
+    while (!satisfaction)
+    {
+        uint initialKnowledge = knowledge.size();
+        uint nTwoWay = 0;
+        uint nonTransitable = 0;
+
+        for (uint i = 0; i < _sectionsSize; ++i)
+        {
+            if (std::find(knowledge.begin(), knowledge.end(), i) != knowledge.end())
+                continue;
+            if (!_sections[i].isTransitable())
+            {
+                nonTransitable += 1;
+                continue;
+            }
+            if (!_sections[i].isOneWay())
+            {
+                nTwoWay += 1;
+                continue;
+            }
+
+            bool flipThisSection = false;
+            bool conclusion = false;
+            for (uint j = 0; j < _sections[i].size(); ++j)
+            {
+                // Deduction 1 - Based on the next lanes, figure out whether we need to flip this section
+                auto [nls, nlSize] = _sections[i][j]->getNextLanes();
+                for (uint k = 0; k < nlSize; ++k)
+                {
+                    if ((nls[k]->getSection()->isOneWay()) &&
+                        (std::find(knowledge.begin(), knowledge.end(), nls[k]->getSection()->getID()) == knowledge.end()))
+                        continue;
+                    if (!mvf::areCloseEnough(_sections[i][j]->getDestination(),
+                                             nls[k]->getOrigin(), 1e-6))
+                        flipThisSection = true;
+
+                    conclusion = true;
+                    break;
+                }
+
+                // Deduction 2 - Based on the previous lanes, figure out whether we need to flip this section
+                auto [pls, plSize] = _sections[i][j]->getPrevLanes();
+                if (!conclusion)
+                {
+                    for (uint k = 0; k < plSize; ++k)
+                    {
+                        if ((pls[k]->getSection()->isOneWay() &&
+                             (std::find(knowledge.begin(), knowledge.end(), pls[k]->getSection()->getID()) == knowledge.end())))
+                            continue;
+                        if (!mvf::areCloseEnough(_sections[i][j]->getOrigin(),
+                                                 pls[k]->getDestination(), 1e-6))
+                            flipThisSection = true;
+
+                        conclusion = true;
+                        break;
+                    }
+                }
+
+                // If a conclusion was reached, we can break.
+                if (conclusion) break;
+            }
+
+            if (conclusion)
+                knowledge.push_back(i);
+
+            if (flipThisSection)
+                _sections[i].flipBackwards();
+        }
+
+        uint totalKnowledge = knowledge.size();
+        if (nTwoWay + nonTransitable + totalKnowledge == _sectionsSize)
+            satisfaction = true;
+        if (initialKnowledge == totalKnowledge)
+            satisfaction = true;
+    }
 }
 
 
@@ -479,36 +646,342 @@ void RNS::printLanes() const
                 else nlString += ", ";
                 nlString += nls[k]->getCSUID();
             }
+
+            std::string sideString = ", has port lane ";
+            if (l->getPortLane())
+            {
+                sideString += l->getPortLane()->getCSUID();
+            }
+            else
+            {
+                sideString += "<null>";
+            }
+            sideString += ", has starboard lane ";
+            if (l->getStarboardLane())
+            {
+                sideString += l->getStarboardLane()->getCSUID();
+            }
+            else
+            {
+                sideString += "<null>";
+            }
+
             std::cout << l->getShapeString() << " lane: " << l->getCSUID();
             std::cout << " starts in: (" << o[0] << ", " << o[1] <<  "), ends in: (" << d[0] << ", " << d[1] << ")"
                       << ", _to: (" << l->getTo()[0] << ", " << l->getTo()[1] << ")"
                       << ", is " << l->getLength() << " m long, has max speed: " << l->getSpeed()
                       // << ", bounding box: " << bli[0] << ", " << bli[1] << " to " << tri[0] << ", " << tri[1] << std::endl;
-                      << plString << nlString << std::endl;
+                      << plString << nlString << sideString << std::endl;
 
         }
     }
 
+    /*
+    std::cout << "--- Zero Lanes ---" << std::endl;
+    std::cout << "------------------" << std::endl;
+    for (uint i = 0; i < _sectionsSize; ++i)
+    {
+        const lane *l = _sections[i].zero();
+        std::cout << l->getShapeString() << " lane: " << l->getCSUID();
+        arr2 o = l->getOrigin();
+        arr2 d = l->getDestination();
+        std::cout << " starts in: (" << o[0] << ", " << o[1] <<  "), ends in: (" << d[0] << ", " << d[1] << ")"
+                  << ", _to: (" << l->getTo()[0] << ", " << l->getTo()[1] << ")"
+                  << ", is " << l->getLength() << " m long" << std::endl;
+    }
+    */
+
 }
 
-
-void RNS::linkLanesIfInRange(lane *li, lane *lj, scalar tol)
+void RNS::write(const std::string &mapFile) const
 {
-    if ((mvf::areCloseEnough(li->getDestination(), lj->getOrigin(), tol)) ||
-            (mvf::areCloseEnough(li->getDestination(), lj->getDestination(), tol)))
-        li->setNextLane(lj, false);
+    // Create a TinyXML2 object:
+    tinyxml2::XMLDocument xmlMap;
+    tinyxml2::XMLNode *root = xmlMap.NewElement(Odr::Elem::OpenDrive);
+    xmlMap.InsertEndChild(root);
 
-    if ((mvf::areCloseEnough(li->getOrigin(), lj->getOrigin(), tol)) ||
-            (mvf::areCloseEnough(li->getOrigin(), lj->getDestination(), tol)))
-        li->setPrevLane(lj, false);
+    // Print out a header:
+    tinyxml2::XMLElement* header = xmlMap.NewElement(Odr::Elem::Header);
+    header->SetAttribute("revMajor", 1);
+    header->SetAttribute("revMinor", 6);
+    header->SetAttribute("vendor", "University of Leeds, Simulator5");
+    // ... with some user data:
+    tinyxml2::XMLElement* userData = xmlMap.NewElement(Odr::Elem::UserData);
+    userData->SetAttribute("extension", "25_01: bezier3, no junctions");
+    if (_letter.udConnections.size())
+    {
+        // std::cout << "rns._letter has udConnections.size()" << std::endl;
+        tinyxml2::XMLElement* connections = xmlMap.NewElement(Odr::Elem::UDConnectionPoints);
+        for (uint i = 0; i < _letter.udConnections.size(); ++i)
+        {
+            tinyxml2::XMLElement* cp = xmlMap.NewElement(Odr::Elem::UDConnectionPoint);
+            cp->SetAttribute(Odr::Attr::Id, _letter.udConnections[i].id);
+            cp->SetAttribute(Odr::Attr::X, _letter.udConnections[i].px);
+            cp->SetAttribute(Odr::Attr::Y, _letter.udConnections[i].py);
+            cp->SetAttribute(Odr::Attr::rZ, _letter.udConnections[i].rz);
+            connections->InsertEndChild(cp);
+        }
+        userData->InsertEndChild(connections);
+    }
+    header->InsertEndChild(userData);
+    root->InsertEndChild(header); // into root.
 
-    if ((mvf::areCloseEnough(lj->getDestination(), li->getOrigin(), tol)) ||
-            (mvf::areCloseEnough(lj->getDestination(), li->getDestination(), tol)))
+
+    // If we built that from using ReadBOdr, the original input was incomplete:
+    if (_letter.k() == ReadOdr::kind::bodr)
+    {
+        // Iterate over the roads, because there are no road sections:
+        for (uint i = 0; i < _sectionsSize; ++i)
+        {
+            // Road definition and attributes:
+            tinyxml2::XMLElement* xmlRoad = xmlMap.NewElement(Odr::Elem::Road);
+            const Odr::smaS *smas = _letter.odrSection(_sections[i].odrID());
+            if (!smas)
+            {
+                std::cerr << "[ RNS::Write Error ] smas not found "
+                          << "for road with odrID: " << _sections[i].odrID() << std::endl;
+            }
+            xmlRoad->SetAttribute(Odr::Attr::Name, smas->name.c_str());
+            xmlUtils::setAttrDouble(xmlRoad, Odr::Attr::Length, _sections[i].zero()->getLength());
+            xmlRoad->SetAttribute(Odr::Attr::Id, _sections[i].odrID());
+            xmlRoad->SetAttribute(Odr::Attr::Junction, -1);
+            if (_drivingSide == concepts::drivingSide::leftHand)
+                xmlRoad->SetAttribute(Odr::Attr::Rule, Odr::Kind::LHT);
+            else if (_drivingSide == concepts::drivingSide::rightHand)
+                xmlRoad->SetAttribute(Odr::Attr::Rule, Odr::Kind::RHT);
+
+            // Road -> Type:
+            tinyxml2::XMLElement* type = xmlMap.NewElement(Odr::Elem::Type);
+            xmlUtils::setAttrDouble(type, Odr::Attr::S, 0.00);
+            type->SetAttribute(Odr::Attr::Type, Odr::roadTypeString( smas->type ).c_str());
+            // Road -> type -> speed:
+            tinyxml2::XMLElement* speed = xmlMap.NewElement(Odr::Elem::Speed);
+            xmlUtils::setAttrDouble(speed, Odr::Attr::Max, _sections[i].maxSpeed());
+            speed->SetAttribute(Odr::Attr::Unit, Odr::Kind::ms);
+            type->InsertEndChild(speed); // push speed
+            xmlRoad->InsertEndChild(type); // push type
+
+            // Road -> link - We don't need road linking, lanes are linked individually.
+            tinyxml2::XMLElement* roadLink = xmlMap.NewElement(Odr::Elem::Link);
+            xmlRoad->InsertEndChild(roadLink);
+
+            // Road -> PlanView - i e, geometries
+            tinyxml2::XMLElement* planView = xmlMap.NewElement(Odr::Elem::PlanView);
+            if (!_sections[i].zero()->xmlPlanView(planView, xmlMap))
+                std::cerr << "zero was unable to run xmlPlanView" << std::endl;
+            xmlRoad->InsertEndChild(planView);
+
+            // Road -> Lanes:
+            tinyxml2::XMLElement *lanes = xmlMap.NewElement(Odr::Elem::Lanes);
+            // Road -> Lanes -> Lanes offset:
+            for (uint j = 0; j < smas->loffset.size(); ++j)
+            {
+                tinyxml2::XMLElement* laneOffset = xmlMap.NewElement(Odr::Elem::LaneOffset);
+                xmlUtils::setAttrOffsetS(laneOffset, smas->loffset[j]);
+                lanes->InsertEndChild(laneOffset);
+            }
+
+            // Road -> Lanes -> Lane Section:
+            tinyxml2::XMLElement* laneSection = xmlMap.NewElement(Odr::Elem::LaneSection);
+            xmlUtils::setAttrDouble(laneSection, Odr::Attr::S, 0.);
+
+            // Gather the indices for left & right lanes:
+            std::vector<uint> leftUint, rightUint;
+            for (uint j = 0; j < smas->lanes.size(); ++j)
+            {
+                if (smas->lanes[j].odrID < 0)
+                    rightUint.push_back(j);
+                else if (smas->lanes[j].odrID > 0)
+                    leftUint.push_back(j);
+            }
+
+            // Road -> Lanes -> LaneSection -> Left
+            tinyxml2::XMLElement* leftXML = xmlMap.NewElement(Odr::Elem::Left);
+            for (uint j = 0; j < leftUint.size(); ++j)
+            {
+                tinyxml2::XMLElement* laneXML = xmlMap.NewElement(Odr::Elem::Lane);
+                const lane* l = _sections[i].getOdrLane(smas->lanes[leftUint[j]].odrID);
+                if (!l)
+                {
+                    std::cerr << "[ Error ] RNS::write - lane not found" << std::endl;
+                    return;
+                }
+                l->xmlLaneAttributesAndLinks(laneXML, xmlMap);
+                smas->lanes[leftUint[j]].writeXMLWidth(laneXML, xmlMap);
+                smas->lanes[leftUint[j]].writeXMLBorder(laneXML, xmlMap);
+                leftXML->InsertEndChild(laneXML);
+            }
+            if (leftUint.size())
+                laneSection->InsertEndChild(leftXML);
+
+
+            // Road -> Lanes -> LaneSection -> Centre
+            tinyxml2::XMLElement* centreXML = xmlMap.NewElement(Odr::Elem::Center);
+            tinyxml2::XMLElement* centreLane = xmlMap.NewElement(Odr::Elem::Lane);
+            centreLane->SetAttribute(Odr::Attr::Id, 0);
+            centreLane->SetAttribute(Odr::Attr::Type, Odr::Kind::None);
+            centreLane->SetAttribute(Odr::Attr::Level, Odr::Kind::False);
+            tinyxml2::XMLElement* lane0Link = xmlMap.NewElement(Odr::Elem::Link);
+            centreLane->InsertEndChild(lane0Link); // push laneLink into Lane
+            centreXML->InsertEndChild(centreLane); // push centreLane into Center
+            laneSection->InsertEndChild(centreXML); // push Center into Lane Section
+
+
+            // Road -> Lanes -> LaneSection -> Right
+            tinyxml2::XMLElement* rightXML = xmlMap.NewElement(Odr::Elem::Right);
+            for (uint j = 0; j < rightUint.size(); ++j)
+            {
+                tinyxml2::XMLElement* laneXML = xmlMap.NewElement(Odr::Elem::Lane);
+                const lane* l = _sections[i].getOdrLane(smas->lanes[rightUint[j]].odrID);
+                if (!l)
+                {
+                    std::cerr << "[ Error ] RNS::write - lane not found" << std::endl;
+                    return;
+                }
+                l->xmlLaneAttributesAndLinks(laneXML, xmlMap, smas->lanes[rightUint[j]].kind);
+                smas->lanes[rightUint[j]].writeXMLWidth(laneXML, xmlMap);
+                smas->lanes[rightUint[j]].writeXMLBorder(laneXML, xmlMap);
+                rightXML->InsertEndChild(laneXML);
+            }
+            if (rightUint.size())
+                laneSection->InsertEndChild(rightXML);
+
+            lanes->InsertEndChild(laneSection);
+            xmlRoad->InsertEndChild(lanes);
+
+            root->InsertEndChild(xmlRoad); // into root.
+        }
+    }
+    else
+    {
+
+        /*
+            // loop over letter.sections:
+            const Odr::smaS *smas = &(_letter.sections[5]);
+
+            // Gather the indices for left & right lanes:
+            std::vector<uint> leftUint, rightUint;
+            for (uint j = 0; j < smas->lanes.size(); ++j)
+            {
+                if (smas->lanes[j].odrID < 0)
+                    rightUint.push_back(j);
+                else if (smas->lanes[j].odrID > 0)
+                    leftUint.push_back(j);
+            }
+
+            // Road -> Lanes -> LaneSection -> Left
+            tinyxml2::XMLElement* leftXML = xmlMap.NewElement(Odr::Elem::Left);
+            for (uint j = 0; j < leftUint.size(); ++j)
+            {
+                tinyxml2::XMLElement* lane = xmlMap.NewElement(Odr::Elem::Lane);
+                smas->lanes[leftUint[j]].writeXML(lane, xmlMap);
+                leftXML->InsertEndChild(lane);
+            }
+            if (leftUint.size())
+                laneSection->InsertEndChild(leftXML);
+        */
+        std::cout << "not implemented!" << std::endl;
+    }
+
+    xmlUtils::CheckResult(xmlMap.SaveFile(mapFile.c_str()));
+}
+
+void RNS::linkLanesGeometrically(scalar tol)
+{
+    // 1 - Link two-way sections, we've already run setPortAndStarboard which flips them correctly.
+    for (uint i = 0; i < sectionsSize(); ++i)
+    {
+        if (_sections[i].isOneWay()) continue;
+        for (uint j = i + 1; j < sectionsSize(); ++j)
+        {
+            if (_sections[j].isOneWay()) continue;
+            linkLanesInSectionsOD(_sections[i], _sections[j], tol);
+        }
+    }
+
+    // 2 - Link one-way to two-way sections and flip them
+    for (uint si = 0; si < sectionsSize(); ++si)
+    {
+        for (uint sj = si + 1; sj < sectionsSize(); ++sj)
+        {
+            if (!(( (_sections[si].isOneWay()) && (!_sections[sj].isOneWay()) ) ||
+                 ( (!_sections[si].isOneWay()) && (_sections[sj].isOneWay()) ) ) )
+                continue;
+
+            // From here on, either _section[si] or _sections[sj] is oneWay.
+            for (uint li = 0; li < _sections[si].size(); ++li)
+            {
+                for (uint lj = 0; lj < _sections[sj].size(); ++lj)
+                {
+                    uint linkErr = linkLanesIfInRange(_sections[si][li], _sections[sj][lj]);
+                    if (linkErr != 2)
+                        continue;
+
+                    if (_sections[si].isOneWay())
+                        _sections[si].flipBackwards();
+                    else
+                        _sections[sj].flipBackwards();
+                }
+            }
+        }
+    }
+
+    // 3 - Link one-way to one-way ones
+    for (uint i = 0; i < sectionsSize(); ++i)
+    {
+        if (!_sections[i].isOneWay()) continue;
+        for (uint j = i + 1; j < sectionsSize(); ++j)
+        {
+            if (!_sections[j].isOneWay()) continue;
+            linkLanesInSections(_sections[i], _sections[j], tol);
+        }
+    }
+
+    // And flip the missing one-way sections:
+    flipOneWaySections();
+
+    return;
+}
+
+bool RNS::linkLanesIfInRangeAndOD(lane *li, lane *lj, scalar tol)
+{
+
+    if (mvf::areCloseEnough(li->getDestination(), lj->getOrigin(), tol))
+    {
+        li->setNextLane(lj, true);
+        return true;
+    }
+
+    if (mvf::areCloseEnough(li->getOrigin(), lj->getDestination(), tol))
+    {
+        li->setPrevLane(lj, true);
+        return true;
+    }
+    return false;
+}
+
+uint RNS::linkLanesIfInRange(lane *li, lane *lj, scalar tol)
+{
+    if (linkLanesIfInRangeAndOD(li, lj, tol))
+        return 1;
+
+
+    if (mvf::areCloseEnough(li->getDestination(), lj->getDestination(), tol))
+    {
         lj->setNextLane(li, false);
+        li->setNextLane(lj, false);
+        return 2;
+    }
 
-    if ((mvf::areCloseEnough(lj->getOrigin(), li->getOrigin(), tol)) ||
-            (mvf::areCloseEnough(lj->getOrigin(), li->getDestination(), tol)))
+    if (mvf::areCloseEnough(li->getOrigin(), lj->getOrigin(), tol))
+    {
+        li->setPrevLane(lj, false);
         lj->setPrevLane(li, false);
+        return 2;
+    }
+
+    return 0;
+
 }
 
 void RNS::linkLanesInSections(section &si, section &sj, scalar tol)
@@ -517,6 +990,15 @@ void RNS::linkLanesInSections(section &si, section &sj, scalar tol)
     {
         for (uint j = 0; j < sj.size(); ++j)
             linkLanesIfInRange(si[i], sj[j]);
+    }
+}
+
+void RNS::linkLanesInSectionsOD(section &si, section &sj, scalar tol)
+{
+    for (uint i = 0; i < si.size(); ++i)
+    {
+        for (uint j = 0; j < sj.size(); ++j)
+            linkLanesIfInRangeAndOD(si[i], sj[j]);
     }
 }
 
@@ -539,6 +1021,20 @@ lane* RNS::getLaneWithSUID(int sID, int lID) const
     {
         if (_sections[sndx][i]->getID() == lID)
             return _sections[sndx][i];
+    }
+
+    return nullptr;
+}
+
+const lane* RNS::getCLaneWithODRIds(uint rID, int lID) const
+{
+    for (uint i = 0; i < _sectionsSize; ++i)
+    {
+        if (_sections[i].odrID() != rID) continue;
+        for (uint j = 0; j < _sections[i].size(); ++j)
+        {
+            if (_sections[i][j]->odrID() == lID) return _sections[i][j];
+        }
     }
 
     return nullptr;
@@ -621,18 +1117,28 @@ std::vector<uint> RNS::getSectionIDsWithOVNodeId(int nID) const
     return s;
 }
 
+int RNS::getSectionIDWithODRIDWithRoadCoord(uint rID, scalar s) const
+{
+    for (uint i = 0; i < _sectionsSize; ++i)
+    {
+        if ((_sections[i].odrID() == rID) && (_sections[i].isInOdrRange(s)))
+            return i;
+    }
+    return -1;
+}
+
 
 int RNS::findPortAndStarboardLanes(lane* &port, lane* &starboard, lane *l1, lane *l2, scalar dToEoL1, scalar dToEoL2) const
 {
     port = nullptr;
     if (dToEoL1 > l1->getLength())
     {
-        std::cout << "[ ERROR ] getPortLane cannot be used with a dToEoL larger than the length of " << l1->getSUID() << std::endl;
+        std::cerr << "[ ERROR ] getPortLane cannot be used with a dToEoL larger than the length of " << l1->getSUID() << std::endl;
         return 2;
     }
     else if (dToEoL2 > l2->getLength())
     {
-        std::cout << "[ ERROR ] getPortLane cannot be used with a dToEoL larger than the length of " << l2->getSUID() << std::endl;
+        std::cerr << "[ ERROR ] getPortLane cannot be used with a dToEoL larger than the length of " << l2->getSUID() << std::endl;
         return 3;
     }
     arr2 o1, o2;
@@ -679,7 +1185,7 @@ lane::lCoord RNS::getLaneCoordsForPoint(const arr2 &o, scalar tol) const
     // 1 - Generic algorithm to find the closest lane:
     //   For each section check if o is within its bounding box,
     //   and if it is, check whether o is within any of its lanes bounding boxes.
-    lane::lCoord lcoo = {nullptr, {0, 0}, 1e3};
+    lane::lCoord lcoo = {nullptr, {0, 0}, 0., 1e3};
     for (uint is = 0; is < sectionsSize(); ++is)
     {
         arr2 bli, tri;
@@ -703,6 +1209,7 @@ lane::lCoord RNS::getLaneCoordsForPoint(const arr2 &o, scalar tol) const
                 lcoo.loff = oj;
                 lcoo.l = _sections[is][jl];
                 lcoo.pos = pj;
+                lcoo.s = lcoo.l->unsafeDistanceFromTheBoL(pj);
             }
         }
     }
@@ -710,8 +1217,28 @@ lane::lCoord RNS::getLaneCoordsForPoint(const arr2 &o, scalar tol) const
     return lcoo;
 }
 
+arr2 RNS::getPosForLaneCoords(const lane::lCoord &lc) const
+{
+    arr2 p;
+    lc.l->getPointWithOffset(p, lc.pos, lc.loff);
+    return p;
+}
 
-lane* RNS::getLaneWithPoint(const arr2 &p, scalar tol) const
+
+arr2 RNS::getPosForRoadCoords(uint rID, scalar s, scalar offset, scalar height) const
+{
+    arr2 p = {0., 0.};
+    int sID = getSectionIDWithODRIDWithRoadCoord(rID, s);
+    if (sID == -1)
+        return p;
+    _sections[sID].zero()->getPointWithOffset(p, s, offset);
+    return p;
+
+
+}
+
+
+const lane* RNS::getLaneWithPoint(const arr2 &p, scalar tol) const
 {
     lane::lCoord lcoo = getLaneCoordsForPoint(p, tol);
     if (lcoo.loff < tol) return lcoo.l;
@@ -837,7 +1364,7 @@ void RNS::getDimensions(scalar &minX, scalar &minY, scalar &maxX, scalar &maxY) 
         {
             if (!_sections[i][j]->getBoundingBox(bli, tri))
             {
-                std::cout << "[ ERROR ] lrn could not get the bounding box for lane "
+                std::cerr << "[ ERROR ] lrn could not get the bounding box for lane "
                           << _sections[i][j]->getSUID() << std::endl;
             }
             mvf::increaseBoxWithBox(blc, trc, bli, tri);
@@ -921,14 +1448,17 @@ bool RNS::makePrioritiesSameEndingDifferentSectionLanes(scalar anticipationTime)
                     }
                     else
                     {
-                        std::cout << "nonsense!" << std::endl;
+                        std::cerr << "nonsense!" << std::endl;
                         return false; // continue;
                     }
 
                     // create a conflict and assign it to the lower priority lane:
                     conflict lpCnf = conflict::createEoLConflict(lpLane, hpLane, anticipationTime);
-                    for (uint pk = 0; pk < lpCnf.hpLane.size(); ++pk)
-                        std::cout << "lane: " << lpCnf.hpLane[pk]->getSUID() << " has priority over " << lpLane->getSUID() << std::endl;
+                    if (verbose())
+                    {
+                        for (uint pk = 0; pk < lpCnf.hpLane.size(); ++pk)
+                            std::cout << "lane: " << lpCnf.hpLane[pk]->getSUID() << " has priority over " << lpLane->getSUID() << std::endl;
+                    }
                     lpLane->addConflict(lpCnf);
 
                     //   and inform the higher priority lane:
@@ -964,13 +1494,13 @@ void RNS::makePrioritiesSameSectionMergeLanes()
             if (!_sections[i][li]->hasNextLane())
             {
                 // Preferably, merge towards the starboard (on a leftHand scenario);
-                if ((_drivingSide == concepts::drivingSide::leftHand) && ((_sections[i][li]->getStarboardLane()) && (_sections[i][li]->getStarboardLane()->hasNextLane())) )
+                if ((_drivingSide == concepts::drivingSide::leftHand) && ((_sections[i][li]->getStarboardLaneSD()) && (_sections[i][li]->getStarboardLaneSD()->hasNextLane())) )
                     _sections[i][li]->addConflict(conflict::createMergeConflict(_sections[i][li], mvf::side::starboard));
 
-                else if ((_sections[i][li]->getPortLane()) && (_sections[i][li]->getPortLane()->hasNextLane()))
+                else if ((_sections[i][li]->getPortLaneSD()) && (_sections[i][li]->getPortLaneSD()->hasNextLane()))
                     _sections[i][li]->addConflict(conflict::createMergeConflict(_sections[i][li], mvf::side::port));
 
-                else if ((_drivingSide == concepts::drivingSide::rightHand) && ((_sections[i][li]->getStarboardLane()) && (_sections[i][li]->getStarboardLane()->hasNextLane())) )
+                else if ((_drivingSide == concepts::drivingSide::rightHand) && ((_sections[i][li]->getStarboardLaneSD()) && (_sections[i][li]->getStarboardLaneSD()->hasNextLane())) )
                     _sections[i][li]->addConflict(conflict::createMergeConflict(_sections[i][li], mvf::side::starboard));
 
 
@@ -986,22 +1516,24 @@ void RNS::makePrioritiesSameSectionMergeLanes()
                 if (!mvf::areCloseEnough( _sections[i][li]->getDestination(), _sections[i][lj]->getDestination(), lane::odrTol ) )
                     continue;
 
-                if ( ((_drivingSide == concepts::drivingSide::rightHand) && (_sections[i][li]->getPortLane() == _sections[i][lj])) ||
-                     ((_drivingSide == concepts::drivingSide::leftHand) && (_sections[i][li]->getStarboardLane() == _sections[i][lj])) )
+                if ( ((_drivingSide == concepts::drivingSide::rightHand) && (_sections[i][li]->getPortLaneSD() == _sections[i][lj])) ||
+                     ((_drivingSide == concepts::drivingSide::leftHand) && (_sections[i][li]->getStarboardLaneSD() == _sections[i][lj])) )
                 {
-                    std::cout << "[ lrn ] assigning merge to " << _sections[i][li]->getSUID()
-                              << " giving higher priority to " << _sections[i][lj]->getSUID() << std::endl;
                     _sections[i][li]->addConflict(conflict::createMergeConflict(_sections[i][li], mvf::side::port));
                     // _sections[i][lj]->setStopMargin(calcStopMargin(_sections[i][lj], _sections[i][li]));
+                    if (verbose())
+                        std::cout << "[ lrn ] assigning merge to " << _sections[i][li]->getSUID()
+                                  << " giving higher priority to " << _sections[i][lj]->getSUID() << std::endl;
                 }
 
-                else if ( ((_drivingSide == concepts::drivingSide::rightHand) && (_sections[i][li]->getStarboardLane() == _sections[i][lj])) ||
-                          ((_drivingSide == concepts::drivingSide::leftHand) && (_sections[i][li]->getPortLane() == _sections[i][lj])) )
+                else if ( ((_drivingSide == concepts::drivingSide::rightHand) && (_sections[i][li]->getStarboardLaneSD() == _sections[i][lj])) ||
+                          ((_drivingSide == concepts::drivingSide::leftHand) && (_sections[i][li]->getPortLaneSD() == _sections[i][lj])) )
                 {
-                    std::cout << "[ lrn ] assigning merge to " << _sections[i][lj]->getSUID()
-                              << " giving higher priority to " << _sections[i][li]->getSUID() << std::endl;
                     _sections[i][li]->addConflict(conflict::createMergeConflict(_sections[i][li], mvf::side::starboard));
                     // _sections[i][li]->setStopMargin(calcStopMargin(_sections[i][li], _sections[i][lj]));
+                    if (verbose())
+                        std::cout << "[ lrn ] assigning merge to " << _sections[i][lj]->getSUID()
+                                  << " giving higher priority to " << _sections[i][li]->getSUID() << std::endl;
                 }
 
                 else std::cerr << "[ ERROR ] lanes: " << _sections[i][li]->getSUID() << " and " << _sections[i][lj]->getSUID()
@@ -1070,32 +1602,35 @@ void RNS::makePrioritiesDifferentEndingDifferentSectionCrossingLanes(scalar anti
                     if (v.size() == 0) continue;
 
                     // Print out the intersections:
-                    std::cout << "lanes: " << _sections[i][li]->getCSUID() << ", and " << _sections[j][lj]->getCSUID()
-                              << " intersect in " << v.size() << " point";
-                    if (v.size() > 1) std::cout << "s; these are: ";
-                    else std::cout << ", in: ";
-                    std::cout << "(" << v[0][0] << ", " << v[0][1] << ")";
-                    for (uint vk = 1; vk < v.size(); ++vk)
+                    if (verbose())
                     {
-                        std::cout << ", (" << v[vk][0] << ", " << v[vk][1] << ")";
+                        std::cout << "lanes: " << _sections[i][li]->getCSUID() << ", and " << _sections[j][lj]->getCSUID()
+                                  << " intersect in " << v.size() << " point";
+                        if (v.size() > 1) std::cout << "s; these are: ";
+                        else std::cout << ", in: ";
+                        std::cout << "(" << v[0][0] << ", " << v[0][1] << ")";
+                        for (uint vk = 1; vk < v.size(); ++vk)
+                        {
+                            std::cout << ", (" << v[vk][0] << ", " << v[vk][1] << ")";
+                        }
+                        std::cout << " where the curvature of " << _sections[i][li]->getCSUID() << " and "
+                                  << _sections[j][lj]->getCSUID() << " is: " << _sections[i][li]->getCurvature(v[0])
+                                << " and " << _sections[j][lj]->getCurvature(v[0]);
+                        for (uint vk = 1; vk < v.size(); ++vk)
+                        {
+                            std::cout << ", " << _sections[i][li]->getCurvature(v[vk])
+                                      << " and " << _sections[j][lj]->getCurvature(v[vk]);
+                        }
+                        std::cout << " and where the angle they form is " <<
+                                     mvf::subtendedAngle(_sections[i][li]->getTangentInPoint(v[0]),
+                                _sections[j][lj]->getTangentInPoint(v[0])) * ct::rad2deg;
+                        for (uint vk = 1; vk < v.size(); ++vk)
+                        {
+                            std::cout << ", " << mvf::subtendedAngle(_sections[i][li]->getTangentInPoint(v[vk]),
+                                                                     _sections[j][lj]->getTangentInPoint(v[vk])) * ct::rad2deg;
+                        }
+                        std::cout << " degrees" << std::endl;
                     }
-                    std::cout << " where the curvature of " << _sections[i][li]->getCSUID() << " and "
-                              << _sections[j][lj]->getCSUID() << " is: " << _sections[i][li]->getCurvature(v[0])
-                              << " and " << _sections[j][lj]->getCurvature(v[0]);
-                    for (uint vk = 1; vk < v.size(); ++vk)
-                    {
-                              std::cout << ", " << _sections[i][li]->getCurvature(v[vk])
-                              << " and " << _sections[j][lj]->getCurvature(v[vk]);
-                    }
-                    std::cout << " and where the angle they form is " <<
-                                 mvf::subtendedAngle(_sections[i][li]->getTangentInPoint(v[0]),
-                                                     _sections[j][lj]->getTangentInPoint(v[0])) * ct::rad2deg;
-                    for (uint vk = 1; vk < v.size(); ++vk)
-                    {
-                        std::cout << ", " << mvf::subtendedAngle(_sections[i][li]->getTangentInPoint(v[vk]),
-                                                                 _sections[j][lj]->getTangentInPoint(v[vk])) * ct::rad2deg;
-                    }
-                    std::cout << " degrees" << std::endl;
 
 
                     // And store them, so they're shown later by the graphicalLRN:
@@ -1113,7 +1648,8 @@ void RNS::makePrioritiesDifferentEndingDifferentSectionCrossingLanes(scalar anti
                         lane *portLane, *starboardLane;
                         if (findPortAndStarboardLanes(portLane, starboardLane, _sections[i][li], _sections[j][lj], dToEoLi, dToEoLj) > 0)
                         {
-                            std::cerr << "[ Error ] unable to find out which one is port between: " <<
+                            if (verbose())
+                                std::cerr << "[ Warning ] unable to find out which one is port between: " <<
                                          _sections[i][li]->getCSUID() << " and " << _sections[j][lj]->getCSUID() <<
                                          " at the intersection point (" << v[ck][0] << ", " << v[ck][1] << ")" << std::endl;
                             continue;
@@ -1131,7 +1667,7 @@ void RNS::makePrioritiesDifferentEndingDifferentSectionCrossingLanes(scalar anti
                         }
                         else
                         {
-                            std::cout << "nonsense!" << std::endl;
+                            std::cerr << "nonsense!" << std::endl;
                             continue;
                         }
 
@@ -1150,8 +1686,9 @@ void RNS::makePrioritiesDifferentEndingDifferentSectionCrossingLanes(scalar anti
                         }
 
 
-                        std::cout << " Lane " << lpLane->getSUID() << " has lower priority than " << hpLane->getSUID() <<
-                                         " at the intersection point (" << v[ck][0] << ", " << v[ck][1] << ")" << std::endl;
+                        if (verbose())
+                            std::cout << " Lane " << lpLane->getSUID() << " has lower priority than " << hpLane->getSUID()
+                                      << " at the intersection point (" << v[ck][0] << ", " << v[ck][1] << ")" << std::endl;
 
 
                         // Add the conflict to the low priority lane:
@@ -1223,7 +1760,7 @@ void RNS::crosslinkConflict(lane *l, scalar cSCoord, conflict::cuid cuid)
     int idx = l->getConflictIdx(cSCoord);
     if (idx < 0)
     {
-        std::cout << "unable to find a conflict in lane " << l->getSUID() << " at length " << cSCoord << std::endl;
+        std::cerr << "unable to find a conflict in lane " << l->getSUID() << " at length " << cSCoord << std::endl;
         return;
     }
     return crosslinkConflict(l, static_cast<uint>(idx), cuid);
@@ -1242,10 +1779,13 @@ bool RNS::swapConflictPriority(lane *l, uint ci)
         uint uck = static_cast<uint>(ick);
         l->setConflictKind(ci, cnf.hpLane[lj]->getConflictKind(uck));
         getLane(cnf.hpLane[lj])->setConflictKind(uck, ko);
-        std::cout << "swapped priorities and now: " << l->getSUID() << ":"
-                  << conflict::kindString(l->getConflictKind(ci))
-                  << " and " << cnf.hpLane[lj]->getSUID()
-                  << ":" << conflict::kindString(cnf.hpLane[lj]->getConflictKind(uck)) << std::endl;
+        if (verbose())
+        {
+            std::cout << "swapped priorities and now: " << l->getSUID() << ":"
+                      << conflict::kindString(l->getConflictKind(ci))
+                      << " and " << cnf.hpLane[lj]->getSUID()
+                      << ":" << conflict::kindString(cnf.hpLane[lj]->getConflictKind(uck)) << std::endl;
+        }
         swapped = true;
     }
     return swapped;

@@ -1,4 +1,4 @@
-// 
+﻿// 
 //  This file is part of the ODRoNeS (OpenDRIVE Road Network System) package.
 //  
 //  Copyright (c) 2023 Albert Solernou, University of Leeds.
@@ -20,10 +20,15 @@
 //  to publications you cite the package and its related publications. 
 //
 
+#include <sstream>
 #include "lane.h"
+#include "xmlUtils.h"
 // DEBUG //
 #include <fstream>
 #include <boost/format.hpp>
+#include <tinyxml2.h>
+
+using namespace odrones;
 
 // Static methods:
 std::string lane::tSignInfoString(tSignInfo s)
@@ -97,6 +102,7 @@ lane::lane(const std::vector<arr2> &bzrp, mvf::shape s, scalar width,
 void lane::base()
 {
     _width = 3;
+    _constantWidth = true;
     _speed = 30 * ct::mphToMs;
     _isPermanent = true;
 
@@ -112,6 +118,7 @@ void lane::base()
     _prevLaneSize = 0;
     _portLane = nullptr;
     _starboardLane = nullptr;
+    _odrZero = nullptr;
     _length = 0;
 
     _shape = mvf::shape::unknown;
@@ -241,18 +248,24 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
                const std::vector<Odr::offset> &width, const Odr::smaL &odrL, scalar endingS)
 {
     _odrID = odrL.odrID;
-    _length = odrL.length; ///< that's a good estimate, but it's not the real length of the lane; just the length of the section at tis centre.
 
-    lane::sign s = lane::sign::o;
-    if (odrL.sign == -1) s = lane::sign::n;
-    else if (odrL.sign == 1) s = lane::sign::p;
+    _sign = lane::sign::o;
+    if (odrL.sign == -1) _sign = lane::sign::n;
+    else if (odrL.sign == 1) _sign = lane::sign::p;
 
-    initialise(width[0].a, odrL.speed, mvf::shape::opendrive, s);
+    if (!width.empty())
+        _width = width[0].a;
+    else                // if a lane has width zero, it will be width will be empty here.
+        _width = 0;
+    _isPermanent = true;
+    _shape = mvf::shape::opendrive;
 
-    if (odrL.kind.compare(Odr::Kind::Driving) == 0)
+    if (isOdrTransitable(odrL.kind.c_str()))
         _kind = kind::tarmac;
-    else if (odrL.kind.compare(Odr::Kind::Sidewalk) == 0)
+    else if ((odrL.kind.compare(Odr::Kind::Sidewalk) == 0) || (odrL.kind.compare(Odr::Kind::Walking) == 0))
         _kind = kind::pavement;
+    else if (odrL.kind.compare(Odr::Kind::None) == 0)
+        _kind = kind::none;
     else
         _kind = kind::unknown;
 
@@ -261,6 +274,7 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
     _odrWidth = width;
 
     bool geomPrint = false;
+    _constantWidth = true;
 
     _length = 0;
     scalar so = odrL.startingS;
@@ -285,13 +299,15 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
         if ((off.size() == 1) && (off[0].isConstant()))
         {
             if (odrg[i].g == Odr::Attr::Geometry::line)
-                _geom.push_back(new straight(odrg[i], getSignInt(), off[0].a, soi, sei));
+                _geom.push_back(new straight(odrg[i], getSignInt(), off[0].a, soi, sei, roadSoi));
             else if (odrg[i].g == Odr::Attr::Geometry::arc)
-                _geom.push_back(new arc(odrg[i], getSignInt(), off[0].a, soi, sei));
+                _geom.push_back(new arc(odrg[i], getSignInt(), off[0].a, soi, sei, roadSoi));
             else if (odrg[i].g == Odr::Attr::Geometry::paramPoly3)
-                _geom.push_back(new paramPoly3(odrg[i], getSignInt(), off[0].a, soi, sei));
+                _geom.push_back(new paramPoly3(odrg[i], getSignInt(), off[0].a, soi, sei, roadSoi));
             else if (odrg[i].g == Odr::Attr::Geometry::spiral)
                 _geom.push_back(new vwSpiral(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
+            else if (odrg[0].g == Odr::Attr::Geometry::bezier3)
+                _geom.push_back(new vwBezier3(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
             else
             {
                 std::cerr << "[ Lane ] Unsupported shape! The code will crash quickly after this." << std::endl;
@@ -300,6 +316,7 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
         }
         else
         {
+            _constantWidth = false;
             if (odrg[i].g == Odr::Attr::Geometry::line)
                 _geom.push_back(new vwStraight(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
             else if (odrg[i].g == Odr::Attr::Geometry::arc)
@@ -308,6 +325,8 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
                 _geom.push_back(new vwParamPoly3(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
             else if (odrg[i].g == Odr::Attr::Geometry::spiral)
                 _geom.push_back(new vwSpiral(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
+            else if (odrg[0].g == Odr::Attr::Geometry::bezier3)
+                _geom.push_back(new vwBezier3(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
             else
             {
                 std::cerr << "[ Lane ] Unsupported shape! The code will crash quickly after this." << std::endl;
@@ -326,15 +345,7 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
             break;
     }
 
-    scalar ds = numerical::defaultDs(_length);
-    uint size = 1 + static_cast<uint>(std::round(_length / ds));
-    numerical::initialise(ds, size);
-    if (numerical::setup())
-    {
-        std::cout << "[ Error ] on " << getCSUID() << " in configuring numerical for the top class" << std::endl;
-    }
-
-    scalar maxSo = _geom.back()->sl0(_length);
+    scalar maxSo = _geom.back()->sl0(_geom.back()->length());
     for (uint i = 0; i < _odrWidth.size(); ++i)
     {
         if ((_odrWidth[i].lr == Odr::offset::LR::RL) &&
@@ -345,106 +356,118 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
     calcBoundingBox();
 
 
-    if (geomPrint)
+    for (uint i = 0; i < odrL.speed.size(); ++i)
     {
-        std::cout << "lane " << getCSUID()
-                  << " origin: (" << getOrigin()[0] << ", " << getOrigin()[1] << ")"
-                  << " _dest: (" << getDestination()[0] << ", " << getDestination()[1] << ")"
-                  << std::endl;
-
-        std::ofstream f;
-        std::string basename = getCSUID();
-#if _WINDOWS
-        std::replace(basename.begin(), basename.end(), ':', ';'); // we cannot have a filename with colons on Windows...
-#endif
-
-        f.open(basename);
-        for (uint i = 0; i < _pointsSize; ++i)
-        {
-            f << boost::format("%10d %12.3f %12.3f") %
-                 i % _pointsX[i] % _pointsY[i] << std::endl;
-        }
-        f.close();
-
-        f.open(basename + ".box");
-        f << boost::format("%12.3f %12.3f") %
-             _bbblc[0] % _bbblc[1] << std::endl;
-        f << boost::format("%12.3f %12.3f") %
-             _bbblc[0] % _bbtrc[1] << std::endl;
-        f << boost::format("%12.3f %12.3f") %
-             _bbtrc[0] % _bbtrc[1] << std::endl;
-        f << boost::format("%12.3f %12.3f") %
-             _bbtrc[0] % _bbblc[1] << std::endl;
-        f << boost::format("%12.3f %12.3f") %
-             _bbblc[0] % _bbblc[1] << std::endl;
-        f.close();
-
-
-        f.open(basename + ".geom");
-        for (uint i = 0; i < _geom.size(); ++i)
-        {
-            f << boost::format("%12.3f %12.3f") %
-                 _geom[i]->origin()[0] % _geom[i]->origin()[1] << std::endl;
-            f << boost::format("%12.3f %12.3f") %
-                 _geom[i]->dest()[0] % _geom[i]->dest()[1] << std::endl;
-        }
-        f.close();
-
-        f.open(basename + ".geom.boxes");
-        for (uint i = 0; i < _geom.size(); ++i)
-        {
-            f << "#" << mvf::shapeString( _geom[i]->shape() ) << std::endl;
-            f << boost::format("%12.3f %12.3f") %
-                 _geom[i]->blc()[0] % _geom[i]->blc()[1] << std::endl;
-            f << boost::format("%12.3f %12.3f") %
-                 _geom[i]->blc()[0] % _geom[i]->trc()[1] << std::endl;
-            f << boost::format("%12.3f %12.3f") %
-                 _geom[i]->trc()[0] % _geom[i]->trc()[1] << std::endl;
-            f << boost::format("%12.3f %12.3f") %
-                 _geom[i]->trc()[0] % _geom[i]->blc()[1] << std::endl;
-            f << boost::format("%12.3f %12.3f") %
-                 _geom[i]->blc()[0] % _geom[i]->blc()[1] << std::endl;
-            f << std::endl << std::endl;
-        }
-        f.close();
-
-        f.open(basename + ".geom.numerical");
-        std::ofstream ff;
-        ff.open(basename + ".geom.S");
-        for (uint i = 0; i < _geom.size(); ++i)
-        {
-            if (!_geom[i]->isNumerical()) continue;
-            f << "#" << mvf::shapeString( _geom[i]->shape() ) << std::endl;
-            std::vector<arr2> p;
-            std::vector<scalar> s;
-            if ((_geom[i]->shape() == mvf::shape::vwStraight) ||
-                (_geom[i]->shape() == mvf::shape::vwArc) ||
-                (_geom[i]->shape() == mvf::shape::vwParamPoly3) ||
-                (_geom[i]->shape() == mvf::shape::vwSpiral))
-
-            {
-                p = static_cast<vwNumerical*>(_geom[i])->points();
-                s = static_cast<vwNumerical*>(_geom[i])->S();
-            }
-            else if (_geom[i]->shape() == mvf::shape::paramPoly3)
-            {
-                p = static_cast<paramPoly3*>(_geom[i])->points();
-                s = static_cast<paramPoly3*>(_geom[i])->S();
-            }
-
-            for (uint j = 0; j < p.size(); ++j)
-                f << boost::format("%12.3f %12.3f") %
-                     p[j][0] % p[j][1] << std::endl;
-
-            for (uint j = 0; j < s.size(); ++j)
-                ff << boost::format("%12.3f") % s[j] << std::endl;
-        }
-        f.close();
-        ff.close();
+        if (mvf::areSameValues(odrL.speed[i].value, 0.)) continue;
+        _odrSpeed.push_back(odrL.speed[i]);
+        _odrSpeed.back().s = sli(odrL.speed[i].s);
     }
+
+
+    if (geomPrint)
+        writeDown();
 
     return;
 
+}
+
+
+void lane::writeDown()
+{
+    std::cout << "lane " << getCSUID()
+              << " origin: (" << getOrigin()[0] << ", " << getOrigin()[1] << ")"
+              << " _dest: (" << getDestination()[0] << ", " << getDestination()[1] << ")"
+              << std::endl;
+
+    std::ofstream f;
+    std::string basename = getCSUID();
+#if _WINDOWS
+    std::replace(basename.begin(), basename.end(), ':', ';'); // we cannot have a filename with colons on Windows...
+#endif
+
+    f.open(basename);
+    for (uint i = 0; i < _pointsSize; ++i)
+    {
+        f << boost::format("%10d %12.3f %12.3f") %
+                 i % _pointsX[i] % _pointsY[i] << std::endl;
+    }
+    f.close();
+
+    f.open(basename + ".box");
+    f << boost::format("%12.3f %12.3f") %
+             _bbblc[0] % _bbblc[1] << std::endl;
+    f << boost::format("%12.3f %12.3f") %
+             _bbblc[0] % _bbtrc[1] << std::endl;
+    f << boost::format("%12.3f %12.3f") %
+             _bbtrc[0] % _bbtrc[1] << std::endl;
+    f << boost::format("%12.3f %12.3f") %
+             _bbtrc[0] % _bbblc[1] << std::endl;
+    f << boost::format("%12.3f %12.3f") %
+             _bbblc[0] % _bbblc[1] << std::endl;
+    f.close();
+
+
+    f.open(basename + ".geom");
+    for (uint i = 0; i < _geom.size(); ++i)
+    {
+        f << boost::format("%12.3f %12.3f") %
+                 _geom[i]->origin()[0] % _geom[i]->origin()[1] << std::endl;
+        f << boost::format("%12.3f %12.3f") %
+                 _geom[i]->dest()[0] % _geom[i]->dest()[1] << std::endl;
+    }
+    f.close();
+
+    f.open(basename + ".geom.boxes");
+    for (uint i = 0; i < _geom.size(); ++i)
+    {
+        f << "#" << mvf::shapeString( _geom[i]->shape() ) << std::endl;
+        f << boost::format("%12.3f %12.3f") %
+                 _geom[i]->blc()[0] % _geom[i]->blc()[1] << std::endl;
+        f << boost::format("%12.3f %12.3f") %
+                 _geom[i]->blc()[0] % _geom[i]->trc()[1] << std::endl;
+        f << boost::format("%12.3f %12.3f") %
+                 _geom[i]->trc()[0] % _geom[i]->trc()[1] << std::endl;
+        f << boost::format("%12.3f %12.3f") %
+                 _geom[i]->trc()[0] % _geom[i]->blc()[1] << std::endl;
+        f << boost::format("%12.3f %12.3f") %
+                 _geom[i]->blc()[0] % _geom[i]->blc()[1] << std::endl;
+        f << std::endl << std::endl;
+    }
+    f.close();
+
+    f.open(basename + ".geom.numerical");
+    std::ofstream ff;
+    ff.open(basename + ".geom.S");
+    for (uint i = 0; i < _geom.size(); ++i)
+    {
+        if (!_geom[i]->isNumerical()) continue;
+        f << "#" << mvf::shapeString( _geom[i]->shape() ) << std::endl;
+        std::vector<arr2> p;
+        std::vector<scalar> s;
+        if ((_geom[i]->shape() == mvf::shape::vwStraight) ||
+            (_geom[i]->shape() == mvf::shape::vwArc) ||
+            (_geom[i]->shape() == mvf::shape::vwParamPoly3) ||
+            (_geom[i]->shape() == mvf::shape::vwSpiral))
+
+        {
+            p = static_cast<vwNumerical*>(_geom[i])->points();
+            s = static_cast<vwNumerical*>(_geom[i])->S();
+        }
+        else if (_geom[i]->shape() == mvf::shape::paramPoly3)
+        {
+            p = static_cast<paramPoly3*>(_geom[i])->points();
+            s = static_cast<paramPoly3*>(_geom[i])->S();
+        }
+
+        for (uint j = 0; j < p.size(); ++j)
+            f << boost::format("%12.3f %12.3f") %
+                     p[j][0] % p[j][1] << std::endl;
+
+        for (uint j = 0; j < s.size(); ++j)
+            ff << boost::format("%12.3f") % s[j] << std::endl;
+    }
+    f.close();
+    ff.close();
 }
 
 void lane::set(const OneVersion::smaS &sec, uint index)
@@ -490,14 +513,6 @@ void lane::set(const OneVersion::smaS &sec, uint index)
         _length += _geom.back()->length();
     }
 
-    scalar ds = numerical::defaultDs(_length);
-    uint size = 1 + static_cast<uint>(std::round(_length / ds));
-    numerical::initialise(ds, size);
-    if (numerical::setup())
-    {
-        std::cout << "[ Error ] on " << getCSUID() << " in configuring numerical for the top class" << std::endl;
-    }
-
     calcBoundingBox();
 
 
@@ -521,12 +536,172 @@ bool lane::isOdrShapeSupported(mvf::shape s) const
         return true;
     case mvf::shape::paramPoly3:
         return true;
+    case mvf::shape::vwSpiral:
+        return true;
+    case mvf::shape::vwBezier3:
+        return true;
     default:
         return false;
     }
 }
 
 
+bool lane::xmlPlanView(tinyxml2::XMLElement *planView, tinyxml2::XMLDocument &doc) const
+{
+    if (_odrID != 0) return false;
+
+    // We're in Lane Zero from here on:
+    for (uint i = 0; i < _geom.size(); ++i)
+    {
+        tinyxml2::XMLElement *geometry = doc.NewElement(Odr::Elem::Geometry);
+        if (!geometry)
+        {
+            std::cerr << "[ Error ] Lane::xmlPlanView unable to create geometry element" << std::endl;
+            return false;
+        }
+        xmlUtils::setAttrDouble(geometry, Odr::Attr::S, _geom[i]->roadSo());
+        xmlUtils::setAttrDouble(geometry, Odr::Attr::X, _geom[i]->o()[0]);
+        xmlUtils::setAttrDouble(geometry, Odr::Attr::Y,  _geom[i]->o()[1]);
+        xmlUtils::setAttrDouble(geometry, Odr::Attr::Hdg,
+                                std::atan2(_geom[i]->to()[1], _geom[i]->to()[0]));
+        xmlUtils::setAttrDouble(geometry, Odr::Attr::Length,
+                               _geom[i]->roadSe() - _geom[i]->roadSo());
+        if (_geom[i]->shape() == mvf::shape::straight)
+        {
+            tinyxml2::XMLElement *xmlLine = doc.NewElement(Odr::Elem::Line);
+            geometry->InsertEndChild(xmlLine);
+        }
+        else if (_geom[i]->isArc())
+        {
+            tinyxml2::XMLElement *xmlArc = doc.NewElement(Odr::Elem::Arc);
+            xmlUtils::setAttrDouble(xmlArc, Odr::Attr::Curvature,
+                              (1. / static_cast<arc*>(_geom[i])->radiusOfCurvature()));
+            geometry->InsertEndChild(xmlArc);
+        }
+        else if (_geom[i]->shape() == mvf::shape::paramPoly3)
+        {
+            tinyxml2::XMLElement *xmlPP3 = doc.NewElement(Odr::Elem::ParamPoly3);
+            xmlUtils::setAttrDouble(xmlPP3, Odr::Attr::aU,
+                                 (static_cast<paramPoly3*>(_geom[i])->u(0)));
+            xmlUtils::setAttrDouble(xmlPP3,Odr::Attr::bU,
+                                 (static_cast<paramPoly3*>(_geom[i])->u(1)));
+            xmlUtils::setAttrDouble(xmlPP3, Odr::Attr::cU,
+                                 (static_cast<paramPoly3*>(_geom[i])->u(2)));
+            xmlUtils::setAttrDouble(xmlPP3, Odr::Attr::dU,
+                                 (static_cast<paramPoly3*>(_geom[i])->u(3)));
+
+            xmlUtils::setAttrDouble(xmlPP3, Odr::Attr::aV,
+                                 (static_cast<paramPoly3*>(_geom[i])->v(0)));
+            xmlUtils::setAttrDouble(xmlPP3,Odr::Attr::bV,
+                                 (static_cast<paramPoly3*>(_geom[i])->v(1)));
+            xmlUtils::setAttrDouble(xmlPP3, Odr::Attr::cV,
+                                 (static_cast<paramPoly3*>(_geom[i])->v(2)));
+            xmlUtils::setAttrDouble(xmlPP3, Odr::Attr::dV,
+                                 (static_cast<paramPoly3*>(_geom[i])->v(3)));
+
+            if (static_cast<paramPoly3*>(_geom[i])->normalised())
+                xmlPP3->SetAttribute(Odr::Attr::pRange, Odr::Kind::normalized);
+            else
+                xmlPP3->SetAttribute(Odr::Attr::pRange, Odr::Kind::arcLength);
+
+            geometry->InsertEndChild(xmlPP3);
+        }
+        else if (_geom[i]->shape() == mvf::shape::vwSpiral)
+        {
+            tinyxml2::XMLElement *xmlSpiral = doc.NewElement(Odr::Elem::Spiral);
+            xmlUtils::setAttrDouble(xmlSpiral, Odr::Attr::CurvStart,
+                                 (static_cast<vwSpiral*>(_geom[i])->l0CurvStart()));
+            xmlUtils::setAttrDouble(xmlSpiral, Odr::Attr::CurvEnd,
+                                 (static_cast<vwSpiral*>(_geom[i])->l0CurvEnd()));
+            geometry->InsertEndChild(xmlSpiral);
+        }
+        else if (_geom[i]->shape() == mvf::shape::vwBezier3)
+        {
+            tinyxml2::XMLElement *xmlBezier = doc.NewElement(Odr::Elem::Bezier3);
+
+            xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz0x,
+                                    (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(0)[0] ));
+            xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz0y,
+                                    (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(0)[1] ));
+            xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz1x,
+                                    (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(1)[0] ));
+            xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz1y,
+                                    (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(1)[1] ));
+            xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz2x,
+                                    (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(2)[0] ));
+            xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz2y,
+                                    (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(2)[1] ));
+            xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz3x,
+                                    (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(3)[0] ));
+            xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz3y,
+                                    (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(3)[1] ));
+
+
+            geometry->InsertEndChild(xmlBezier);
+        }
+        /* That should never happen because this is lane 0, that is constant and zero width.
+        else if (_geom[i]->shape() == mvf::shape::vwArc)
+        {
+            tinyxml2::XMLElement *xmlArc = doc.NewElement(Odr::Elem::Arc);
+            xmlArc->SetAttribute(Odr::Attr::Curvature,
+                              (boost::format(".17g") % (1. / static_cast<vwArc*>(_geom[i])->baseCurvature())).str().c_str());
+            geometry->InsertEndChild(xmlArc);
+        }
+        */ // Thus:
+        else
+            return false;
+
+        planView->InsertEndChild(geometry);
+    }
+
+    return true;
+}
+
+
+bool lane::xmlLaneAttributesAndLinks(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc, const std::string &type) const
+{
+    if (!elem) return false;
+
+    elem->SetAttribute(Odr::Attr::Id, _odrID);
+    elem->SetAttribute(Odr::Attr::Type, type.c_str());
+    elem->SetAttribute(Odr::Attr::Level, Odr::Kind::False);
+
+    tinyxml2::XMLElement* link = doc.NewElement(Odr::Elem::Link);
+    if (!link) return false;
+    if (_nextLaneSize)
+    {
+        tinyxml2::XMLElement *successor = doc.NewElement(Odr::Elem::Successor);
+        if (!successor) return false;
+        successor->SetAttribute(Odr::Attr::Id, _nextLane[0]->odrID());
+        link->InsertEndChild(successor);
+    }
+    if (_prevLaneSize)
+    {
+        tinyxml2::XMLElement *predecessor = doc.NewElement(Odr::Elem::Predecessor);
+        if (!predecessor) return false;
+        predecessor->SetAttribute(Odr::Attr::Id, _prevLane[0]->odrID());
+        link->InsertEndChild(predecessor);
+    }
+    elem->InsertEndChild(link);
+
+    return true;
+}
+
+
+bool lane::xmlLaneAttributesAndLinks(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const
+{
+    if (!elem) return false;
+
+    std::string laneType;
+    if (_kind == kind::tarmac)
+        laneType = Odr::Kind::Driving;
+    else if (_kind == kind::pavement)
+        laneType = Odr::Kind::Walking;
+    else
+        laneType = "none";
+
+    return xmlLaneAttributesAndLinks(elem, doc, laneType);
+}
 
 bool lane::flipBackwards()
 {
@@ -631,11 +806,18 @@ void lane::setBezierLines(const std::vector<bezier2> &bzr)
     }
 
     calcBoundingBox();
+}
+
+void lane::numericalSetup()
+{
 
     scalar ds = numerical::defaultDs(_length);
     uint size = 1 + static_cast<uint>(std::round(_length / ds));
+    numerical::clearMemory();
     numerical::initialise(ds, size);
-    numerical::setup();
+    if (numerical::setup())
+        std::cout << "[ Error ] on " << getCSUID() << " in configuring numerical for the top class" << std::endl;
+
 }
 
 void lane::setBezierLines(const std::vector<bezier3> &bzr)
@@ -656,10 +838,6 @@ void lane::setBezierLines(const std::vector<bezier3> &bzr)
 
     calcBoundingBox();
 
-    scalar ds = numerical::defaultDs(_length);
-    uint size = 1 + static_cast<uint>(std::round(_length / ds));
-    numerical::initialise(ds, size);
-    numerical::setup();
 }
 
 void lane::appendBezierLines(const std::vector<bezier2> &bzr)
@@ -671,12 +849,6 @@ void lane::appendBezierLines(const std::vector<bezier2> &bzr)
     }
 
     calcBoundingBox();
-
-    scalar ds = numerical::defaultDs(_length);
-    uint size = 1 + static_cast<uint>(std::round(_length / ds));
-    numerical::clearMemory();
-    numerical::initialise(ds, size);
-    numerical::setup();
 }
 
 
@@ -709,6 +881,11 @@ void lane::clearMemory()
 
     _conflicts.clear();
     _tSigns.clear();
+
+    _odrSpeed.clear();
+    _odrWidth.clear();
+
+    base();
 }
 
 
@@ -728,8 +905,9 @@ lane& lane::operator=(const lane& t)
 
 void lane::assignInputLaneToThis(const lane &t)
 {
-    _width = t._width;
     _id = t._id;
+    _width = t._width;
+    _constantWidth = t._constantWidth;
     _length = t._length;
     _speed = t._speed;
     _isPermanent = t._isPermanent;
@@ -790,6 +968,8 @@ void lane::assignInputLaneToThis(const lane &t)
     }
     _odrSo = t._odrSo;
     _odrWidth = t._odrWidth;
+    _odrSpeed = t._odrSpeed;
+    _odrZero = t._odrZero;
 
 
     _portLane = t._portLane;
@@ -815,6 +995,7 @@ void lane::assignInputLaneToThis(const lane &t)
 void lane::setPrevLane(const lane *l)
 {
     if (isPrevLane(l)) return;
+    // if (isNextLane(l)) return;
 
     if (_prevLaneSize == 0)
         _prevLane = new const lane*[1];
@@ -850,6 +1031,76 @@ void lane::setPrevLane(const lane *l)
     }
 }
 
+/*
+void lane::removeNextLane(const lane *l)
+{
+    std::cout << "remove " << l->getCSUID() << " from next lanes in " << getCSUID() << std::endl;
+    return;
+
+    int rmNdx = -1;
+    for (uint i = 0; i < _nextLaneSize; ++i)
+    {
+        if (_nextLane[i]->isCSUID(l->getCSUID()))
+        {
+            rmNdx = i;
+            break;
+        }
+    }
+
+    if (rmNdx < 0) return;
+
+    for (uint i = rmNdx; i < _nextLaneSize -1; ++i)
+        _nextLane[i] = _nextLane[i+1];
+
+    _nextLane[_nextLaneSize-1] = nullptr;
+
+    _nextLaneSize -= 1;
+}
+
+void lane::removeNextLane(lane *l, bool crosslink)
+{
+    removeNextLane(l);
+
+    if (crosslink)
+        l->removePrevLane(this);
+}
+
+
+void lane::removePrevLane(const lane *l)
+{
+    std::cout << "remove " << l->getCSUID() << " from prev lanes in " << getCSUID() << std::endl;
+    return;
+    int rmNdx = -1;
+    for (uint i = 0; i < _prevLaneSize; ++i)
+    {
+        if (_prevLane[i]->isCSUID(l->getCSUID()))
+        {
+            rmNdx = i;
+            break;
+        }
+    }
+
+    if (rmNdx < 0) return;
+
+    for (uint i = rmNdx; i < _prevLaneSize -1; ++i)
+        _prevLane[i] = _prevLane[i+1];
+
+    _prevLane[_prevLaneSize-1] = nullptr;
+
+    _prevLaneSize -= 1;
+}
+
+
+void lane::removePrevLane(lane *l, bool crosslink)
+{
+    removePrevLane(l);
+
+    if (crosslink)
+        l->removeNextLane(this);
+}
+*/
+
+
 void lane::setPrevLane(lane *l, bool crosslink)
 {
     setPrevLane(l);
@@ -860,9 +1111,11 @@ void lane::setPrevLane(lane *l, bool crosslink)
 }
 
 
+
 void lane::setNextLane(const lane *l)
 {
     if (isNextLane(l)) return;
+    // if (isPrevLane(l)) return;
 
     if (_nextLaneSize == 0)
        _nextLane = new const lane*[1];
@@ -921,12 +1174,14 @@ void lane::setNextLane(uint ndx, lane* l)
 
 
 
-
-
-
 bool lane::isPermanent() const
 {
     return _isPermanent;
+}
+
+void lane::permanent(bool p)
+{
+    _isPermanent = p;
 }
 
 bool lane::hasDefinedSign() const
@@ -995,7 +1250,8 @@ const lane* lane::getNextLane() const
 
 const lane* lane::getNextLane(uint idx) const
 {
-    return _nextLane[idx];
+    if (idx < _nextLaneSize ) return _nextLane[idx];
+    return nullptr;
 }
 
 std::tuple<const lane**, size_t> lane::getNextLanes() const
@@ -1015,7 +1271,8 @@ const lane* lane::getPrevLane() const
 
 const lane* lane::getPrevLane(uint idx) const
 {
-    return _prevLane[idx];
+    if (idx < _prevLaneSize) return _prevLane[idx];
+    return nullptr;
 }
 
 std::tuple<const lane**, size_t> lane::getPrevLanes() const
@@ -1033,10 +1290,25 @@ const lane* lane::getPortLane() const
     return _portLane;
 }
 
+const lane* lane::getPortLaneSD() const
+{
+    if (!_portLane) return nullptr;
+    if (isSameSign(_portLane)) return _portLane;
+    return nullptr;
+}
+
 const lane* lane::getStarboardLane() const
 {
     return _starboardLane;
 }
+
+const lane* lane::getStarboardLaneSD() const
+{
+    if (!_starboardLane) return nullptr;
+    if (isSameSign(_starboardLane)) return _starboardLane;
+    return nullptr;
+}
+
 
 mvf::side lane::getMergeSide() const
 {
@@ -1157,6 +1429,8 @@ uint lane::getGeometrySize() const
     return static_cast<uint>(_geom.size());
 }
 
+
+/*
 std::vector<std::unique_ptr<geometry>> lane::getGeometries() const
 {
     std::vector<std::unique_ptr<geometry>> v;
@@ -1184,6 +1458,7 @@ std::vector<std::unique_ptr<geometry>> lane::getGeometries() const
     return v;
 
 }
+*/
 
 scalar lane::maxSo() const
 {
@@ -1210,6 +1485,12 @@ bool lane::isSet() const
 int lane::getID() const
 {
     return _id;
+}
+
+int lane::odrSectionID() const
+{
+    if (!isOpenDrive()) return -1;
+    return _odrSectionID;
 }
 
 int lane::odrID() const
@@ -1506,7 +1787,7 @@ scalar lane::unsafeDistanceFromTheBoL(const arr2 &p) const
 
 
 // TEST
-void lane::getPointWithOffset(arr2 &p, arr2 &o, scalar loff) const
+void lane::getPointWithOffset(arr2 &p, const arr2 &o, scalar loff) const
 {
     arr2 v = getTangentInPoint(o);
     scalar angle = 0.5 * ct::pi;
@@ -1544,7 +1825,7 @@ void lane::nSetupPointsXYUniformly(scalar ds)
                 p = nm->interpolate(s);
             }
             else // if ( (_geom[i]->isArc()) || (shp == mvf::shape::straight))
-                _geom[i]->getPointAfterDistance(p, _geom[i]->origin(), s);
+                _geom[i]->getPointAtDistance(p, s); // _geom[i]->getPointAfterDistance(p, _geom[i]->origin(), s);
 
             _pointsX[ndx] = p[0];
             _pointsY[ndx] = p[1];
@@ -1567,7 +1848,7 @@ void lane::nSetupPointsXYUniformly(scalar ds)
 
 }
 
-std::vector<arr2> lane::getIntersectionPoints(const lane *l) const
+std::vector<arr2> lane::getIntersectionPoints(lane *l)
 {
     // In this case we know it is odr vs odr, and thus we will do numerically with the following approach
     // 1 - Check whether the two bounding boxes do overlap;
@@ -1578,11 +1859,15 @@ std::vector<arr2> lane::getIntersectionPoints(const lane *l) const
 
     std::vector<arr2> intersections;
 
-    if ((_pointsSize == 0) || (l->_pointsSize == 0)) return intersections;
-
     if (!mvf::boxesOverlap(_bbblc, _bbtrc, l->_bbblc, l->_bbtrc)) return intersections;
-    mvf::numericalIntersections(intersections, _pointsX, _pointsY, 0, _pointsSize -1, l->_pointsX, l->_pointsY, 0, l->_pointsSize -1);
 
+    if (!numerical::isSet())
+        numericalSetup();
+
+    if (!l->numerical::isSet())
+        l->numericalSetup();
+
+    mvf::numericalIntersections(intersections, _pointsX, _pointsY, 0, _pointsSize -1, l->_pointsX, l->_pointsY, 0, l->_pointsSize -1);
 
     return intersections;
 }
@@ -1743,8 +2028,21 @@ void lane::setSpeed(const scalar speed)
 
 scalar lane::getSpeed() const
 {
-    return _speed;
+    return getSpeed(0);
+    // return _speed;
 }
+
+scalar lane::getSpeed(scalar d) const
+{
+    scalar speed = _speed;
+    for (uint i = 0; i < _odrSpeed.size(); ++i)
+    {
+        if (d  < _odrSpeed[i].s) break;
+        speed = _odrSpeed[i].value;
+    }
+    return speed;
+}
+
 
 scalar lane::getWidth() const
 {
@@ -1753,7 +2051,7 @@ scalar lane::getWidth() const
 
 scalar lane::getWidth(scalar d) const
 {
-    if (!isOpenDrive())
+    if (_constantWidth)
         return _width;
 
     scalar w = 0;
@@ -1777,7 +2075,6 @@ scalar lane::getWidth(scalar d) const
     }
 
     return w;
-
 }
 
 void lane::addTSign(tSign ts)
@@ -1893,6 +2190,8 @@ void lane::addConflict(const conflict &cf)
         }
         if (!insertion) _conflicts[0] = cf;
     }
+
+    // std::cout << " new conflict added to " << getCSUID() << std::endl << cf.print() << std::endl;
 }
 
 bool lane::hasConflicts() const
@@ -2132,6 +2431,24 @@ bool lane::isPavement() const
     return false;
 }
 
+bool lane::isOdrTransitable(Odr::Kind::LaneType lt) const
+{
+    if ((lt == Odr::Kind::LaneType::driving) || (lt == Odr::Kind::LaneType::slipLane) ||
+        (lt == Odr::Kind::LaneType::entry) || (lt == Odr::Kind::LaneType::exit) ||
+        (lt == Odr::Kind::LaneType::onRamp) || (lt == Odr::Kind::LaneType::connectingRamp) ||
+        (lt == Odr::Kind::LaneType::slipLane) )
+        return true;
+
+    return false;
+
+}
+
+bool lane::isOdrTransitable(const char* c) const
+{
+    Odr::Kind::LaneType lt = Odr::laneTypeFromCString(c);
+    return isOdrTransitable(lt);
+}
+
 bool lane::isTransitable() const
 {
 
@@ -2147,6 +2464,39 @@ bool lane::isToMerge() const
     for (uint i = 0; i < _conflicts.size(); ++i)
         if (conflict::isMerge(_conflicts[i].k)) return true;
     return false;
+}
+
+bool lane::isInOdrRange(scalar s) const
+{
+    return mvf::isInRangeLR(s, _odrSo, _geom.back()->roadSe());
+}
+
+void lane::setZero(const lane* z)
+{
+    _odrZero = z;
+}
+
+scalar lane::sli(scalar s0) const
+{
+    if (mvf::areCloseEnough(s0, 0., 1e-8)) return 0;
+
+    if (!_odrZero)
+    {
+        std::cerr << "[ Error ] lane::sli can't calculate with _odrZero set to nullptr" << std::endl;
+        return 0;
+    }
+
+    if (mvf::areCloseEnough(s0, _odrZero->getLength(), 1e-8))
+        return _length;
+
+    arr2 p0;
+    if (!_odrZero->getPointAtDistance(p0, s0))
+    {
+        std::cerr << "[ Error ] lane::sli couldn't find a point at distance " << s0 << " for lane " << getCSUID() << std::endl;
+        return 0;
+    }
+    arr2 pi = projectPointOntoLane(p0);
+    return unsafeDistanceFromTheBoL(pi);
 }
 
 bool lane::actorsSupport(lane::kind k) const
@@ -2190,7 +2540,7 @@ std::vector<QPainterPath> lane::getQPainterPaths(uint n) const
     return qpp;
 }
 
-QPainterPath lane::getEdgeQPainterPath(uint n, int e)
+QPainterPath lane::getEdgeQPainterPath(uint n, int e) const
 {
     QPainterPath qpp;
     if ((e != -1) && (e != 1))
@@ -2300,6 +2650,54 @@ int lane::fillInVerticesAndIndices(scalar step, std::vector<QByteArray> &indexBy
 }
 
 #endif
+
+std::vector<arr2> lane::getEdgePath(uint n, int edge) const
+{
+    std::vector<arr2> path;
+    if ((edge != -1) && (edge != 1))
+    {
+        std::cerr << "[ Error ] getEdgePath means neither left nor right" << std::endl;
+        return path;
+    }
+
+    if (n == 0) n = _length; // so that later appDs is 1m.
+    scalar appDs = _length / n;
+
+    scalar s = 0; // total distance down the road.
+    bool first = true;
+    for (uint i = 0; i < _geom.size(); ++i)
+    {
+        scalar si = 0;
+        uint qi = std::floor(_geom[i]->length() / appDs);
+        if (qi < 4) qi = 4;
+        scalar dsi = _geom[i]->length() / qi;
+        bool quit = false;
+        for (uint j = 0; j <= qi; ++j)
+        {
+            arr2 ci;
+            if (!_geom[i]->getPointAfterDistance(ci, _geom[i]->origin(), si))
+            {
+                ci = _geom[i]->dest();
+                si = _geom[i]->length();
+                quit = true;
+            }
+            arr2 ti = _geom[i]->getTangentInPoint(ci);
+            arr2 ni;
+            if (edge == -1) ni = {-ti[1], ti[0]};
+            else ni = {ti[1], -ti[0]};
+            scalar w = getWidth(s + si);
+            arr2 pi = {ci[0] + 0.5 * w * ni[0], ci[1] + 0.5 * w * ni[1]};
+            path.push_back(pi);
+            si += dsi;
+            if (quit)
+                break;
+        }
+        s += _geom[i]->length();
+    }
+
+    return path;
+
+}
 
 
 // // CONFLICTS // //
@@ -2490,3 +2888,26 @@ scalar conflict::fillInHPLanes(conflict &cnf, const lane *hpLane, scalar anticip
     // std::cout << "anticipation arrives to: " << ant_i << " seconds" << std::endl;
     return ant_i;
 }
+
+std::string conflict::print() const
+{
+    std::stringstream ss;
+    ss << "Conflict of kind " << kindString(k) << " in s:" << s << ", so/se: (" << so << ", " << se << ") ";
+    if (hpLane.size())
+    {
+        if (hpLane.size() == 1)
+            ss << " with hpLane:" << std::endl;
+        else
+            ss << " with hpLanes:" << std::endl;
+        for (uint i = 0; i < hpLane.size(); ++i)
+            ss << " - " << hpLane[i]->getCSUID() << std::endl;
+    }
+    if (links.size())
+    {
+        ss << " with links in: " << std::endl;
+        for (uint i = 0; i < links.size(); ++i)
+            ss << links[i].l->getCSUID() << " s: " << links[i].s << std::endl;
+    }
+    return ss.str();
+}
+

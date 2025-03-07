@@ -20,17 +20,12 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef LANE_H
-#define LANE_H
+#ifndef ODRONES_LANE_H
+#define ODRONES_LANE_H
 
 #include <vector>
-#include <limits>
-#include <iostream>
-#include <cstdarg>
 #include <tuple>
 #include <vector>
-#include <algorithm>
-#include <memory>
 #include "matvec.h"
 #include "geometry.h"
 #include "straight.h"
@@ -39,11 +34,11 @@
 #include "vwArc.h"
 #include "bezier2.h"
 #include "bezier3.h"
+#include "vwBezier3.h"
 #include "paramPoly3.h"
 #include "vwParamPoly3.h"
 #include "vwNumerical.h"
 #include "vwSpiral.h"
-#include "readOdr.h"
 #include "readOneVersion.h"
 #include "rnsconcepts.h"
 
@@ -51,8 +46,26 @@
 #include <QPainterPath>
 #endif
 
+namespace tinyxml2
+{
+    class XMLDocument;
+    class XMLElement;
+}
+
+namespace odrones {
+
 class section;
 class lane;
+class conflict;
+
+typedef odrones::scalar scalar;
+typedef odrones::arr2 arr2;
+typedef odrones::mvf mvf;
+typedef odrones::bezier2 bezier2;
+typedef odrones::bezier3 bezier3;
+typedef odrones::conflict conflict;
+typedef odrones::OneVersion OneVersion;
+typedef odrones::lane lane;
 
 class conflict
 {
@@ -63,7 +76,7 @@ public:
 
     // opendrive static objects:
     enum class staticObjKind {crosswalk, unknown};
-    static std::string staticObjKindString(staticObjKind s);
+    // static std::string staticObjKindString(staticObjKind s);
     struct staticObj
     {
         arr2 pos; ///< the position of the object
@@ -74,6 +87,7 @@ public:
         int section;
         int lane;
     };
+    std::string print() const;
 
 
 public:
@@ -116,16 +130,19 @@ public:
 };
 
 
+
 class lane : public numerical
 {
 public:
 
+    // SUBCLASSES //
+    // 1 - Enums
     enum class sign {n, o, p};
     static std::string signString(sign s);
-    enum class kind { tarmac, pavement, roundabout, crosswalk, unknown };
+    enum class kind { tarmac, pavement, roundabout, crosswalk, none, unknown };
 
 
-    // traffic signs:
+    // 2 - Traffic signs:
     enum class tSignInfo {giveWay, stop, unknown};
     static std::string tSignInfoString(tSignInfo s);
     class tSign
@@ -148,12 +165,26 @@ public:
     };
 
 
-
-    struct lCoord
+    // 3 - Logical coordinates.
+    class lCoord
     {
-        lane *l;
-        arr2 pos;
-        scalar loff;
+    public:
+        const lane *l;       ///< the lane it's on.
+        arr2 pos;            ///< position projected onto the center of the lane
+        scalar s;            ///< distance down the lane
+        scalar loff;         ///< lateral offset, positive to the right in the direction of the lane (starboard).
+        scalar toEOL() const ///< return the distance to the end of the lane; -1 if no lane.
+        {
+            if (!l) return -1;
+            return l->getLength() - s;
+        }
+        std::string print() const
+        {
+            if (l)
+                return l->getCSUID() + " s: " + std::to_string(s) + " loff: " + std::to_string(loff);
+            else
+                return "invalid lane";
+        }
     };
 
     static constexpr scalar odrTol = 1e-2;
@@ -194,6 +225,11 @@ public:
     void setPrevLane(const lane *l); ///< setPrevLane and don't crosslink.
     void setPrevLane(lane *l, bool crosslink); ///< set the previous lane in the Logical Road Network
     void setPrevLane(uint ndx, lane *l); ///< set the ndxth prev lane in the _prevLanes array with minimal checks;
+    /* Untested
+    void removeNextLane(const lane *l); ///< remove l from _nextLanes and don't crosslink
+    void removeNextLane(lane *l, bool crosslink);
+    void removePrevLane(const lane *l); ///< remove l from _prevLanes and don't crosslink
+    void removePrevLane(lane *l, bool crosslink); */
     void setPortLane(const lane *l); ///< set the Port (left) lane.
     void setStarboardLane(const lane *l); ///< set the Starboard (right) lane.
     void setSection(section &s); ///< set the section where this lane sits on.
@@ -210,7 +246,9 @@ public:
     size_t getPrevLaneSize() const; ///< returns the number lanes that end at the beginning of this one.
 
     const lane* getPortLane() const; ///< returns a pointer to the Port (left) lane
+    const lane* getPortLaneSD() const; ///< return a pointer to the Port (left) lane if it's meant to be travelled on the same direction.
     const lane* getStarboardLane() const; ///< returns a pointer to the Starboard (right) lane.
+    const lane* getStarboardLaneSD() const; ///< return a pointer to the Starboard (right) lane if it's meant to be travelled on the same direction.
     mvf::side getMergeSide() const; ///< returns the side towards this is merging.
     const lane* getMergeLane() const; ///< returns port, starboard, or null depending on the _mergeSide;
 
@@ -229,13 +267,15 @@ public:
     scalar getCurvature(const arr2 &p) const; ///< returns the curvature (1/R) at one point.
     scalar getLength() const; ///< returns the length of the lane.
     uint getGeometrySize() const; ///< get the size of the _geom array.
-    std::vector<std::unique_ptr<geometry>> getGeometries() const;
+    // const std::vector<odrones::geometry*> geometries() const;
+    // std::vector<std::unique_ptr<odrones::geometry>> getGeometries() const;
     scalar maxSo() const; ///< odr; return the max So coordinate of lane 0.
 
     scalar getWidth() const;
     scalar getWidth(scalar d) const; ///< get the width at a certain distance down the lane.
 
     scalar getSpeed() const;
+    scalar getSpeed(scalar d) const; ///< get the speed at a certain distance down the lane... assuming it's a car.
     void setSpeed(const scalar speed);
 
 
@@ -249,6 +289,7 @@ public:
     bool isArc() const;
     bool isArc(mvf::shape s) const;
 
+
     // ... and kind:
     void setKind(kind k);
     kind getKind() const;
@@ -256,10 +297,15 @@ public:
     bool isCrosswalk() const;
     bool isPavement() const;
     bool isTransitable() const;
+    bool isOdrTransitable(Odr::Kind::LaneType lt) const;
+    bool isOdrTransitable(const char* odrLaneType) const;
     bool isToMerge() const;
+    bool isInOdrRange(scalar s) const;
     bool actorsSupport(lane::kind k) const;
-    bool actorsSupport(concepts::actor k) const;
+    bool actorsSupport(odrones::concepts::actor k) const;
     // bool actorsOverlap(const lane *l) const;
+    bool isPermanent() const;
+    void permanent(bool p);
 
 
     // Traffic Signs:
@@ -267,7 +313,7 @@ public:
     std::vector<tSign> getTSigns() const;
     uint tSignsSize() const;
     bool hasTSigns() const;
-    tSign getTSign(uint i) const; ///< return a copy of the ith traffic sign.
+    // tSign getTSign(uint i) const; ///< return a copy of the ith traffic sign.
     tSignInfo getTSignInfo(uint i) const; ///< return the sign info of the ith sign.
     scalar getTSignSCoord(uint i) const; ///< return the distance from the begining of the lane of the ith traffic sign.
     void addStaticObj(conflict::staticObj so);
@@ -300,7 +346,7 @@ public:
     std::vector<conflict::cuid> getConflictLinks(uint i) const; ///< return a copy of the _conflicts[i].link vector;
     std::vector<conflict::cuid> getConflictLinks(scalar s) const; ///< return a copy of the _conflicts[ idx(s) ].link vector;
     void addConflictLink(uint i, conflict::cuid id);
-    uint getConflictLinksSize(uint i) const; ///< return the amount of conflicts linked to the ith conflict.
+    // uint getConflictLinksSize(uint i) const; ///< return the amount of conflicts linked to the ith conflict.
     conflict::kind getConflictKind(uint i) const; ///< return the kind of conflict that this one is
     conflict::kind getConflictKind(scalar s) const; ///< return the kind of conflict that has conflict at s.
     void setConflictKind(uint i, conflict::kind k); ///< set the kind of conflict to the ith conflict.
@@ -323,6 +369,8 @@ public:
     bool hasPrevLane() const; ///< true if _prevLane != nullptr.
     bool hasMultiplePrevLanes() const; ///< true if _prevLaneSize > 1;
 
+    //! Numerical:
+    void numericalSetup();
 
     // Geometry in lanes:
     void getTangentInPoint(arr2 &t, const arr2 &p) const;
@@ -341,12 +389,13 @@ public:
     scalar unsafeDistanceToTheEoL(const arr2 &p) const;
     scalar unsafeDistanceFromTheBoL(const arr2 &p) const;
     //! return a point p, given a point on the lane o, and a lateral offset loff (positive is starboard, negative is port)
-    void getPointWithOffset(arr2& p, arr2 &o, scalar loff) const;
+    void getPointWithOffset(arr2& p, const arr2 &o, scalar loff) const;
     //! return a point p, given a distance down the lane, and a lateral offset loff (positive is starboard, negative is port)
     void getPointWithOffset(arr2& p, scalar d, scalar loff) const;
     //! return a vector with all the intersection points between "this" and lane l;
+    //!   It will configure numerical base class if needed.
     //!   we'll have intersection points on every type of lane, just not today!
-    std::vector<arr2> getIntersectionPoints(const lane *l) const;
+    std::vector<arr2> getIntersectionPoints(lane *l);
 
     //! returns true and sets the destination intersection point between arr2 origin and arr2 tangent if there is some intersection,
     //!   and false otherwise.
@@ -364,6 +413,7 @@ public:
 
     //! Lane IDs
     int getID() const;
+    int odrSectionID() const;
     int odrID() const;
     OneVersion::OVID ovID() const;
     void setOVID(OneVersion::OVID id);
@@ -381,8 +431,7 @@ public:
     int getSectionID() const;
 
 
-    bool isPermanent() const;
-
+    //! Lane Sign:
     bool hasDefinedSign() const; // true if _sign != sign::o
     sign getSign() const;
     std::string getSignString() const;
@@ -398,6 +447,28 @@ public:
     bool isFlippable() const; ///< return _flippable
     bool isOdrFwd() const; ///< return _odrFwd
     bool isOdrShapeSupported(mvf::shape s) const; ///< return true if the shape is supported;
+    bool xmlPlanView(tinyxml2::XMLElement *planView, tinyxml2::XMLDocument &doc) const; ///< fill in the planView with geometries ONLY IF IT's LANE 0! (false otherwise).
+    bool xmlLaneAttributesAndLinks(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc, const std::string &type) const;
+    bool xmlLaneAttributesAndLinks(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const;
+    void setZero(const lane* z);
+    scalar sli(scalar s0) const; ///< return s on this lane, given s0 on lane 0;
+
+
+
+
+    //! Qt Plotting:
+#ifdef QT_CORE_LIB
+    QPainterPath getEdgeQPainterPath(uint n, int e) const; ///< e = -1 for left edge and e = 1 for right edge.
+    QPainterPath getQPainterPath(uint n) const; ///< get a QPainterPath with n points per Bezier line.
+    std::vector<QPainterPath> getQPainterPaths(uint n) const; ///< get a vector with the QPainterPaths of each Bezier line in the lane.
+    int fillInVerticesAndIndices(scalar step, std::vector<QByteArray> &indexBytes, std::vector<QByteArray> &vertexBytes,
+                                 std::vector<int> &indexSize, std::vector<int> &vertexSize) const; ///< as the method states: allocate and fill in the required 3D data.
+#endif
+    std::vector<arr2> getEdgePath(uint n, int e) const;
+
+    //! Writing:
+    void writeDown(); ///< For debugging purposes: write down getCSUID.box, getCSUID.geom, getCSUID.geom.boxes, getCSUID.geom.numerical, getCSUID.geom.S
+
 
 
 private:
@@ -405,19 +476,9 @@ private:
     int getGeometryIndex(const arr2 &p) const;  ///< get the geometry index for this point; return -1 if the point is not there for some tol.
     int getGeometryIndex(scalar d) const; ///< get the geometry index for this point; return -1 if out of bounds;
 
-
-public:
-#ifdef QT_CORE_LIB
-    QPainterPath getEdgeQPainterPath(uint n, int e); ///< e = -1 for left edge and e = 1 for right edge.
-    QPainterPath getQPainterPath(uint n) const; ///< get a QPainterPath with n points per Bezier line.
-    std::vector<QPainterPath> getQPainterPaths(uint n) const; ///< get a vector with the QPainterPaths of each Bezier line in the lane.
-    int fillInVerticesAndIndices(scalar step, std::vector<QByteArray> &indexBytes, std::vector<QByteArray> &vertexBytes,
-                                 std::vector<int> &indexSize, std::vector<int> &vertexSize) const; ///< as the method states: allocate and fill in the required 3D data.
-#endif
-
-private:
     //! fill in the _pointsX/Y arrays
     void nSetupPointsXYUniformly(scalar ds) override;
+
 
 
 private:
@@ -445,7 +506,7 @@ private:
 
     mvf::shape _shape; ///< shape of the lane
 
-    std::vector<geometry*> _geom; ///< composed geometry for OpenDRIVE lanes.
+    std::vector<odrones::geometry*> _geom; ///< composed geometry for OpenDRIVE lanes.
 
     bool _isPermanent; ///< whether this lane is permanent or is a lcPath.
 
@@ -458,10 +519,15 @@ private:
     /// Variables needed for the OpenDRIVE variable width:
     scalar _odrSo; ///< start of the lane section (metres), needed for the variable width, variable speed, elevation...
     std::vector<Odr::offset> _odrWidth; ///< the 5 parametres that define the width;
+    std::vector<Odr::speedLimit> _odrSpeed; ///< a vector of speed limits along s;
+    const lane* _odrZero; ///< a pointer to section._zero for you to enjoy :)
+
+    bool _constantWidth; ///< whether the width is constant along the lane.
 
     OneVersion::OVID _ovID; ///< the OneVersion id of the lane.
 
 };
 
+}
 
-#endif // LANE_H
+#endif // ODRONES_LANE_H
