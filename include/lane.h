@@ -454,6 +454,7 @@ public:
     scalar sli(scalar s0) const; ///< return s on this lane, given s0 on lane 0;
 
 
+    std::vector<arr2> getEdgePath(uint n, int e) const;
 
 
     //! Qt Plotting:
@@ -464,7 +465,6 @@ public:
     int fillInVerticesAndIndices(scalar step, std::vector<QByteArray> &indexBytes, std::vector<QByteArray> &vertexBytes,
                                  std::vector<int> &indexSize, std::vector<int> &vertexSize) const; ///< as the method states: allocate and fill in the required 3D data.
 #endif
-    std::vector<arr2> getEdgePath(uint n, int e) const;
 
     //! Writing:
     void writeDown(); ///< For debugging purposes: write down getCSUID.box, getCSUID.geom, getCSUID.geom.boxes, getCSUID.geom.numerical, getCSUID.geom.S

@@ -20,8 +20,8 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef TESTARCLANE_H
-#define TESTARCLANE_H
+#ifndef ODRONES_TESTARCLANE_H
+#define ODRONES_TESTARCLANE_H
 
 #ifdef QT_CORE_LIB
 #include <QGraphicsItem>
@@ -54,4 +54,4 @@ private:
 };
 #endif // QT_CORE_LIB
 
-#endif // TESTARCLANE_H
+#endif // ODRONES_TESTARCLANE_H

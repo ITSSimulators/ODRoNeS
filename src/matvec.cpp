@@ -22,6 +22,12 @@
 
 
 #include "matvec.h"
+#include "arc.h"
+
+#include <cstring>
+#include <iostream>
+
+using namespace odrones;
 
 ////////////////////////////////////////
 // -1 - Auxilliary functions         ///
@@ -44,6 +50,8 @@ std::string mvf::shapeString(mvf::shape s)
         return "bezier";
     case mvf::shape::bezier3:
         return "bezier";
+    case mvf::shape::vwBezier3:
+        return "vwBezier";
     case mvf::shape::paramPoly3:
         return "paramPoly3";
     case mvf::shape::vwParamPoly3:
@@ -75,7 +83,23 @@ std::string mvf::sideString(mvf::side s)
     }
 }
 
+odrones::mvf::side odrones::mvf::parseSide(const char* str)
+{
+    if (std::strcmp(str, "port") == 0)
+    {
+        return side::port;
+    }
+    else if (std::strcmp(str, "bow") == 0)
+    {
+        return side::bow;
+    }
+    else if (std::strcmp(str, "starboard") == 0)
+    {
+        return side::starboard;
+    }
 
+    return side::unknown;
+}
 
 ////////////////////////////////////////
 // 0 - Operations with scalars        //
@@ -121,11 +145,6 @@ bool mvf::isInRange0(scalar a, scalar lower, scalar higher)
     return false;
 }
 
-scalar mvf::sqr(scalar a)
-{
-    return a*a;
-}
-
 int mvf::round(scalar a)
 {
     return static_cast<int>(std::round(a));
@@ -149,6 +168,12 @@ scalar mvf::positiveZero(scalar a)
 {
     if (mvf::areCloseEnough(a, 0, absolutePrecision)) return 0;
     return a;
+}
+
+
+scalar mvf::sqr(scalar a)
+{
+    return a*a;
 }
 
 bool mvf::solve2ndOrderEq(scalar &x1, scalar &x2, scalar a, scalar b, scalar c)
@@ -266,11 +291,13 @@ void mvf::resize(arr2 &v, scalar m)
     v[1] = v[1] * m;
 }
 
+/*
 void mvf::max(arr2 &v)
 {
     v[0] = std::numeric_limits<scalar>::max();
     v[1] = std::numeric_limits<scalar>::max();
 }
+*/
 
 int mvf::quadrant(const arr2 &v)
 {
@@ -384,6 +411,38 @@ bool mvf::isPointOnSegment(const arr2 &p, const arr2 &a, const arr2 &b)
 
     // if (d > distance(a, b)) return false;
     if ( (d > distance(a, b)) || (d < 0) ) return false;
+
+    return true;
+}
+
+bool mvf::areAligned(const std::vector<arr2> &v)
+{
+    if (v.size() <= 2) return true;
+
+    for (uint i = 1; i < v.size() - 1; ++i)
+    {
+        if (!isPointOnSegment(v[i], v[0], v.back()))
+            return false;
+    }
+
+    return true;
+}
+
+bool mvf::areAnArc(const std::vector<arr2> &v, scalar tol)
+{
+    if (v.size() < 2) return false;
+
+    arc A;
+    A.setWith3Points(v[0], v[1], v.back());
+    if (!A.ready()) return false;
+
+    for (uint i = 2; i < v.size() -1; ++i)
+    {
+        arc A2;
+        A2.setWith3Points(v[0], v[i], v.back());
+        if (!mvf::areCloseEnough(A.radiusOfCurvature(), A2.radiusOfCurvature(), tol))
+            return false;
+    }
 
     return true;
 }
@@ -653,26 +712,45 @@ bool mvf::boxesOverlap(const arr2 &blci, const arr2 &trci, const arr2 &blcj, con
     if (isPointInBoxBLcTRc({trcj[0], blcj[1]}, blci, trci)) return true;
 
     // if no corner is within the other box, then it still may be that the boxes are:
-    //        ---
-    //        | |
-    //   ------------
-    //   |    | |   |
-    //   ------------
-    //        | |
-    //        ---
-    //   which means that there has to be double intersection, so it does not matter which one we check.
-    arr2 tmp;
-    if ( (intersectionBetweenSegments(tmp, blci, {trci[0], blci[1]}, blcj, {blcj[0], trcj[1]})) &&
-         (intersectionBetweenSegments(tmp, blci, {trci[0], blci[1]}, {trcj[0], blcj[1]}, trcj)) )
+    //        ---             ---
+    //        | |             | |
+    //   ------------       |---------|
+    //   |    | |   |  , or | | |     | , or...
+    //   ------------       | ---     |
+    //        | |           |         |
+    //        ---           -----------
+    //   which means that two of the perpendicular edges intersect:
+    std::vector<segment> vertical_i = { {blci, {blci[0], trci[1]}}, {{trci[0], blci[1]}, trci} };
+    std::vector<segment> horizontal_j = { {blcj, {trcj[0], blcj[1]}}, {{blcj[0], trcj[1]}, trcj}  };
+    if (figuresOverlap(vertical_i, horizontal_j))
         return true;
 
-    if ( (intersectionBetweenSegments(tmp, blcj, {trcj[0], blcj[1]}, blci, {blci[0], trci[1]})) &&
-         (intersectionBetweenSegments(tmp, blcj, {trcj[0], blcj[1]}, {trci[0], blci[1]}, trci)) )
+    std::vector<segment> horizontal_i = { {blci, {trci[0], blci[1]}}, {{blci[0], trci[1]}, trci}  };
+    std::vector<segment> vertical_j = { {blcj, {blcj[0], trcj[1]}}, {{trcj[0], blcj[1]}, trcj} };
+    if (figuresOverlap(horizontal_i, vertical_j))
         return true;
 
     return false;
 }
 
+
+bool mvf::figuresOverlap(const std::vector<segment> &fig1, const std::vector<segment> &fig2)
+{
+    for (uint i = 0; i < fig1.size(); ++i)
+    {
+        for (uint j = 0; j < fig2.size(); ++j)
+        {
+            arr2 x;
+            if (intersectionBetweenSegments(x, fig1[i].p1, fig1[i].p2, fig2[j].p1, fig2[j].p2))
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+
+}
 
 void mvf::numericalIntersections(std::vector<arr2> &intersections,
                                  const scalar *pointsAx, const scalar *pointsAy, uint ndxOA, uint ndxEA,
@@ -730,8 +808,8 @@ void mvf::numericalIntersections(std::vector<arr2> &intersections,
     }
 
     // Calculate the bounding box of A1, A2, B1 and B2
-    auto [ mxA1, MxA1 ] = std::minmax_element(pointsAx+ndxOA1, pointsAx+ndxEA1);
-    auto [ myA1, MyA1 ] = std::minmax_element(pointsAy+ndxOA1, pointsAy+ndxEA1);
+    auto [ mxA1, MxA1 ] = std::minmax_element(pointsAx+ndxOA1, pointsAx+ndxEA1+1);
+    auto [ myA1, MyA1 ] = std::minmax_element(pointsAy+ndxOA1, pointsAy+ndxEA1+1);
     arr2 blA1 = {*mxA1, *myA1};
     arr2 trA1 = {*MxA1, *MyA1};
 
@@ -740,15 +818,15 @@ void mvf::numericalIntersections(std::vector<arr2> &intersections,
     arr2 blA2, trA2;
     if (splitA)
     {
-        std::tie(mxA2, MxA2) = std::minmax_element(pointsAx+ndxOA2, pointsAx+ndxEA2);
-        std::tie(myA2, MyA2) = std::minmax_element(pointsAy+ndxOA2, pointsAy+ndxEA2);
+        std::tie(mxA2, MxA2) = std::minmax_element(pointsAx+ndxOA2, pointsAx+ndxEA2+1);
+        std::tie(myA2, MyA2) = std::minmax_element(pointsAy+ndxOA2, pointsAy+ndxEA2+1);
         blA2 = {*mxA2, *myA2};
         trA2 = {*MxA2, *MyA2};
     }
 
 
-    auto [ mxB1, MxB1 ] = std::minmax_element(pointsBx+ndxOB1, pointsBx+ndxEB1);
-    auto [ myB1, MyB1 ] = std::minmax_element(pointsBy+ndxOB1, pointsBy+ndxEB1);
+    auto [ mxB1, MxB1 ] = std::minmax_element(pointsBx+ndxOB1, pointsBx+ndxEB1+1);
+    auto [ myB1, MyB1 ] = std::minmax_element(pointsBy+ndxOB1, pointsBy+ndxEB1+1);
     arr2 blB1 = {*mxB1, *myB1};
     arr2 trB1 = {*MxB1, *MyB1};
 
@@ -757,8 +835,8 @@ void mvf::numericalIntersections(std::vector<arr2> &intersections,
     arr2 blB2, trB2;
     if (splitB)
     {
-        std::tie(mxB2, MxB2) = std::minmax_element(pointsBx+ndxOB2, pointsBx+ndxEB2);
-        std::tie(myB2, MyB2) = std::minmax_element(pointsBy+ndxOB2, pointsBy+ndxEB2);
+        std::tie(mxB2, MxB2) = std::minmax_element(pointsBx+ndxOB2, pointsBx+ndxEB2+1);
+        std::tie(myB2, MyB2) = std::minmax_element(pointsBy+ndxOB2, pointsBy+ndxEB2+1);
         blB2 = {*mxB2, *myB2};
         trB2 = {*MxB2, *MyB2};
     }

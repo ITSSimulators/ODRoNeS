@@ -21,6 +21,7 @@
 //
 
 #include "vwArc.h"
+using namespace odrones;
 
 vwArc::vwArc(const Odr::geometry &odg, int sign, std::vector<Odr::offset> off,
              scalar so, scalar se, scalar roadSo, bool print)
@@ -31,11 +32,12 @@ vwArc::vwArc(const Odr::geometry &odg, int sign, std::vector<Odr::offset> off,
     _shape = mvf::shape::vwArc;
     _vwOff = off;
     _roadSo = roadSo;
+    _roadSe = roadSo + se - so;
     _print = print;
 
     // Calculate the parameters of the central lane arc from arc with zero offset:
     // arc a = arc(odg, sign, 0, so, se);
-    arc a = arc(odg, sign, 0, 0, odg.length);
+    arc a = arc(odg, sign, 0, 0, odg.length, roadSo);
     _centre = a.centre();
     _alpha = odg.curvature * odg.length;
     _radiusOfCurvature = a.radiusOfCurvature();
@@ -79,7 +81,7 @@ vwArc::vwArc(const Odr::geometry &odg, int sign, std::vector<Odr::offset> off,
 
     if (print)
     {
-        arc aAux = arc(odg, sign, off[0].a, so, se);
+        arc aAux = arc(odg, sign, off[0].a, so, se, roadSo);
         std::cout << "aAux: "; aAux.printOut();
         std::cout << "vwArc: "; printOut();
     }
@@ -124,4 +126,9 @@ void vwArc::printOut() const
               << ", offset(" << _maxt << "): " << offset(_maxt);
     geometry::printOut();
 
+}
+
+scalar vwArc::l0Curvature() const
+{
+    return _radiusOfCurvature;
 }

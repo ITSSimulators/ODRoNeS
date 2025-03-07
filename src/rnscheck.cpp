@@ -30,6 +30,8 @@
 
 #include "cxxopts.hpp"
 #include "rnswindow.h"
+#include "Odr.h"
+using namespace odrones;
 
 static double rnsversion = 0.8;
 
@@ -47,7 +49,10 @@ int main(int argc, char *argv[])
 	    ("h,help", "Print usage message") 
             ("m,map", "Input file map", cxxopts::value<std::string>())
             ("v,version", "Print RNS version")
-            ("i,identify", "Identify lanes");
+            ("i,identify", "Identify lanes")
+            ("z,zero", "Include the centre lane")
+            ("c,zero-only", "Consider the centre lane only")
+            ("a,all-but-zero", "Include every lane");
 
     options.parse_positional("map");
 
@@ -72,7 +77,6 @@ int main(int argc, char *argv[])
     {
         iFile = result["map"].as<std::string>();
         std::filesystem::path fsIFile = iFile;
-        fsIFile = std::filesystem::canonical(fsIFile);
         std::ostringstream em;
 
         // check that it exists:
@@ -105,6 +109,7 @@ int main(int argc, char *argv[])
             return 1;
         }
 
+        fsIFile = std::filesystem::canonical(fsIFile);
         iFile = fsIFile.string();
     }
     else
@@ -113,23 +118,34 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    graphicalSettings gSettings;
+
     // Option 3 - Identify lanes
-    bool identifyLanes = false;
     if (result.count("identify"))
-        identifyLanes = true;
+        gSettings.identify = true;
 
+    // Option 4 - Identify lanes
+    if (result.count("zero"))
+        gSettings.zero = true;
 
+    // Option 5 - Identify lanes
+    if (result.count("zero-only"))
+        gSettings.zeroOnly = true;
+
+    // Option 6 - Every other lane.
+    if (result.count("all-but-zero"))
+        gSettings.allButZero = true;
 
 
 
 #ifdef QT_CORE_LIB
     QApplication app(argc, argv);
-    RNS *rns = new RNS(iFile, concepts::drivingSide::leftHand, true);
-    RNSWindow rw(rns, identifyLanes);
+    RNS *rns = new RNS(iFile, Odr::Kind::LHT, false, true);
+    RNSWindow rw(rns, gSettings);
     rw.show();
     return app.exec();
 #else
-    RNS rns(iFile, concepts::drivingSide::leftHand, true);
+    RNS rns(iFile, Odr::Kind::LHT, true, true);
     rns.printLanes();
     return 0;
 #endif // QT_CORE_LIB

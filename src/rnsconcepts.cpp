@@ -21,9 +21,10 @@
 //
 
 #include "rnsconcepts.h"
+#include "Odr.h"
+using namespace odrones;
 
-
-std::string rnsConcepts::actorString(actor a)
+std::string concepts::actorString(actor a)
 {
     switch(a)
     {
@@ -31,12 +32,27 @@ std::string rnsConcepts::actorString(actor a)
         return "car";
     case actor::meeple:
         return "meeple";
+    case actor::bus:
+        return "bus";
+    case actor::motorbike:
+        return "motorbike";
+    case actor::semitrailer:
+        return "semitrailer";
+    case actor::trailer:
+        return "trailer";
+    case actor::tram:
+        return "tram";
+    case actor::truck:
+        return "truck";
+    case actor::van:
+        return "van";
+
     default:
         return "unknown";
     }
 }
 
-std::string rnsConcepts::drivingString(drivingSide d)
+std::string concepts::drivingString(drivingSide d)
 {
     switch(d)
     {
@@ -48,5 +64,3 @@ std::string rnsConcepts::drivingString(drivingSide d)
         return "no idea";
     }
 }
-
-

@@ -25,8 +25,11 @@
 #include "vwNumerical.h"
 #include "Clothoid.hh"
 
-#ifndef VWSPIRAL_H
-#define VWSPIRAL_H
+#ifndef ODRONES_VWSPIRAL_H
+#define ODRONES_VWSPIRAL_H
+
+namespace odrones
+{
 
 class vwSpiral : public vwNumerical
 {
@@ -47,6 +50,9 @@ public:
     arr2 clNormal(scalar t) const; ///< return the normal at t;
     arr2 clNormalP(scalar t) const; ///< return the first derivative of the normal at t;
 
+    scalar l0CurvStart() const { return _curvStart; };
+    scalar l0CurvEnd() const { return _curvEnd; };
+
 
 private:
     arr2 curvexy_a(scalar t) const override; ///< normalised or not, here t is the distance in meters.
@@ -56,8 +62,12 @@ private:
 
     G2lib::ClothoidCurve _clothoid;
     int _sign;
+    scalar _curvStart;
+    scalar _curvEnd;
 
 };
 
+} // namespace odrones;
 
-#endif // VWSPIRAL_H
+
+#endif // ODRONES_VWSPIRAL_H

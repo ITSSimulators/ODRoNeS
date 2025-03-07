@@ -27,10 +27,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Defining RNS_DIR is convenient when you have ODRoNeS as a git submodule.
 if (NOT DEFINED RNS_DIR)
    set( RNS_DIR ${PROJECT_SOURCE_DIR} )
-endif (NOT DEFINED RNS_DIR)
-if (NOT DEFINED RNS_INSTALL)
-   set( RNS_INSTALL ON )
-endif (NOT DEFINED RNS_INSTALL)
+endif ()
+if (NOT DEFINED RNS_INSTALL_DEV)
+   set( RNS_INSTALL_DEV ON )
+endif ()
+if (NOT DEFINED RNS_INSTALL_DIR)
+	SET( RNS_INSTALL_DIR ${CMAKE_INSTALL_PREFIX} )
+endif ()
 
 # Our own headers:
 include_directories(${RNS_DIR}/include)
@@ -46,21 +49,21 @@ include_directories(${RNS_DIR}/3rdParty/tinyxml2)
 
 
 # Qt graphical interface:
-option(USE_QT "Build ODRoNeS with a graphical interface" ON)
-if (USE_QT)
-  find_package(Qt6 COMPONENTS Core Gui Widgets 3DCore 3DRender 3DExtras)
+option(ODRONES_USE_QT "Build ODRoNeS with a graphical interface" ON)
+if (ODRONES_USE_QT)
+  find_package(Qt6 COMPONENTS Core Gui Widgets) # 3DCore 3DRender 3DExtras)
   if (NOT ${Qt6_FOUND})
-      message(FATAL_ERROR "You could also try compiling without Qt support using -DUSE_QT=OFF")
+      message(FATAL_ERROR "You could also try compiling without Qt support using -DODRONES_USE_QT=OFF")
   endif (NOT ${Qt6_FOUND})
   set(QT_LIBRARIES Qt6::Core Qt6::Gui Qt6::Widgets)
   set(CMAKE_AUTOUIC ON)
   set(CMAKE_AUTOMOC ON)
   set(CMAKE_AUTORCC ON)
-endif(USE_QT)
+endif(ODRONES_USE_QT)
 
 # OneVersion interface:
-option(USE_ONEVERSION "Add support for OneVersion maps" OFF)
-if(USE_ONEVERSION)
+option(ODRONES_USE_ONEVERSION "[ Deprecated ] Add support for OneVersion maps" OFF)
+if(ODRONES_USE_ONEVERSION)
   # Find the headers:
   find_path(ONEVERSION_INCLUDE_DIR NAMES sim/Car.h
           HINTS ${ONEVERSION_HOME}/Simulator3/include
@@ -87,14 +90,18 @@ if(USE_ONEVERSION)
   # Add an extra definition
   add_definitions(-DUSE_ONEVERSION)
 
-endif(USE_ONEVERSION)
+endif(ODRONES_USE_ONEVERSION)
 
 # Build the RNS library:
 add_library(rns
     ${RNS_DIR}/include/constants.h 
     ${RNS_DIR}/src/rnsconcepts.cpp ${RNS_DIR}/include/rnsconcepts.h
     ${RNS_DIR}/src/matvec.cpp ${RNS_DIR}/include/matvec.h
+	 ${RNS_DIR}/src/xmlUtils.cpp ${RNS_DIR}/include/xmlUtils.h
+	 ${RNS_DIR}/src/Odr.cpp ${RNS_DIR}/include/Odr.h
     ${RNS_DIR}/src/readOdr.cpp ${RNS_DIR}/include/readOdr.h
+    ${RNS_DIR}/src/readXOdr.cpp ${RNS_DIR}/include/readXOdr.h
+    ${RNS_DIR}/src/readBOdr.cpp ${RNS_DIR}/include/readBOdr.h
     ${RNS_DIR}/src/readOneVersion.cpp ${RNS_DIR}/include/readOneVersion.h
     ${RNS_DIR}/src/geometry.cpp ${RNS_DIR}/include/geometry.h
     ${RNS_DIR}/src/parametric.cpp ${RNS_DIR}/include/parametric.h
@@ -108,6 +115,7 @@ add_library(rns
     ${RNS_DIR}/src/vwParamPoly3.cpp ${RNS_DIR}/include/vwParamPoly3.h
     ${RNS_DIR}/src/bezier.cpp ${RNS_DIR}/src/bezier2.cpp ${RNS_DIR}/src/bezier3.cpp
     ${RNS_DIR}/include/bezier.h ${RNS_DIR}/include/bezier2.h ${RNS_DIR}/include/bezier3.h
+    ${RNS_DIR}/src/vwBezier3.cpp ${RNS_DIR}/include/vwBezier3.h
     ${RNS_DIR}/src/vwSpiral.cpp ${RNS_DIR}/include/vwSpiral.h
     ${RNS_DIR}/src/lane.cpp ${RNS_DIR}/include/lane.h
     ${RNS_DIR}/src/section.cpp ${RNS_DIR}/include/section.h
@@ -123,32 +131,59 @@ add_library(rns
 )
 target_link_libraries(rns clothoids ${QT_LIBRARIES})
 
-if (USE_ONEVERSION)
+#How about Python bindings:
+option(ODRONES_PYTHON_BINDINGS "Build Python3 bindings for ODRoNeS" OFF)
+if (ODRONES_PYTHON_BINDINGS) 
+	find_package(Python 3.0 COMPONENTS Interpreter Development REQUIRED)
+	find_package(SWIG REQUIRED)
+	include(UseSWIG)
+	include_directories(${Python_INCLUDE_DIRS})
+
+   set_source_files_properties(${RNS_DIR}/swig/odrones_python.i PROPERTIES 
+	                            CPLUSPLUS ON 
+										 USE_SWIG_DEPENDENCIES ON
+										 SWIG_FLAGS "-I${RNS_DIR}/include")
+	swig_add_library(odrones TYPE SHARED LANGUAGE python
+                    SOURCES ${RNS_DIR}/swig/odrones_python.i)
+	swig_link_libraries(odrones ${Python_LIBRARIES} rns clothoids)
+
+	message(STATUS "ODRoNeS: ${RNS_INSTALL_DIR}")
+	set(ODRONES_PYTHON_INSTALL_DIR 
+	    ${RNS_INSTALL_DIR}/lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages/odrones 
+		 CACHE INTERNAL "folder in which ODRoNeS will install the Python bindings" FORCE)
+	file(WRITE ${CMAKE_BINARY_DIR}/__init__.py "from . import odrones")
+	install (TARGETS odrones DESTINATION ${ODRONES_PYTHON_INSTALL_DIR})
+	install (FILES ${CMAKE_BINARY_DIR}/odrones.py ${CMAKE_BINARY_DIR}/__init__.py
+	         DESTINATION ${ODRONES_PYTHON_INSTALL_DIR})
+endif()
+
+
+
+
+if (ODRONES_USE_ONEVERSION)
     target_link_libraries(rns ${ONEVERSION_LIBRARY} ${SIMDEPS_LIBRARIES})
-endif (USE_ONEVERSION)
+endif (ODRONES_USE_ONEVERSION)
 
 
 # Build the Graphical representations, provided you have Qt available
-if (USE_QT)
+if (ODRONES_USE_QT)
   add_executable(rnscheck
-      ${RNS_DIR}/src/main.cpp
+      ${RNS_DIR}/src/rnscheck.cpp
       ${RNS_DIR}/src/rnswindow.cpp ${RNS_DIR}/include/rnswindow.h
   )
   target_link_libraries(rnscheck rns ${QT_LIBRARIES})
 
-  qt_add_executable(rns3d 
-      ${RNS_DIR}/src/mainQt3D.cpp 
-      ${RNS_DIR}/src/mainwindow.cpp ${RNS_DIR}/include/mainwindow.h)
-  target_link_libraries(rns3d PRIVATE rns Qt6::Widgets Qt6::3DCore Qt6::3DRender Qt6::3DExtras)
+  # qt_add_executable(rns3d 
+      # ${RNS_DIR}/src/mainQt3D.cpp 
+      # ${RNS_DIR}/src/mainwindow.cpp ${RNS_DIR}/include/mainwindow.h)
+  # target_link_libraries(rns3d PRIVATE rns Qt6::Widgets Qt6::3DCore Qt6::3DRender Qt6::3DExtras)
 
-  if (RNS_INSTALL)
-     install (TARGETS rnscheck RUNTIME DESTINATION bin)
-  endif (RNS_INSTALL)
-endif (USE_QT)
+  install (TARGETS rnscheck RUNTIME DESTINATION ${RNS_INSTALL_DIR}/bin)
+endif()
 
-if (RNS_INSTALL)
-   install (TARGETS rns DESTINATION lib)
-   install (DIRECTORY ${RNS_DIR}/include/odrones DESTINATION ${CMAKE_INSTALL_PREFIX})
-endif (RNS_INSTALL)
+if (RNS_INSTALL_DEV)
+   install (TARGETS rns DESTINATION ${RNS_INSTALL_DIR}/lib)
+   install (DIRECTORY ${RNS_DIR}/include DESTINATION ${RNS_INSTALL_DIR}/include/odrones)
+endif()
                          
 

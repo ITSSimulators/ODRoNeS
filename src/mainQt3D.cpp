@@ -28,6 +28,7 @@
 #include "mainwindow.h"
 #include "cxxopts.hpp"
 #include "rns.h"
+using namespace odrones;
 
 
 static double rnsversion = 0.8;

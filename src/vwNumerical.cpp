@@ -21,6 +21,7 @@
 //
 
 #include "vwNumerical.h"
+using namespace odrones;
 
 vwNumerical::vwNumerical()
 {
@@ -400,6 +401,11 @@ scalar vwNumerical::distanceToTheEoL(const arr2 &p) const
 bool vwNumerical::getPointAfterDistance(arr2 &p, const arr2 &o, scalar d) const
 {
     return numerical::nGetPointAfterDistance(p, o, d);
+}
+
+bool vwNumerical::getPointAtDistance(arr2 &p, scalar d) const
+{
+   return interpolate(p, d);
 }
 
 bool vwNumerical::getIntersectionPointFromOT(arr2 &p, const arr2 &o, const arr2 &t) const

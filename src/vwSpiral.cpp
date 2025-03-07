@@ -21,6 +21,7 @@
 //
 
 #include "vwSpiral.h"
+using namespace odrones;
 
 
 void vwSpiral::base()
@@ -30,6 +31,8 @@ void vwSpiral::base()
     _shape = mvf::shape::vwSpiral;
     _sign = 0;
     _l = 0;
+    _curvStart = 0;
+    _curvEnd = 0;
 
     offsetP = std::bind(&vwSpiral::offsetP_a, this, std::placeholders::_1);
 }
@@ -42,7 +45,10 @@ vwSpiral::vwSpiral(const Odr::geometry &odg, int sign, std::vector<Odr::offset> 
     _sign = sign;
     _vwOff = ioffset;
     _l = odg.length;
+    _curvStart = odg.curvStart;
+    _curvEnd = odg.curvEnd;
     _roadSo = roadSo;
+    _roadSe = roadSo + se - so;
 
     _o = {odg.x, odg.y};
     _to = {std::cos(odg.hdg), std::sin(odg.hdg)};

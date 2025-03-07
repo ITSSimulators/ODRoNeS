@@ -20,13 +20,15 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
+#ifndef ODRONES_CONSTANTS_H
+#define ODRONES_CONSTANTS_H
 
 #include <limits>
 
+namespace odrones
+{
+
 typedef double scalar;
-// while purists may argue, Qt uses just this same definition and I can't type so much.
 typedef unsigned int uint;
 
 namespace constants
@@ -234,4 +236,6 @@ namespace constants
 
 namespace ct = constants;
 
-#endif // CONSTANTS_H
+} // namespace odrones
+
+#endif // ODRONES_CONSTANTS_H

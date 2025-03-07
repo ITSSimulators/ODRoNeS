@@ -24,8 +24,11 @@
 #include "numerical.h"
 #include <functional>
 
-#ifndef VWNUMERICAL_H
-#define VWNUMERICAL_H
+#ifndef ODRONES_VWNUMERICAL_H
+#define ODRONES_VWNUMERICAL_H
+
+namespace odrones
+{
 
 class vwNumerical : public geometry, public numerical
 {
@@ -49,6 +52,7 @@ public:
     arr2 getTangentInPoint(const arr2 &p) const override;
     scalar distanceToTheEoL(const arr2 &p) const override;
     bool getPointAfterDistance(arr2 &p, const arr2 &o, scalar d) const override;
+    bool getPointAtDistance(arr2 &p, scalar d) const override;
     bool getIntersectionPointFromOT(arr2 &p, const arr2 &o, const arr2 &t) const override;
     scalar getCurvature(const arr2 &p) const override;
 
@@ -87,5 +91,6 @@ protected:
     bool _ahead; ///< auxilliary boolean to know whether we're using ahead _a or backwards _b functions.
 };
 
+} // namespace odrones;
 
-#endif // VWNUMERICAL_H
+#endif // ODRONES_VWNUMERICAL_H

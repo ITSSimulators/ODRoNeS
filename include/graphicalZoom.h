@@ -20,8 +20,8 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef GRAPHICALZOOM_H
-#define GRAPHICALZOOM_H
+#ifndef ODRONES_GRAPHICALZOOM_H
+#define ODRONES_GRAPHICALZOOM_H
 
 #ifdef QT_CORE_LIB
 #include <QObject>
@@ -72,10 +72,8 @@ private:
   QPointF target_scene_pos, target_viewport_pos;
   bool eventFilter(QObject* object, QEvent* event);
 
-signals:
-  void zoomed();
 };
 
 #endif // QT_CORE_LIB
 
-#endif // GRAPHICALZOOM_H
+#endif // ODRONES_GRAPHICALZOOM_H

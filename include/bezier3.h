@@ -22,19 +22,22 @@
 
 #include "bezier.h"
 
-#ifndef BEZIER3_H
-#define BEZIER3_H
+#ifndef ODRONES_BEZIER3_H
+#define ODRONES_BEZIER3_H
+
+namespace odrones
+{
 
 class bezier3 : public bezier
 {
 public:
     bezier3();
     bezier3(const bezier3& b);
+    bezier3(const arr2 &p0, const arr2 &p1, const arr2 &p2, const arr2 &p3);
     bezier3& operator=(const bezier3& b);
     ~bezier3() override;
     void assignInputLaneToThis(const bezier3& b);
 
-    // bezier3(const arr2 &p0, const arr2 &p1, const arr2 &p2, const arr2 &p3);
     void set(const arr2 &p0, const arr2 &p1, const arr2 &p2, const arr2 &p3);
     scalar calcLength() const override;
     scalar calcLength(scalar t) const override;
@@ -70,4 +73,6 @@ public:
 };
 
 
-#endif // BEZIER3_H
+}
+
+#endif // ODRONES_BEZIER3_H

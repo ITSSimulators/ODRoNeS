@@ -20,8 +20,8 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef RNSWINDOW_H
-#define RNSWINDOW_H
+#ifndef ODRONES_RNSWINDOW_H
+#define ODRONES_RNSWINDOW_H
 
 #ifdef QT_CORE_LIB
 
@@ -35,13 +35,16 @@ namespace Ui {
 class RNSWindow;
 }
 
+namespace odrones
+{
+
 class RNSWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
     // explicit RNSWindow(std::string iFile, bool identifyLanes, QWidget *parent = nullptr);
-    explicit RNSWindow(RNS *rns, bool identifyLanes, QWidget *parent = nullptr);
+    explicit RNSWindow(RNS *rns, const graphicalSettings &gSettings, QWidget *parent = nullptr);
     ~RNSWindow();
 
 private:
@@ -53,6 +56,7 @@ private:
     QGraphicsScene *_scene;
 };
 
+}
 #endif // QT_CORE_LIB
 
-#endif // RNSWINDOW_H
+#endif // ODRONES_RNSWINDOW_H

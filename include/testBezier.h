@@ -20,8 +20,8 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef TESTBEZIER_H
-#define TESTBEZIER_H
+#ifndef ODRONES_TESTBEZIER_H
+#define ODRONES_TESTBEZIER_H
 
 #ifdef QT_CORE_LIB
 #include <QGraphicsItem>
@@ -47,11 +47,11 @@ public:
 
 private:
 
-    scalar randomUnif01();
+    odrones::scalar randomUnif01();
     std::minstd_rand _randomGenerator;
     std::uniform_real_distribution<> _unifDist01;
 };
 
 #endif // QT_CORE_LIB
 
-#endif // TESTBEZIER_H
+#endif // ODRONES_TESTBEZIER_H

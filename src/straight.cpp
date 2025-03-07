@@ -21,6 +21,7 @@
 //
 
 #include "straight.h"
+using namespace odrones;
 
 straight::straight(const straight& s)
 {
@@ -58,7 +59,7 @@ straight::straight(const OneVersion::segment &sgm, scalar offset)
      _shape = mvf::shape::straight;
 }
 
-straight::straight(const Odr::geometry &odg, int sign, scalar offsetA, scalar so, scalar se)
+straight::straight(const Odr::geometry &odg, int sign, scalar offsetA, scalar so, scalar se, scalar roadSo)
 {
     // Firstly make sure that so and se fall in range:
     if (!mvf::isInRangeLR(so, 0, odg.length))
@@ -82,6 +83,9 @@ straight::straight(const Odr::geometry &odg, int sign, scalar offsetA, scalar so
 
     _shape = mvf::shape::straight;
     mvf::boundingBoxFromTwoPoints(_blc, _trc, _origin, _dest);
+
+    _roadSo = roadSo;
+    _roadSe = roadSo + se - so;
 
     _ready = true;
 }
@@ -130,6 +134,14 @@ bool straight::getPointAfterDistance(arr2 &p, const arr2 &o, scalar d) const
     p[1] = o[1] + d * t[1];
     if (isPointHere(p)) return true;
     return false;
+}
+
+bool straight::getPointAtDistance(arr2 &p, scalar d) const
+{
+    if (d > _length) return false;
+    p[0] = _origin[0] + d * _to[0];
+    p[1] = _origin[1] + d * _to[1];
+    return true;
 }
 
 bool straight::getIntersectionPointFromOT(arr2 &p, const arr2 &o, const arr2 &t) const

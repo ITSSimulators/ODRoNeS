@@ -24,9 +24,10 @@
 
 #include "rnswindow.h"
 #include "ui_rnswindow.h"
+using namespace odrones;
 
 // RNSWindow::RNSWindow(std::string iFile, bool identifyLanes, QWidget *parent) :
-RNSWindow::RNSWindow(RNS *rns, bool identifyLanes, QWidget *parent) :
+RNSWindow::RNSWindow(RNS *rns, const graphicalSettings &gSettings, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::RNSWindow),
     _grns(nullptr),
@@ -55,7 +56,7 @@ RNSWindow::RNSWindow(RNS *rns, bool identifyLanes, QWidget *parent) :
     // This is the appropriate indexing method if you're adding and removing objects.
     _scene->setItemIndexMethod(QGraphicsScene::NoIndex); // CHANGE THIS
 
-    _grns = new graphicalRNS(*rns, identifyLanes);
+    _grns = new graphicalRNS(*rns, gSettings);
     _scene->addItem(_grns);
 
 

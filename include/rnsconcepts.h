@@ -20,22 +20,34 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef RNSCONCEPTS_H
-#define RNSCONCEPTS_H
+#ifndef ODRONES_RNSCONCEPTS_H
+#define ODRONES_RNSCONCEPTS_H
 
 #include <string>
+#include <vector>
 
-class rnsConcepts
+namespace odrones
+{
+
+class concepts
 {
 public:
-    enum class actor {car, meeple, none};
+    /*! meeple + OpenSCENARIO's vehicle category https://publications.pages.asam.net/standards/ASAM_OpenSCENARIO/ASAM_OpenSCENARIO_XML/latest/generated/content/VehicleCategory.html */
+    enum class actor {car, meeple, bus, motorbike, semitrailer, trailer, tram, truck, van, none};
     static std::string actorString(actor a);
+
+    inline static const std::vector<actor> actorV {
+        actor::car, actor::meeple, actor::bus, actor::motorbike, actor::semitrailer,
+        actor::trailer, actor::tram, actor::truck, actor::van };
+
 
     /*! whether we're on a right-hand or a left-hand driving scenario */
     enum class drivingSide { rightHand, leftHand };
     static std::string drivingString(drivingSide d);
+
 };
 
-typedef rnsConcepts concepts;
 
-#endif // RNSCONCEPTS
+} // namespace odrones;
+
+#endif // ODRONES_RNSCONCEPTS_H

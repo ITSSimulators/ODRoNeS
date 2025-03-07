@@ -21,6 +21,7 @@
 //
 
 #include "bezier.h"
+using namespace odrones;
 
 bezier::bezier()
 {
@@ -61,15 +62,23 @@ void bezier::allocateMem(uint degree)
     _wy = new scalar[degree + 1];
 }
 
+
+arr2 bezier::controlPoint(uint i) const
+{
+    if (i > _degree) return {0., 0.};
+    return {_wx[i], _wy[i]};
+}
+
+
 void bezier::clearMem()
 {
     if (_ready)
     {
+        _degree = 0;
         delete[] _wx;
         delete[] _wy;
     }
 }
-
 
 void bezier::assignInputLaneToThis(const bezier &b)
 {
@@ -168,7 +177,7 @@ scalar bezier::tangentSize(scalar t) const
 
 bool bezier::getTgivenD(scalar &t, scalar d, scalar epsilon) const
 {
-    constexpr bool rungeKutta = true;
+    constexpr bool rungeKutta = false;
     if (rungeKutta) return getTgivenDRungeKutta(t, d, epsilon);
     else return getTgivenDNewtonRoot(t, d, epsilon); // this one does not quite work yet.
 }
@@ -209,7 +218,6 @@ bool bezier::getTgivenDRungeKutta(scalar &t, scalar d, scalar epsilon) const
     return true;
 }
 
-// I don't think that using tangentSize as dFdt is correct.
 bool bezier::getTgivenDNewtonRoot(scalar &t, scalar d, scalar epsilon) const
 {
     t = d / _length;
@@ -225,28 +233,23 @@ bool bezier::getTgivenDNewtonRoot(scalar &t, scalar d, scalar epsilon) const
         }
         scalar dFdt = tangentSize(t);
 
-        /*
-        scalar dFdt = 0;
-        for (uint i = 0; i < 30; ++i)
-        {
+        bool dFdt_zero = false;
+        scalar ti = t;
+        if (mvf::areCloseEnough(dFdt, 0., 1e-16))
+            dFdt_zero = true;
+        else
+            ti = t - F/dFdt;
 
-            auto [dx, dy] = curvePxy(0.5*(ct::gc::A20[i]+1))
-
-        }
-        */
-
-
-        scalar ti = (t - F)/dFdt;
         if (F > 0)
         {
             tmax = t;
-            if (ti <= tmin) t = (tmax + tmin) / 2.;
+            if ((ti <= tmin) || (dFdt_zero)) t = (tmax + tmin) / 2.;
             else t = ti;
         }
         else
         {
             tmin = t;
-            if (ti >= tmax) t = (tmax + tmin) / 2.;
+            if ((ti >= tmax) || (dFdt_zero)) t = (tmax + tmin) / 2.;
             else t = ti;
         }
     }
@@ -273,9 +276,23 @@ bool bezier::getPointAfterDistance(arr2 &p, const arr2 &o, scalar d) const
     scalar so = distanceFromTheBoL(to);
     if (so + d > _length) return false; // that means the point would be after the end of this line.
 
+    return getPointAtDistance(p, so + d);
+}
+
+
+bool bezier::getPointAtDistance(arr2 &p, scalar d) const
+{
+    if (d > _length) return false;
+
+    if (mvf::areSameValues(d, 0))
+    {
+        p = origin();
+        return true;
+    }
+
     // get the parametre t (te) after d:
     scalar te = 0;
-    if (!getTgivenD(te, so + d)) return false; // and if false, then it was too long.
+    if (!getTgivenD(te, d)) return false; // and if false, then it was too long.
 
     p = curvexy(te);
     return true;

@@ -2593,9 +2593,6 @@ QPainterPath lane::getEdgeQPainterPath(uint n, int e) const
     return qpp;
 }
 
-
-
-
 int lane::fillInVerticesAndIndices(scalar step, std::vector<QByteArray> &indexBytes, std::vector<QByteArray> &vertexBytes, std::vector<int> &indexSize, std::vector<int> &vertexSize) const
 {
     if ((indexBytes.size() != 0) || (vertexBytes.size() != 0) ||

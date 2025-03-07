@@ -20,8 +20,8 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef LANEBEZIER_H
-#define LANEBEZIER_H
+#ifndef ODRONES_LANEBEZIER_H
+#define ODRONES_LANEBEZIER_H
 
 #include <vector>
 #include <limits>
@@ -33,6 +33,9 @@
 #ifdef QT_CORE_LIB
 #include <QPainterPath>
 #endif
+
+namespace odrones
+{
 
 class bezier : public parametric
 {
@@ -92,6 +95,8 @@ public:
     //!    The base class provides a valid implementation, individual classes may provide higher accuracy ones.
     virtual bool getPointAfterDistance(arr2& p, const arr2 &o, scalar d) const override;
 
+    bool getPointAtDistance(arr2 &p, scalar d) const override;
+
     //! return the top left corner, length and height of the rectangle that aligned to the x,y axis bounds the curve.
     virtual void getBoundingBox(arr2& blc, arr2& trc) const = 0;
 
@@ -108,7 +113,7 @@ public:
 
     bool isArc() const override {return false;}
     bool isNumerical() const override {return false;}
-
+    arr2 controlPoint(uint i) const; ///< Return the ith control point;
 
 #ifdef QT_CORE_LIB
     QPainterPath getQPainterPath(uint n) const override;
@@ -132,7 +137,7 @@ protected:
 };
 
 
+} // namespace odrones;
 
 
-
-#endif // LANEBEZIER_H
+#endif // ODRONES_LANEBEZIER_H

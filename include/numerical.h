@@ -20,8 +20,8 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef NUMERIC_H
-#define NUMERIC_H
+#ifndef ODRONES_NUMERIC_H
+#define ODRONES_NUMERIC_H
 
 #include <iostream>
 #include "matvec.h"
@@ -29,6 +29,9 @@
 #ifdef QT_CORE_LIB
 #include <QPainterPath>
 #endif // QT_CORE_LIB
+
+namespace odrones
+{
 
 class numerical
 {
@@ -58,6 +61,7 @@ public:
 
     void base(); ///< initialise all the variables.
     void nInvert(); ///< invert recalculating the points using interpolate().
+    bool isSet() const; ///< check if _pointsSize > 0;
 
     arr2 interpolate(scalar d) const; ///< interpolate the value of the curve at 0 <= d <= n.
     bool interpolate(arr2 &p, scalar d) const; ///< interpolate safely;
@@ -102,6 +106,7 @@ protected:
 
 };
 
+} // namespace odrones;
 
 
-#endif // NUMERIC_H
+#endif // ODRONES_NUMERIC_H

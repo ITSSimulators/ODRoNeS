@@ -20,30 +20,37 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef SECTION_H
-#define SECTION_H
+#ifndef ODRONES_SECTION_H
+#define ODRONES_SECTION_H
 
 #include <vector>
-#include <limits>
-#include <iostream>
-#include <cstdarg>
-#include <tuple>
-#include <vector>
-#include <algorithm>
-#include <memory>
 #include "matvec.h"
-#include "readOdr.h"
+#include "readXOdr.h"
 #include "readOneVersion.h"
 #include "rnsconcepts.h"
 #include "lane.h"
 
 
 
+namespace odrones
+{
 /*! A section is a bundle of lanes that run parallel (roughly).
  *  Lanes are kept in a vector that cannot be resized,
  *  because this could mean that the pointers to lanes
  *  leading to nextLane, prevLane, etc. would be invalidated.
  */
+
+typedef odrones::arr2 arr2;
+typedef odrones::scalar scalar;
+typedef odrones::concepts concepts;
+typedef odrones::mvf mvf;
+typedef odrones::bezier2 bezier2;
+typedef odrones::bezier3 bezier3;
+typedef odrones::lane lane;
+// typedef odrones::Odr Odr;
+typedef odrones::OneVersion OneVersion;
+
+
 class section
 {
 public:
@@ -86,7 +93,9 @@ public:
     /*! this section IS a crosswalk if every lane is of type crosswalk */
     bool isCrosswalk() const;
 
-    bool isTransitable(); ///< i. e., it has at least one transitable road
+    bool isTransitable() const; ///< i. e., it has at least one transitable road
+    bool isInOdrRange(scalar s) const; ///< true if s within the range of this section (aka laneGroup).
+    bool isOneWay() const;
 
     /*! store the input data, and add all the lanes for this laneSection ID */
     void setOdrRoad(const Odr::smaS &sec, uint lsID);
@@ -102,7 +111,9 @@ public:
     bool flipBackwards(); ///< change the direction of every lane as backwards.
 
     lane* operator[](size_t index); ///< get a lane
-    lane* getLane(size_t index) const; ///< get the same bloody lane
+    const lane* getLane(size_t index) const; ///< get a constant lane
+    const lane* getOdrLane(size_t odrId) const; ///< get the lane with _odrID == odrID;
+    lane* zero(); ///< get the reference lane.
     bool isSameSection(const section *s) const; ///< true if *s == this
     bool isConnected(const section &s) const; ///< true if any lane in *s is connected to any lane of this.
     size_t size() const; ///< return the amount of stuff stored
@@ -117,6 +128,14 @@ public:
 
     void addUpBoundingBoxes(); ///< on  set the box to the sum of all the boxes
     void updateBoundingBox(const arr2 &blc, const arr2 &trc); ///< update the bounding box defined by _bbblc, bbtrc with the input box;
+
+    bool setZero(const std::vector<Odr::geometry> &g, scalar so, scalar se); ///< return false if it was already configured.
+
+    scalar maxSpeed() const;
+    void setSpeed(scalar speed);
+
+    Odr::Kind::RoadType type() const;
+
 private:
     void updateBoundingBox(uint ndx); ///< update the bounding box defined by _bbblc, bbtrc with the box of lane _sections[ndx];
 
@@ -124,14 +143,17 @@ private:
 private:
     int _id;
     lane* _lanes; ///< a dynamic array of lanes;
+    lane _zero; ///< the reference or '0' lane that is needed for road coordinates.
     size_t _writtenSize;
     size_t _allocSize;
     arr2 _bbblc, _bbtrc; ///< bounding box bottom left corner, bounding box top right corner.
     uint _odrID;
+    Odr::Kind::RoadType _type; ///< as defined by OpenDRIVE 1.8.1 - a.6.3 e_roadType
     OneVersion::OVID _ovID;
 };
 
+} // namespace odrones
 
 
 
-#endif // SECTION_H
+#endif // ODRONES_SECTION_H

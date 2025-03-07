@@ -21,6 +21,7 @@
 //
 
 #include "section.h"
+using namespace odrones;
 
 section::section() :
    _id(-1),
@@ -31,6 +32,7 @@ section::section() :
     _bbblc = {0, 0};
     _bbtrc = {0, 0};
     _odrID = 0;
+    _type = Odr::Kind::RoadType::unknown;
 }
 
 void section::set(size_t size)
@@ -43,12 +45,15 @@ void section::set(size_t size)
         _lanes[i].setSectionID(_id);
         _lanes[i].setSection(*this);
     }
+    _zero.setSection(*this);
+    _zero.setSectionID(_id);
 }
 
 
 section::~section()
 {
     if (_allocSize > 0) delete[] _lanes;
+    _zero.clearMemory();
 }
 
 
@@ -76,6 +81,7 @@ void section::assignInputSectionToThis(const section &s)
 {
 
     _id = s.getID();
+    _type = s.type();
     _allocSize = s.getMaxSize();
     _writtenSize = s.size();
     if (_writtenSize > 0)
@@ -85,6 +91,8 @@ void section::assignInputSectionToThis(const section &s)
             _lanes[i] = s._lanes[i];
     }
     else _lanes = nullptr;
+
+    _zero = s._zero;
 
     _bbblc = {s._bbblc[0], s._bbblc[1]};
     _bbtrc = {s._bbtrc[0], s._bbtrc[1]};
@@ -225,6 +233,7 @@ int section::addLane(const std::vector<Odr::geometry> &geom, const std::vector<O
     {
         _lanes[_writtenSize].setID(static_cast<int>(_writtenSize));
         _lanes[_writtenSize].setOdrSectionID(_odrID);
+        _lanes[_writtenSize].setZero(&_zero);
         _lanes[_writtenSize].set(geom, off, width, odrL, se);
         updateBoundingBox(static_cast<uint>(_writtenSize));
         _writtenSize += 1;
@@ -281,6 +290,7 @@ void section::setOneVersionRoad(const OneVersion::smaS &sec, uint lgID)
 void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
 {
     _odrID = sec.odrID;
+    _type = sec.type;
 
     // Lanes within the same laneSection start at the same so and end at the same se,
     //  so start finding out these values:
@@ -303,6 +313,11 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
         }
     }
     // std::cout << "sec: " << sec.odrID << " starts in " << so << " and finishes in " << se << std::endl;
+
+
+    // Eventually, we'll need to configure a laneZero in _zero if it has not happened yet:
+    if ((_zero.getSign() == lane::sign::o) && (_zero.getKind() != lane::kind::none))
+        setZero(sec.geom, so, se);
 
 
     // Now, for every lane, get an array with all the offsets,
@@ -474,18 +489,6 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
         }
     }
 
-    // Once all the lanes have been created we can the traffic signs to each lane.
-    // First make a laneZero l0 to do the calculations:
-    // std::vector<Odr::tsign> ts = sec.tsigns;
-    lane* l0 = nullptr;
-    if ((sec.tsigns.size()) && (validLane >= 0))
-    {
-        l0 = new lane();
-        Odr::smaL odrl0 = sec.lanes[validLane];
-        odrl0.sign = 1;
-        l0->set(sec.geom, {Odr::offset(0.,0.,0.,0.,so,se)}, {Odr::offset(0.,0.,0.,0.,so,se)},
-                sec.lanes[validLane], se);
-    }
     // Now use getPointWithOffset(p, d, offset) to get the xy
     //   and calculate st's/
     for (uint i = 0; i < sec.tsigns.size(); ++i)
@@ -493,7 +496,7 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
         if (!mvf::isInRangeLR(sec.tsigns[i].s, so, se)) continue;
 
         lane::tSign lts;
-        l0->getPointWithOffset(lts.pos, static_cast<scalar>(sec.tsigns[i].s - so),
+        _zero.getPointWithOffset(lts.pos, static_cast<scalar>(sec.tsigns[i].s - so),
                                         static_cast<scalar>(sec.tsigns[i].t));
         lts.section = getID();
 
@@ -516,10 +519,49 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
         }
     }
 
-    if (l0) delete l0;
-
 
     return;
+}
+
+bool section::setZero(const std::vector<Odr::geometry> &g, scalar so, scalar se)
+{
+    if ((_zero.getSign() != lane::sign::o) && (_zero.getKind() != lane::kind::unknown))
+        return false;
+
+    _zero.setID(-1); ///< I hope this doesn't cause havoc.
+    _zero.setOdrSectionID(_odrID);
+
+    Odr::smaL odrl0;
+    odrl0.startingS = so;
+    odrl0.sign = 1;
+    odrl0.speed.push_back(Odr::speedLimit());
+    odrl0.odrID = 0;
+    odrl0.kind = Odr::Kind::None;
+    _zero.set(g, {Odr::offset(0.,0.,0.,0.,so,se)},
+              {Odr::offset(0.,0.,0.,0.,so,se)}, odrl0, se);
+
+    return true;
+}
+
+
+scalar section::maxSpeed() const
+{
+    scalar speed = 0;
+    for (uint i = 0; i < _writtenSize; ++i)
+        if (_lanes[i].getSpeed() > speed) speed = _lanes[i].getSpeed();
+
+    return speed;
+}
+
+void section::setSpeed(scalar speed)
+{
+    for (uint i = 0; i < _writtenSize; ++i)
+        _lanes[i].setSpeed(speed);
+}
+
+Odr::Kind::RoadType section::type() const
+{
+    return _type;
 }
 
 
@@ -589,9 +631,24 @@ lane* section::operator[](size_t index)
     return &(_lanes[index]);
 }
 
-lane* section::getLane(size_t index) const
+const lane* section::getLane(size_t index) const
 {
     return &(_lanes[index]);
+}
+
+const lane* section::getOdrLane(size_t id) const
+{
+    for (uint i = 0; i < _writtenSize; ++i)
+    {
+        if (_lanes[i].odrID() == id)
+            return &(_lanes[i]);
+    }
+    return nullptr;
+}
+
+lane* section::zero()
+{
+    return &_zero;
 }
 
 size_t section::size() const
@@ -659,7 +716,7 @@ bool section::isCrosswalk() const
 }
 
 // We'll move to the left (port) most lane, and then walk rightwards (starboard-wards)
-//  setting port/starboard pairs if the lanes have the same sign.
+//  setting port/starboard pairs if the lanes have the same type.
 // We cannot use Origin or Destination as they may be points shared by several lanes within the same section.
 //   Therefore we use a point that's slightly ahead.
 void section::setPortAndStarboard(bool assumeLeftHandDriving, bool assumeRightHandDriving)
@@ -673,17 +730,12 @@ void section::setPortAndStarboard(bool assumeLeftHandDriving, bool assumeRightHa
     if (_lanes[0].getLength() < ahead) ahead = 0.5 * _lanes[0].getLength();
 
     arr2 o;
-    // _lanes[0].getPointAfterDistance(o, _lanes[0].getOrigin(), ahead);
     if (!_lanes[0].getPointAtDistance(o, ahead))
     {
         std::cerr << "[ Error ] lrn failed in determining port/starboard lanes " << _lanes[0].getCSUID() << std::endl;
     }
     arr2 to = _lanes[0].getTangentInPoint(o);
-    if (!mvf::areCloseEnough(1, mvf::magnitude(to), mvf::absolutePrecision))
-    {
-        std::cout << "[ ERROR ] unable to configure section " << _id << std::endl;
-        return;
-    }
+
     int leftMost = 0; // if we don't find anything, it means it's Zero:
     // For each lane, check whether it is on the left, and if it is, take it:
     for (int j = 1; j < static_cast<int>(size()); ++j)
@@ -746,11 +798,6 @@ void section::setPortAndStarboard(bool assumeLeftHandDriving, bool assumeRightHa
 
             arr2 oj;
             _lanes[j].getPointAtDistance(oj, ahead);
-            /* if (!_lanes[j].getPointAfterDistance(oj, _lanes[j].getOrigin(), ahead))
-                {
-                    std::cerr << "[ Error ] lrn failed in determining port/starboard lanes " << _lanes[j].getSUID() << std::endl;
-                    // return false;
-                } */
             arr2 no = {oj[0] - o[0], oj[1] - o[1]}; // now;
             scalar dj = mvf::magnitude(no);
             no = {no[0] / dj, no[1] / dj }; // normalise
@@ -765,8 +812,7 @@ void section::setPortAndStarboard(bool assumeLeftHandDriving, bool assumeRightHa
             }
         }
 
-        // if ((nextRight != leftMost) && (_lanes[leftMost].isSameSign(_lanes[nextRight])))
-        if ((possible) && (_lanes[leftMost].isSameSign(&(_lanes[nextRight])))) // just equivalent, if slightly cheaper?
+        if ((possible) && (_lanes[leftMost].getKind() == _lanes[nextRight].getKind()))
         {
             _lanes[nextRight].setPortLane(&(_lanes[leftMost]));
             _lanes[leftMost].setStarboardLane(&(_lanes[nextRight]));
@@ -794,20 +840,10 @@ void section::setPortAndStarboard(bool assumeLeftHandDriving, bool assumeRightHa
     }
 
 
-    bool deduceDirection = false; // we may not deduce anything if every lane has the same direction.
+    // we may not deduce anything if every lane has the same direction.
+    if (isOneWay()) return;
+
     lane::sign so = _lanes[leftToRight[0]].getSign();
-    for (uint i = 1; i < size(); ++i)
-    {
-        if (leftToRight[i] == -1) break;
-        if (!_lanes[leftToRight[i]].isSameSign(so))
-        {
-            deduceDirection = true;
-            break;
-        }
-    }
-
-    if (!deduceDirection) return;
-
     if (assumeLeftHandDriving)
     {
         _lanes[leftToRight[0]].lockFlippable();
@@ -865,7 +901,7 @@ void section::lockOdrFlippable()
 
 }
 
-bool section::isTransitable()
+bool section::isTransitable() const
 {
     for (uint i = 0; i < size(); ++i)
         if (_lanes[i].isTransitable()) return true;
@@ -873,3 +909,22 @@ bool section::isTransitable()
 }
 
 
+bool section::isInOdrRange(scalar s) const
+{
+    return (_lanes[0].isInOdrRange(s));
+}
+
+
+bool section::isOneWay() const
+{
+    if (!size()) return false;
+
+    if (size() == 1) return true;
+
+    for (uint i = 1; i < size(); ++i)
+    {
+        if (_lanes[i].getSign() != _lanes[0].getSign())
+            return false;
+    }
+    return true;
+}

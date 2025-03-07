@@ -24,14 +24,16 @@
 #include "parametric.h"
 #include "numerical.h"
 
-#ifndef PARAMPOLY3_H
-#define PARAMPOLY3_H
+#ifndef ODRONES_PARAMPOLY3_H
+#define ODRONES_PARAMPOLY3_H
 
+namespace odrones
+{
 class paramPoly3 : public parametric, public numerical
 {
 public:
 
-    paramPoly3(const Odr::geometry &odr, int sign, scalar offsetA, scalar so, scalar se);
+    paramPoly3(const Odr::geometry &odr, int sign, scalar offsetA, scalar so, scalar se, scalar roadSo);
     paramPoly3(const paramPoly3& p3);
     paramPoly3& operator=(const paramPoly3& p3);
     void assignInputGeomToThis(const paramPoly3& p3);
@@ -46,6 +48,7 @@ public:
     arr2 getTangentInPoint(const arr2 &p) const override;  ///< parametric
     scalar distanceToTheEoL(const arr2 &p) const override; ///< numerical
     bool getPointAfterDistance(arr2 &p, const arr2 &o, scalar d) const override; ///< numerical
+    bool getPointAtDistance(arr2 &p, scalar d) const override; ///< numerical
     bool getIntersectionPointFromOT(arr2 &p, const arr2 &o, const arr2 &t) const override; ///< numerical
     scalar getCurvature(const arr2 &p) const override;     ///< numerial
 
@@ -67,6 +70,10 @@ public:
     bool isNumerical() const override {return true;}
     scalar sl0(scalar s) const override;
 
+    scalar u(uint i) const { if (i > 3) return 0; return _u[i]; }
+    scalar v(uint i) const { if (i > 3) return 0; return _v[i]; }
+    bool normalised() const { return _normalised; }
+
 #ifdef QT_CORE_LIB
     QPainterPath getQPainterPath(uint n) const override;
 #endif // QT_CORE_LIB
@@ -84,5 +91,7 @@ private:
 
 };
 
+} // namespace odrones;
 
-#endif // PARAMPOLY3_H
+
+#endif // ODRONES_PARAMPOLY3_H

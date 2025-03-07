@@ -20,8 +20,8 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef ODRONES_MAINWINDOW_H
+#define ODRONES_MAINWINDOW_H
 
 #include <QMainWindow>
 #include <Qt3DCore/Qt3DCore>
@@ -32,6 +32,9 @@
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
+
+namespace odrones
+{
 
 class MainWindow : public QMainWindow
 {
@@ -53,4 +56,6 @@ private:
     RNS *_rns;
 
 };
-#endif // MAINWINDOW_H
+
+} // namespace odrones;
+#endif // ODRONES_MAINWINDOW_H

@@ -22,8 +22,11 @@
 
 #include "vwNumerical.h"
 
-#ifndef VWSTRAIGHT_H
-#define VWSTRAIGHT_H
+#ifndef ODRONES_VWSTRAIGHT_H
+#define ODRONES_VWSTRAIGHT_H
+
+namespace odrones
+{
 
 class vwStraight : public vwNumerical
 {
@@ -41,5 +44,6 @@ private:
 
 };
 
+} // namespace odrones;
 
-#endif // VWSTRAIGHT_H
+#endif // ODRONES_VWSTRAIGHT_H

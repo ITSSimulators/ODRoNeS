@@ -22,8 +22,11 @@
 
 #include "bezier.h"
 
-#ifndef BEZIER2_H
-#define BEZIER2_H
+#ifndef ODRONES_BEZIER2_H
+#define ODRONES_BEZIER2_H
+
+namespace odrones
+{
 
 class bezier2 : public bezier
 {
@@ -69,5 +72,6 @@ public:
 
 };
 
+} // namespace odrones;
 
-#endif // BEZIER2_H
+#endif // ODRONES_BEZIER2_H

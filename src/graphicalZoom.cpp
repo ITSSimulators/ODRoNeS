@@ -53,7 +53,6 @@ void GraphicalZoom::gentle_zoom(double factor) {
                                                              _view->viewport()->height() / 2.0);
   QPointF viewport_center = _view->mapFromScene(target_scene_pos) - delta_viewport_pos;
   _view->centerOn(_view->mapToScene(viewport_center.toPoint()));
-  emit zoomed();
 }
 
 void GraphicalZoom::set_modifiers(Qt::KeyboardModifiers modifiers) {

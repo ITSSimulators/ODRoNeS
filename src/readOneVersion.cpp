@@ -22,6 +22,7 @@
 
 #include "readOneVersion.h"
 #include "constants.h"
+using namespace odrones;
 
 #ifdef USE_ONEVERSION
 

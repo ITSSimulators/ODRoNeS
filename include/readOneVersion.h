@@ -20,14 +20,17 @@
 //  to publications you cite the package and its related publications. 
 //
 
-#ifndef READONEVERSION_H
-#define READONEVERSION_H
+#ifndef ODRONES_READONEVERSION_H
+#define ODRONES_READONEVERSION_H
 
 // Only System and ODRoNeS headers should be here.
 #include <iostream>
 #include <string>
 #include <vector>
 #include <array>
+
+namespace odrones
+{
 
 typedef unsigned int uint;
 
@@ -290,4 +293,6 @@ private:
     bool _ready;
 };
 
-#endif // READONEVERSION_H
+} // namespace odrones
+
+#endif // ODRONES_READONEVERSION_H

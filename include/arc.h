@@ -22,14 +22,17 @@
 
 #include "geometry.h"
 
-#ifndef ARC_H
-#define ARC_H
+#ifndef ODRONES_ARC_H
+#define ODRONES_ARC_H
+
+namespace odrones
+{
 
 class arc : public geometry
 {
 public:
     arc();
-    arc(const Odr::geometry &odr, int sign, scalar offsetA, scalar so, scalar se);
+    arc(const Odr::geometry &odr, int sign, scalar offsetA, scalar so, scalar se, scalar roadSo);
     arc(const OneVersion::segment &sgm, scalar offset);
     arc(const arr2& origin, const arr2& dest, const arr2& centre, mvf::shape s);
     arc(const arr2& origin, const arr2& dest, const arr2& to);
@@ -39,9 +42,11 @@ public:
     void assignInputGeomToThis(const arc& a);
 
     void setTo(arr2 to);
+    void setWith3Points(const arr2& origin, const arr2& dest, const arr2& third);
 
     void base() override;
     void invert() override;
+    void printOut() const override;
     bool isArc() const override {return true;}
     bool isNumerical() const override {return false;}
     scalar sl0(scalar s) const override;
@@ -52,6 +57,7 @@ public:
     arr2 getTangentInPoint(const arr2 &p) const override;
     scalar distanceToTheEoL(const arr2 &p) const override;
     bool getPointAfterDistance(arr2 &p, const arr2 &o, scalar d) const override;
+    bool getPointAtDistance(arr2 &p, scalar d) const override;
     bool getIntersectionPointFromOT(arr2 &p, const arr2 &o, const arr2 &t) const override;
     scalar getCurvature(const arr2 &p) const override;
 #ifdef QT_CORE_LIB
@@ -77,5 +83,6 @@ private:
 
 };
 
+}
 
-#endif // ARC_H
+#endif // ODRONES_ARC_H

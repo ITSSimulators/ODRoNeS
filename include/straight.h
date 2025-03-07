@@ -22,14 +22,17 @@
 
 #include "geometry.h"
 
-#ifndef STRAIGHT_H
-#define STRAIGHT_H
+#ifndef ODRONES_STRAIGHT_H
+#define ODRONES_STRAIGHT_H
+
+namespace odrones
+{
 
 class straight : public geometry
 {
 public:
 
-    straight(const Odr::geometry &odr, int sign, scalar offsetA, scalar so, scalar se);
+    straight(const Odr::geometry &odr, int sign, scalar offsetA, scalar so, scalar se, scalar roadSo);
     straight(const OneVersion::segment &sgm, scalar offset);
     straight(const arr2 &origin, const arr2 &dest);
     straight(const straight& s);
@@ -42,6 +45,7 @@ public:
     arr2 getTangentInPoint(const arr2 &p) const override;
     scalar distanceToTheEoL(const arr2 &p) const override;
     bool getPointAfterDistance(arr2 &p, const arr2 &o, scalar d) const override;
+    bool getPointAtDistance(arr2 &p, scalar d) const override;
     bool getIntersectionPointFromOT(arr2 &p, const arr2 &o, const arr2 &t) const override;
     scalar getCurvature(const arr2 &p) const override;
 #ifdef QT_CORE_LIB
@@ -50,5 +54,6 @@ public:
 
 };
 
+} // namespace odrones
 
-#endif // STRAIGHT_H
+#endif // ODRONES_STRAIGHT_H

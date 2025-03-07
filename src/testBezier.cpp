@@ -31,7 +31,7 @@ testBezier::testBezier()
     _unifDist01 = std::uniform_real_distribution<>(0,1);
 }
 
-scalar testBezier::randomUnif01()
+odrones::scalar testBezier::randomUnif01()
 {
     return _unifDist01(_randomGenerator);
 }
@@ -85,6 +85,7 @@ void testBezier::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWid
     // setPos(0 * ct::mToPix, - 0 * ct::mToPix);
     */
 
+    using namespace odrones;
 
 
 
@@ -240,7 +241,7 @@ void testBezier::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWid
         scalar ti;
         lb3.getTGivenXY(ti, p);
         scalar si = lb3.distanceBetween(to, ti);
-        if (!mvf::areSameValues(si, Ds))
+        if (!mvf::areCloseEnough(si, Ds, mvf::distPrecision))
         {
             std::cerr << "wrong distance: " << si << " does not match Ds: " << Ds
                       << ", abs err: " << std::abs(Ds-si) <<  std::endl ;
@@ -263,7 +264,7 @@ void testBezier::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWid
         scalar ti;
         lb2.getTGivenXY(ti, p);
         scalar si = lb2.distanceBetween(to, ti);
-        if (!mvf::areSameValues(si, Ds))
+        if (!mvf::areCloseEnough(si, Ds, mvf::distPrecision))
         {
             std::cerr << "wrong distance: " << si << " does not match Ds: " << Ds
                       << ", abs err: " << std::abs(Ds-si) <<  std::endl ;
@@ -401,9 +402,9 @@ void testBezier::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWid
         {
             pen.setColor(Qt::magenta);
             painter->setPen(pen);
-            std::cout << "too much: " << o[0] << ", " << o[1] << " went to " << p[0] << ", " << p[1] << " at " << t
-                      << " but tg: " << tg[0] << ", " << tg[1] << " and nrm: " << nrm[0] << ", " << nrm[1]
-                      << " do not add up: " << nrm[0]*tg[0] + nrm[1]*tg[1] << " d: " << mvf::distance(p, o) << std::endl;
+            std::cout << "too much: (" << o[0] << ", " << o[1] << ") went to (" << p[0] << ", " << p[1] << ") at " << t
+                      << " but tg: (" << tg[0] << ", " << tg[1] << ") and nrm: (" << nrm[0] << ", " << nrm[1]
+                      << ") do not add up: " << nrm[0]*tg[0] + nrm[1]*tg[1] << " d: " << mvf::distance(p, o) << std::endl;
 
         }
         painter->drawLine(QPointF(ct::mToPix * xy[0], -ct::mToPix * xy[1]), QPointF(ct::mToPix * p[0], -ct::mToPix * p[1]));
@@ -426,9 +427,9 @@ void testBezier::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWid
         {
             pen.setColor(Qt::magenta);
             painter->setPen(pen);
-            std::cout << "too much: " << o[0] << ", " << o[1] << " went to " << p[0] << ", " << p[1] << " at " << t
-                      << " but tg: " << tg[0] << ", " << tg[1] << " and nrm: " << nrm[0] << ", " << nrm[1]
-                      << " do not add up: " << nrm[0]*tg[0] + nrm[1]*tg[1] << " d: " << mvf::distance(p, o) << std::endl;
+            std::cout << "too much: (" << o[0] << ", " << o[1] << ") went to (" << p[0] << ", " << p[1] << ") at " << t
+                      << " but tg: (" << tg[0] << ", " << tg[1] << ") and nrm: (" << nrm[0] << ", " << nrm[1]
+                      << ") do not add up: " << nrm[0]*tg[0] + nrm[1]*tg[1] << " d: " << mvf::distance(p, o) << std::endl;
 
         }
         painter->drawLine(QPointF(ct::mToPix * xy[0], -ct::mToPix * xy[1]), QPointF(ct::mToPix * p[0], -ct::mToPix * p[1]));

@@ -21,6 +21,7 @@
 //
 
 #include "paramPoly3.h"
+using namespace odrones;
 
 
 paramPoly3::paramPoly3(const paramPoly3 &p)
@@ -44,12 +45,14 @@ void paramPoly3::base()
     _pto = {0., 0.};
 }
 
-paramPoly3::paramPoly3(const Odr::geometry &odg, int sign, scalar offsetA, scalar so, scalar se)
+paramPoly3::paramPoly3(const Odr::geometry &odg, int sign, scalar offsetA, scalar so, scalar se, scalar roadSo)
 {
     _shape = mvf::shape::paramPoly3;
     _sign = sign;
     _offset = offsetA;
     _odrLength = odg.length;
+    _roadSo = roadSo;
+    _roadSe = roadSo + se - so;
 
     _u[0] = odg.aU;
     _u[1] = odg.bU;
@@ -224,6 +227,11 @@ scalar paramPoly3::distanceToTheEoL(const arr2 &p) const
 bool paramPoly3::getPointAfterDistance(arr2 &p, const arr2 &o, scalar d) const
 {
     return nGetPointAfterDistance(p, o, d);
+}
+
+bool paramPoly3::getPointAtDistance(arr2 &p, scalar d) const
+{
+    return interpolate(p, d);
 }
 
 bool paramPoly3::getIntersectionPointFromOT(arr2 &p, const arr2 &o, const arr2 &t) const
