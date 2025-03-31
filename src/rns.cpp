@@ -534,7 +534,6 @@ void RNS::setPortAndStarboard()
 
 void RNS::flipOneWaySections()
 {
-
     // Flip lanes in one-way sections linked to two-way sections
     //   for which "prev" and "next" don't match.
     bool satisfaction = false;
@@ -572,7 +571,7 @@ void RNS::flipOneWaySections()
                         (std::find(knowledge.begin(), knowledge.end(), nls[k]->getSection()->getID()) == knowledge.end()))
                         continue;
                     if (!mvf::areCloseEnough(_sections[i][j]->getDestination(),
-                                             nls[k]->getOrigin(), 1e-6))
+                                             nls[k]->getOrigin(), lane::odrTol))
                         flipThisSection = true;
 
                     conclusion = true;
@@ -589,7 +588,7 @@ void RNS::flipOneWaySections()
                              (std::find(knowledge.begin(), knowledge.end(), pls[k]->getSection()->getID()) == knowledge.end())))
                             continue;
                         if (!mvf::areCloseEnough(_sections[i][j]->getOrigin(),
-                                                 pls[k]->getDestination(), 1e-6))
+                                                 pls[k]->getDestination(), lane::odrTol))
                             flipThisSection = true;
 
                         conclusion = true;
@@ -913,7 +912,7 @@ void RNS::linkLanesGeometrically(scalar tol)
             {
                 for (uint lj = 0; lj < _sections[sj].size(); ++lj)
                 {
-                    uint linkErr = linkLanesIfInRange(_sections[si][li], _sections[sj][lj]);
+                    uint linkErr = linkLanesIfInRange(_sections[si][li], _sections[sj][lj], tol);
                     if (linkErr != 2)
                         continue;
 
