@@ -261,8 +261,11 @@ arr2 numerical::interpolate(scalar d) const
     uint ndx;
     scalar frac;
     interpolateSCore(ndx, frac, d);
-    return {_pointsX[ndx] * (1 - frac) + _pointsX[ndx+1] * frac,
-            _pointsY[ndx] * (1 - frac) + _pointsY[ndx+1] * frac};
+    if (frac != 0)
+        return {_pointsX[ndx] * (1 - frac) + _pointsX[ndx+1] * frac,
+                _pointsY[ndx] * (1 - frac) + _pointsY[ndx+1] * frac};
+    else
+        return {_pointsX[ndx], _pointsY[ndx]};
 }
 
 scalar numerical::interpolateSo(scalar d) const
@@ -270,7 +273,10 @@ scalar numerical::interpolateSo(scalar d) const
     uint ndx;
     scalar frac;
     interpolateSCore(ndx, frac, d);
-    return _pointsSo[ndx] * (1 - frac) + _pointsSo[ndx+1] * frac;
+    if (frac != 0)
+        return _pointsSo[ndx] * (1 - frac) + _pointsSo[ndx+1] * frac;
+    else
+        return _pointsSo[ndx];
 }
 
 
