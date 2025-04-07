@@ -52,7 +52,8 @@ int main(int argc, char *argv[])
             ("i,identify", "Identify lanes")
             ("z,zero", "Include the centre lane")
             ("c,zero-only", "Consider the centre lane only")
-            ("a,all-but-zero", "Include every lane");
+            ("a,all-but-zero", "Include every lane")
+            ("e,exhaustive-linking", "Geometrically link lanes with close enough ends");
 
     options.parse_positional("map");
 
@@ -136,16 +137,20 @@ int main(int argc, char *argv[])
     if (result.count("all-but-zero"))
         gSettings.allButZero = true;
 
+    bool el = false;
+    if (result.count("exhaustive-linking"))
+        el = true;
+
 
 
 #ifdef QT_CORE_LIB
     QApplication app(argc, argv);
-    RNS *rns = new RNS(iFile, Odr::Kind::LHT, false, true);
+    RNS *rns = new RNS(iFile, Odr::Kind::LHT, el, true);
     RNSWindow rw(rns, gSettings);
     rw.show();
     return app.exec();
 #else
-    RNS rns(iFile, Odr::Kind::LHT, true, true);
+    RNS rns(iFile, Odr::Kind::LHT, el, true);
     rns.printLanes();
     return 0;
 #endif // QT_CORE_LIB
