@@ -145,13 +145,17 @@ private:
     const lane* getLaneWithPoint(const arr2 &p, scalar tol = mvf::absolutePrecision) const;
 
     //! Assign li as nextLane to lj or lj as nextLane to li, and set the corresponding prevLanes,
-    //!   as long as the end / start of li and lj are closer than tol.
+    //!  ... as long as any ending pair of points for li and lj are closer than tol.
     uint linkLanesIfInRange(lane *li, lane *lj, scalar tol = lane::odrTol);
+    //!  ... as long as the end / start of li and lj are closer than tol.
     bool linkLanesIfInRangeAndOD(lane *li, lane *lj, scalar tol = lane::odrTol);
+    //!  ... as long as any ending pair of points for li and lj are closer than tol and the tangents align correctly.
+    uint linkLanesIfSound(lane *li, lane *lj, scalar tol = lane::odrTol);
 
     //! Assign nextLanes and prevLanes to the lanes in sections si and sj by calling linkLanesIfInRange on a double loop.
     void linkLanesInSections(section &si, section &sj, scalar tol = lane::odrTol);
     void linkLanesInSectionsOD(section &si, section &sj, scalar tol = lane::odrTol);
+    void linkLanesInSectionsIfSound(section &si, section &sj, scalar tol = lane::odrTol);
 
     /*! arrange conflicts and default priorities for lanes in different sections and same ending: priority is to the right */
     bool makePrioritiesSameEndingDifferentSectionLanes(scalar anticipationTime);

@@ -912,7 +912,7 @@ void RNS::linkLanesGeometrically(scalar tol)
             {
                 for (uint lj = 0; lj < _sections[sj].size(); ++lj)
                 {
-                    uint linkErr = linkLanesIfInRange(_sections[si][li], _sections[sj][lj], tol);
+                    uint linkErr = linkLanesIfSound(_sections[si][li], _sections[sj][lj], tol);
                     if (linkErr != 2)
                         continue;
 
@@ -932,7 +932,7 @@ void RNS::linkLanesGeometrically(scalar tol)
         for (uint j = i + 1; j < sectionsSize(); ++j)
         {
             if (!_sections[j].isOneWay()) continue;
-            linkLanesInSections(_sections[i], _sections[j], tol);
+            linkLanesInSectionsIfSound(_sections[i], _sections[j], tol);
         }
     }
 
@@ -980,7 +980,57 @@ uint RNS::linkLanesIfInRange(lane *li, lane *lj, scalar tol)
     }
 
     return 0;
+}
 
+
+uint RNS::linkLanesIfSound(lane *li, lane *lj, scalar tol)
+{
+    if (li->isCSUID("11:0 (26:-1)") || (lj->isCSUID("11:0 (26:-1)")))
+    {
+        std::cout << "pause!" << std::endl;
+    }
+
+    if (mvf::areCloseEnough(li->getDestination(), lj->getOrigin(), tol))
+    {
+        if (! mvf::areCloseEnough( 1,  mvf::scalarProduct(li->getTangentInPoint(li->getDestination()), lj->getTo()), tol ) )
+            return 1;
+
+        li->setNextLane(lj, true);
+        return 0;
+    }
+
+    if (mvf::areCloseEnough(li->getOrigin(), lj->getDestination(), tol))
+    {
+        if (! mvf::areCloseEnough( 1,  mvf::scalarProduct(lj->getTangentInPoint(lj->getDestination()), li->getTo()), tol ) )
+            return 1;
+
+        li->setPrevLane(lj, true);
+        return 0;
+    }
+
+
+    if (mvf::areCloseEnough(li->getDestination(), lj->getDestination(), tol))
+    {
+        if (! mvf::areCloseEnough( -1,  mvf::scalarProduct( li->getTangentInPoint(lj->getDestination()),
+                                                            lj->getTangentInPoint(lj->getDestination())), tol ) )
+            return 1;
+
+        lj->setNextLane(li, false);
+        li->setNextLane(lj, false);
+        return 2;
+    }
+
+    if (mvf::areCloseEnough(li->getOrigin(), lj->getOrigin(), tol))
+    {
+        if (! mvf::areCloseEnough( -1,  mvf::scalarProduct( li->getTo(), lj->getTo()), tol ) )
+            return 1;
+
+        li->setPrevLane(lj, false);
+        lj->setPrevLane(li, false);
+        return 2;
+    }
+
+    return 1;
 }
 
 void RNS::linkLanesInSections(section &si, section &sj, scalar tol)
@@ -998,6 +1048,15 @@ void RNS::linkLanesInSectionsOD(section &si, section &sj, scalar tol)
     {
         for (uint j = 0; j < sj.size(); ++j)
             linkLanesIfInRangeAndOD(si[i], sj[j]);
+    }
+}
+
+void RNS::linkLanesInSectionsIfSound(section &si, section &sj, scalar tol)
+{
+    for (uint i = 0; i < si.size(); ++i)
+    {
+        for (uint j = 0; j < sj.size(); ++j)
+            linkLanesIfSound(si[i], sj[j]);
     }
 }
 
