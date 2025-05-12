@@ -355,3 +355,19 @@ QPainterPath bezier::getQPainterPath(uint n) const
 }
 #endif
 
+scalar bezier::arcError() const
+{
+    arc ao = Arc();
+    scalar d1 = mvf::distance(curvexy(0.25), ao.centre());
+    scalar d2 = mvf::distance(curvexy(0.75), ao.centre());
+    scalar r = std::abs(ao.radiusOfCurvature());
+
+    return std::sqrt(0.5 * ( (d1-r)*(d1-r) + (d2-r)*(d2-r) ));
+}
+
+arc bezier::Arc() const
+{
+    arc ao;
+    ao.setWith3Points(curvexy(0), curvexy(1), curvexy(0.5));
+    return ao;
+}
