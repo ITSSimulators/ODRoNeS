@@ -64,6 +64,8 @@ public:
     QPainterPath getQPainterPath(uint n) const override;
 #endif // QT_CORE_LIB
 
+    Odr::geometry writeGeometry() const; ///< we should bring that down to geometry.
+
 public:
     scalar alpha() const {return _alpha;}
     arr2 centre() const {return _centre;}
