@@ -340,6 +340,7 @@ void Odr::smaL::writeXML(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc)
     writeXMLWidth(elem, doc);
 }
 
+// See if the multiple control points forming the bezier are (nearly) on an arc.
 bool ReadOdr::simplifySingleArc(Odr::smaS &s)
 {
     if (s.geom.size() == 1) return false;
@@ -375,17 +376,68 @@ bool ReadOdr::simplifySingleArc(Odr::smaS &s)
     // a_f.printOut();
 
     s.geom.clear();
-    s.geom.push_back( Odr::geometry() );
-    s.geom.back().g = Odr::Attr::Geometry::arc;
-    s.geom.back().s = 0;
-    s.geom.back().x = a_f.origin()[0];
-    s.geom.back().y = a_f.origin()[1];
-    s.geom.back().hdg = std::atan2(a_f.to()[1], a_f.to()[0]);
-    s.geom.back().length = a_f.length();
-    s.geom.back().curvature = 1.0 / a_o.radiusOfCurvature();
+    s.geom.push_back( a_f.writeGeometry() );
 
     return true;
 }
+
+bool ReadOdr::simplifyMultipleArcs(Odr::smaS &s)
+{
+    std::vector<Odr::geometry> g; // output vector of geometries.
+
+    scalar tol = 1e-2;
+    scalar minLength = 1e-2;
+    // Swap every bezier for a series of arcs:
+    for (uint i = 0; i < s.geom.size(); ++i)
+    {
+        if (s.geom[i].g != Odr::Attr::Geometry::bezier3)
+        {
+            g.push_back(s.geom[i]);
+            continue;
+        }
+
+
+        bezier3 bz3_r(s.geom[i]);
+        scalar err = bz3_r.arcError();
+        scalar si = s.geom[i].s;
+        bool success = true;
+        std::vector<Odr::geometry> arcs;
+        while (err > tol)
+        {
+            scalar t = 2;
+            bezier3 bzi;
+            while ((err > tol) && (success))
+            {
+                t = t / 2;
+                bzi = bz3_r.getStartingPart(t);
+                err = bzi.arcError();
+                std::cout << "geom[" << i << "], ti: " << t << ", bzi.length(): " << bzi.length() << ", err: " << err << std::endl;
+                if (bzi.length() < minLength)
+                    success = false;
+            }
+            if (!success) break;
+            bz3_r = bz3_r.getEndingPart(t);
+            arcs.push_back(bzi.Arc().writeGeometry());
+            arcs.back().s = si;
+            si += arcs.back().length;
+
+            err = bz3_r.arcError();
+        }
+
+        if (success)
+        {
+            arcs.push_back(bz3_r.Arc().writeGeometry());
+            arcs.back().s = si;
+            g.insert(g.end(), arcs.begin(), arcs.end());
+        }
+        else
+            g.push_back(s.geom[i]);
+    }
+
+    s.geom = g;
+    return true;
+}
+
 
 bool ReadOdr::simplifyStraights(Odr::smaS &s)
 {
@@ -449,6 +501,6 @@ void ReadOdr::simplifyGeometries(Odr::smaS &s)
 
     simplifyStraights(s);
 
-
+    simplifyMultipleArcs(s);
 
 }

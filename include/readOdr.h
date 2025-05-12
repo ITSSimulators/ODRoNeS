@@ -43,7 +43,7 @@ public:
     ReadOdr& operator+=(const ReadOdr& r);
 
     void renumber(uint shift); ///< renumber the Odr ids of the sections.
-    void transform(const arr2 &position, scalar angle);
+    void transform(const arr2 &position, scalar angle); ///< rotate and translate this map
 
     bool uniqueSectionOdrIDs(); ///< check whether there are sections with repeated odrIDs
 
@@ -78,6 +78,8 @@ protected:
     bool simplifySingleArc(Odr::smaS &s); ///< if equivalent, modify s.geom into a single arc and return true;
 
     bool simplifyStraights(Odr::smaS &s); ///< simplify every straight bezier into a real straight.
+
+    bool simplifyMultipleArcs(Odr::smaS &s); ///< cut the beziers into short arcs that accurately fit
 
 protected:
     std::vector<Odr::smaS> _sections;
