@@ -1659,6 +1659,7 @@ int lane::getGeometryIndex(const arr2 &p) const
         for (uint i = 0; i < _geom.size(); ++i)
             if (mvf::isPointInBoxBLcTRcTol(p, _geom[i]->blc(), _geom[i]->trc(), odrTol))
                 return i;
+
         return -1;
     }
 
@@ -2539,6 +2540,23 @@ std::vector<QPainterPath> lane::getQPainterPaths(uint n) const
 
     return qpp;
 }
+
+std::vector<QPainterPath> lane::getBoxQPainterPaths() const
+{
+    std::vector<QPainterPath> qpp;
+    for (uint i = 0; i < _geom.size(); ++i)
+    {
+        QPainterPath qpi;
+        qpi.moveTo(ct::mToPix * _geom[i]->blc()[0], -ct::mToPix * _geom[i]->blc()[1]);
+        qpi.lineTo(ct::mToPix * _geom[i]->trc()[0], -ct::mToPix * _geom[i]->blc()[1]);
+        qpi.lineTo(ct::mToPix * _geom[i]->trc()[0], -ct::mToPix * _geom[i]->trc()[1]);
+        qpi.lineTo(ct::mToPix * _geom[i]->blc()[0], -ct::mToPix * _geom[i]->trc()[1]);
+        qpi.lineTo(ct::mToPix * _geom[i]->blc()[0], -ct::mToPix * _geom[i]->blc()[1]);
+        qpp.push_back(qpi);
+    }
+    return qpp;
+}
+
 
 QPainterPath lane::getEdgeQPainterPath(uint n, int e) const
 {

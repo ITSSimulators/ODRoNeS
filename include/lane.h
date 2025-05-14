@@ -462,6 +462,7 @@ public:
     QPainterPath getEdgeQPainterPath(uint n, int e) const; ///< e = -1 for left edge and e = 1 for right edge.
     QPainterPath getQPainterPath(uint n) const; ///< get a QPainterPath with n points per Bezier line.
     std::vector<QPainterPath> getQPainterPaths(uint n) const; ///< get a vector with the QPainterPaths of each Bezier line in the lane.
+    std::vector<QPainterPath> getBoxQPainterPaths() const;
     int fillInVerticesAndIndices(scalar step, std::vector<QByteArray> &indexBytes, std::vector<QByteArray> &vertexBytes,
                                  std::vector<int> &indexSize, std::vector<int> &vertexSize) const; ///< as the method states: allocate and fill in the required 3D data.
 #endif
