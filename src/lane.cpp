@@ -1657,7 +1657,7 @@ int lane::getGeometryIndex(const arr2 &p) const
     if (fast) /* Fast and slightly insecure */
     {
         for (uint i = 0; i < _geom.size(); ++i)
-            if (mvf::isPointInBoxBLcTRcTol(p, _geom[i]->blc(), _geom[i]->trc(), odrTol))
+            if (mvf::isPointInBoxBLcTRcTol(p, _geom[i]->blc(), _geom[i]->trc(), 1e-6))
                 return i;
 
         return -1;
