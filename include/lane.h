@@ -169,6 +169,14 @@ public:
     class lCoord
     {
     public:
+        lCoord()
+        {
+            l = nullptr;  pos = {0., 0.}; s = 0; loff = 0;
+        }
+        lCoord(const lane *li, const arr2& posi, scalar si, scalar loffi)
+        {
+            l = li; pos = posi; s = si; loff = loffi;
+        }
         const lane *l;       ///< the lane it's on.
         arr2 pos;            ///< position projected onto the center of the lane
         scalar s;            ///< distance down the lane
