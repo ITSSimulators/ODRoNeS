@@ -474,6 +474,9 @@ scalar bezier3::calcLength() const
 
 scalar bezier3::calcLength(scalar t) const
 {
+    if (mvf::areSameValues(t, 0))
+        return 0;
+
     uint order = 30;
     scalar l = 0;
     for (uint i = 0; i < order; ++i)
