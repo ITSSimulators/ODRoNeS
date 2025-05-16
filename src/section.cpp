@@ -101,7 +101,7 @@ void section::assignInputSectionToThis(const section &s)
 }
 
 
-bool section::isReady()
+bool section::isReady() const
 {
     if (_allocSize == 0) return false;
     return true;
@@ -646,7 +646,7 @@ const lane* section::getOdrLane(size_t id) const
     return nullptr;
 }
 
-lane* section::zero()
+const lane* section::zero() const
 {
     return &_zero;
 }
