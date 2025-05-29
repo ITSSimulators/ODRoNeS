@@ -230,13 +230,13 @@ void numerical::interpolateSCore(uint &ndx, scalar &frac, scalar s) const
 
 
     // Take a good initial guess for ndx:
-    ndx = std::floor((scalar) s / _approxDs);
-    if (ndx > _pointsSize -1) ndx = _pointsSize -1; // this can very rarely.
+    ndx = std::floor(s / _approxDs);
+    if (ndx > _pointsSize -1) ndx = _pointsSize -1; // this happen can very rarely.
     //  and now refine it:
+    while ( (ndx < _pointsSize - 2) && (_pointsS[ndx + 1] < s) )
+            ndx += 1;
     while ( (ndx > 0) && (_pointsS[ndx] > s) )
             ndx -= 1;
-    while ( (ndx < _pointsSize - 1) && (_pointsS[ndx + 1] < s) )
-            ndx += 1;
 
 
     if (ndx == _pointsSize -1)
@@ -291,6 +291,12 @@ void numerical::nCalcBoundingBox(arr2 &blc, arr2 &trc)
 
 scalar numerical::nProjectPointHere(arr2 &p, const arr2 &o) const
 {
+    if (mvf::areSamePoints(o, {_pointsX[0], _pointsY[0]}))
+    {
+        p = {_pointsX[0], _pointsY[0]};
+        return 0;
+    }
+
     uint minIdx = 0;
     scalar d2o = 1e12;
     uint prt = minPointsSize;
