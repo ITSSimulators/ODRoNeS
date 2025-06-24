@@ -618,6 +618,8 @@ void RNS::flipOneWaySections()
 
 void RNS::printLanes() const
 {
+    constexpr char RESET[5] = "\033[0m";
+    constexpr char BOLDWHITE[10] = "\033[1m\033[37m";
 
     for (uint i = 0; i < _sectionsSize; ++i)
     {
@@ -665,7 +667,7 @@ void RNS::printLanes() const
                 sideString += "<null>";
             }
 
-            std::cout << l->getShapeString() << " lane: " << l->getCSUID();
+            std::cout << BOLDWHITE << l->getShapeString() << " lane: " << l->getCSUID() << RESET;
             std::cout << " starts in: (" << o[0] << ", " << o[1] <<  "), ends in: (" << d[0] << ", " << d[1] << ")"
                       << ", _to: (" << l->getTo()[0] << ", " << l->getTo()[1] << ")"
                       << ", is " << l->getLength() << " m long, has max speed: " << l->getSpeed()
@@ -675,7 +677,6 @@ void RNS::printLanes() const
         }
     }
 
-    /*
     std::cout << "--- Zero Lanes ---" << std::endl;
     std::cout << "------------------" << std::endl;
     for (uint i = 0; i < _sectionsSize; ++i)
@@ -688,7 +689,6 @@ void RNS::printLanes() const
                   << ", _to: (" << l->getTo()[0] << ", " << l->getTo()[1] << ")"
                   << ", is " << l->getLength() << " m long" << std::endl;
     }
-    */
 
 }
 
@@ -1096,6 +1096,11 @@ const lane* RNS::getCLaneWithODRIds(uint rID, int lID) const
     }
 
     return nullptr;
+}
+
+const lane* RNS::getCLaneWithSUID(uint sID, uint lID) const
+{
+    return _sections[sID][lID];
 }
 
 lane* RNS::getLaneWithODRIds(uint rID, int lID) const
@@ -1512,7 +1517,7 @@ bool RNS::makePrioritiesSameEndingDifferentSectionLanes(scalar anticipationTime)
 
                     // create a conflict and assign it to the lower priority lane:
                     conflict lpCnf = conflict::createEoLConflict(lpLane, hpLane, anticipationTime);
-                    if (verbose())
+                    if ((verbose()) && (false))
                     {
                         for (uint pk = 0; pk < lpCnf.hpLane.size(); ++pk)
                             std::cout << "lane: " << lpCnf.hpLane[pk]->getSUID() << " has priority over " << lpLane->getSUID() << std::endl;
@@ -1660,7 +1665,7 @@ void RNS::makePrioritiesDifferentEndingDifferentSectionCrossingLanes(scalar anti
                     if (v.size() == 0) continue;
 
                     // Print out the intersections:
-                    if (verbose())
+                    if ((verbose()) && (false))
                     {
                         std::cout << "lanes: " << _sections[i][li]->getCSUID() << ", and " << _sections[j][lj]->getCSUID()
                                   << " intersect in " << v.size() << " point";
@@ -1706,7 +1711,7 @@ void RNS::makePrioritiesDifferentEndingDifferentSectionCrossingLanes(scalar anti
                         lane *portLane, *starboardLane;
                         if (findPortAndStarboardLanes(portLane, starboardLane, _sections[i][li], _sections[j][lj], dToEoLi, dToEoLj) > 0)
                         {
-                            if (verbose())
+                            if ((verbose()) && (false))
                                 std::cerr << "[ Warning ] unable to find out which one is port between: " <<
                                          _sections[i][li]->getCSUID() << " and " << _sections[j][lj]->getCSUID() <<
                                          " at the intersection point (" << v[ck][0] << ", " << v[ck][1] << ")" << std::endl;
@@ -1744,7 +1749,7 @@ void RNS::makePrioritiesDifferentEndingDifferentSectionCrossingLanes(scalar anti
                         }
 
 
-                        if (verbose())
+                        if ((verbose()) && (false))
                             std::cout << " Lane " << lpLane->getSUID() << " has lower priority than " << hpLane->getSUID()
                                       << " at the intersection point (" << v[ck][0] << ", " << v[ck][1] << ")" << std::endl;
 
@@ -1837,7 +1842,7 @@ bool RNS::swapConflictPriority(lane *l, uint ci)
         uint uck = static_cast<uint>(ick);
         l->setConflictKind(ci, cnf.hpLane[lj]->getConflictKind(uck));
         getLane(cnf.hpLane[lj])->setConflictKind(uck, ko);
-        if (verbose())
+        if ((verbose()) && (false))
         {
             std::cout << "swapped priorities and now: " << l->getSUID() << ":"
                       << conflict::kindString(l->getConflictKind(ci))
