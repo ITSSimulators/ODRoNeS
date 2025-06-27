@@ -40,14 +40,11 @@ namespace odrones
  *  leading to nextLane, prevLane, etc. would be invalidated.
  */
 
-typedef odrones::arr2 arr2;
-typedef odrones::scalar scalar;
 typedef odrones::concepts concepts;
 typedef odrones::mvf mvf;
 typedef odrones::bezier2 bezier2;
 typedef odrones::bezier3 bezier3;
 typedef odrones::lane lane;
-// typedef odrones::Odr Odr;
 typedef odrones::OneVersion OneVersion;
 
 

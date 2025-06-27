@@ -31,8 +31,6 @@ namespace odrones {
 typedef odrones::concepts concepts;
 typedef odrones::lane lane;
 typedef odrones::section section;
-typedef odrones::scalar scalar;
-typedef odrones::arr2 arr2;
 typedef odrones::OneVersion OneVersion;
 typedef odrones::mvf mvf;
 typedef odrones::conflict conflict;

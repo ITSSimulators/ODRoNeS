@@ -45,131 +45,131 @@ namespace Odr
     class Elem
     {
     public:
-        static const char* OpenDrive;
-        static const char* Header;
-        static const char* Road;
-        static const char* Type;
-        static const char* PlanView;
-        static const char* Lane;
-        static const char* Lanes;
-        static const char* LaneOffset;
-        static const char* LaneSection;
+        constexpr static const char* OpenDrive {"OpenDRIVE"} ;
+        constexpr static const char* Header {"header"};
+        constexpr static const char* Road {"road"};
+        constexpr static const char* Type {"type"};
+        constexpr static const char* PlanView {"planView"};
+        constexpr static const char* Lane {"lane"};
+        constexpr static const char* Lanes {"lanes"};
+        constexpr static const char* LaneOffset {"laneOffset"};
+        constexpr static const char* LaneSection {"laneSection"};
 
-        static const char* DefaultRegulations;
-        static const char* RoadRegulations;
-        static const char* Semantics;
+        constexpr static const char* DefaultRegulations {"defaultRegulations"};
+        constexpr static const char* RoadRegulations {"roadRegulations"};
+        constexpr static const char* Semantics {"semantics"};
 
-        static const char* Junction;
-        static const char* Connection;
-        static const char* LaneLink;
+        constexpr static const char* Junction {"junction"};
+        constexpr static const char* Connection {"connection"};
+        constexpr static const char* LaneLink {"laneLink"};
 
-        static const char* Link;
-        static const char* Predecessor;
-        static const char* Successor;
+        constexpr static const char* Link {"link"};
+        constexpr static const char* Predecessor {"predecessor"};
+        constexpr static const char* Successor {"successor"};
 
-        static const char* Left;
-        static const char* Center;
-        static const char* Right;
+        constexpr static const char* Left {"left"};
+        constexpr static const char* Center {"center"};
+        constexpr static const char* Right {"right"};
 
-        static const char* Geometry;
-        static const char* Line;
-        static const char* Arc;
-        static const char* Spiral;
-        static const char* ParamPoly3;
-        static const char* Bezier3;
+        constexpr static const char* Geometry {"geometry"};
+        constexpr static const char* Line {"line"};
+        constexpr static const char* Arc {"arc"};
+        constexpr static const char* Spiral {"spiral"};
+        constexpr static const char* ParamPoly3 {"paramPoly3"};
+        constexpr static const char* Bezier3 {"bezier3"};
 
-        static const char* Width;
-        static const char* Speed;
-        static const char* Border;
+        constexpr static const char* Width {"width"};
+        constexpr static const char* Speed {"speed"};
+        constexpr static const char* Border {"border"};
 
-        static const char* Signals;
-        static const char* Signal;
-        static const char* Validity;
-        static const char* UserData;
-        static const char* Dependency;
+        constexpr static const char* Signals {"signals"};
+        constexpr static const char* Signal {"signal"};
+        constexpr static const char* Validity {"validity"};
+        constexpr static const char* UserData {"userData"};
+        constexpr static const char* Dependency {"dependency"};
 
-        static const char* UDConnectionPoints;
-        static const char* UDConnectionPoint;
+        constexpr static const char* UDConnectionPoints {"udConnectionPoints"};
+        constexpr static const char* UDConnectionPoint {"udConnectionPoint"};
     };
 
     class Attr
     {
     public:
-        static const char* Type;
-        static const char* Name;
-        static const char* Id;
-        static const char* Junction;
-        static const char* Length;
-        static const char* Rule;
+        constexpr static const char* Type {"type"};
+        constexpr static const char* Name {"name"};
+        constexpr static const char* Id {"id"};
+        constexpr static const char* Junction {"junction"};
+        constexpr static const char* Length {"length"};
+        constexpr static const char* Rule {"rule"};
 
-        static const char* IncomingRoad;
-        static const char* ConnectingRoad;
-        static const char* ContactPoint;
-        static const char* From;
-        static const char* To;
+        constexpr static const char* IncomingRoad {"incomingRoad"};
+        constexpr static const char* ConnectingRoad {"connectingRoad"};
+        constexpr static const char* ContactPoint {"contactPoint"};
+        constexpr static const char* From {"from"};
+        constexpr static const char* To {"to"};
 
-        static const char* SingleSide;
+        constexpr static const char* SingleSide {"singleSide"};
 
-        static const char* ElementType;
-        static const char* ElementId;
+        constexpr static const char* ElementType {"elementType"};
+        constexpr static const char* ElementId {"elementId"};
 
-        static const char* Level;
+        constexpr static const char* Level {"level"};
 
-        static const char* Curvature;
-        static const char* CurvStart;
-        static const char* CurvEnd;
-        static const char* S;
-        static const char* T;
-        static const char* X;
-        static const char* Y;
-        static const char* Hdg;
+        constexpr static const char* Curvature {"curvature"};
+        constexpr static const char* CurvStart {"curvStart"};
+        constexpr static const char* CurvEnd {"curvEnd"};
+        constexpr static const char* S {"s"};
+        constexpr static const char* T {"t"};
+        constexpr static const char* X {"x"};
+        constexpr static const char* Y {"y"};
+        constexpr static const char* Hdg {"hdg"}; 
 
-        static const char* sOffset;
-        static const char* A;
-        static const char* B;
-        static const char* C;
-        static const char* D;
+        constexpr static const char* sOffset {"sOffset"};
+        constexpr static const char* A {"a"};
+        constexpr static const char* B {"b"};
+        constexpr static const char* C {"c"};
+        constexpr static const char* D {"d"};
 
-        static const char* Max;
+        constexpr static const char* Max {"max"};
 
         enum class Geometry {line, spiral, arc, paramPoly3, bezier3, none};
         enum class ParamPoly3Range {arcLength, normalized, none};
 
-        static const char* aU;
-        static const char* bU;
-        static const char* cU;
-        static const char* dU;
-        static const char* aV;
-        static const char* bV;
-        static const char* cV;
-        static const char* dV;
-        static const char* pRange;
+        constexpr static const char* aU {"aU"};
+        constexpr static const char* bU {"bU"};
+        constexpr static const char* cU {"cU"};
+        constexpr static const char* dU {"dU"};
+        constexpr static const char* aV {"aV"};
+        constexpr static const char* bV {"bV"};
+        constexpr static const char* cV {"cV"};
+        constexpr static const char* dV {"dV"};
+        constexpr static const char* pRange {"pRange"};
 
-        static const char* bz0x;
-        static const char* bz0y;
-        static const char* bz1x;
-        static const char* bz1y;
-        static const char* bz2x;
-        static const char* bz2y;
-        static const char* bz3x;
-        static const char* bz3y;
+        constexpr static const char* bz0x {"bz0x"};
+        constexpr static const char* bz0y {"bz0y"};
+        constexpr static const char* bz1x {"bz1x"};
+        constexpr static const char* bz1y {"bz1y"};
+        constexpr static const char* bz2x {"bz2x"};
+        constexpr static const char* bz2y {"bz2y"};
+        constexpr static const char* bz3x {"bz3x"};
+        constexpr static const char* bz3y {"bz3y"};
 
-        static const char* rZ;
+        constexpr static const char* rZ {"rz"};
 
-        static const char* Unit;
+        constexpr static const char* Unit {"unit"};
 
-        static const char* Dynamic;
-        static const char* Orientation;
-        static const char* ZOffset;
-        static const char* Value;
-        static const char* Height;
-        static const char* Width;
-        static const char* Text;
-        static const char* HOffset;
-        static const char* Pitch;
-        static const char* Roll;
-        static const char* FromLane;
-        static const char* ToLane;
+        constexpr static const char* Dynamic {"dynamic"};
+        constexpr static const char* Orientation {"orientation"};
+        constexpr static const char* ZOffset {"zOffset"};
+        constexpr static const char* Value {"value"};
+        constexpr static const char* Height {"height"};
+        constexpr static const char* Width {"width"};
+        constexpr static const char* Text {"text"};
+        constexpr static const char* HOffset {"hOffset"};
+        constexpr static const char* Pitch {"pitch"};
+        constexpr static const char* Roll {"roll"};
+        constexpr static const char* FromLane {"fromLane"};
+        constexpr static const char* ToLane {"toLane"};
 
 
     };
@@ -177,24 +177,25 @@ namespace Odr
     class Kind
     {
     public:
-        static const char* Driving;
-        static const char* Sidewalk;
-        static const char* Walking;
+        constexpr static const char* Driving {"driving"};
+        constexpr static const char* Sidewalk {"sidewalk"};
+        constexpr static const char* Walking {"walking"};
 
-        static const char* Shoulder;
-        static const char* Border;
-        static const char* Stop;
-        static const char* Restricted;
-        static const char* Parking;
-        static const char* Median;
-        static const char* Biking;
-        static const char* Curb;
-        static const char* Entry;
-        static const char* Exit;
-        static const char* OnRamp;
-        static const char* OffRamp;
-        static const char* ConnectingRamp;
-        static const char* SlipLane;
+        constexpr static const char* Shoulder {"shoulder"};
+        constexpr static const char* Border {"border"};
+        constexpr static const char* Stop {"stop"};
+        constexpr static const char* Restricted {"restricted"};
+        constexpr static const char* Parking {"parking"};
+        constexpr static const char* Median {"median"};
+        constexpr static const char* Biking {"biking"};
+        constexpr static const char* Curb {"curb"};
+        constexpr static const char* Entry {"entry"};
+        constexpr static const char* Exit {"exit"};
+        constexpr static const char* OnRamp {"onRamp"};
+        constexpr static const char* OffRamp {"offRamp"};
+        constexpr static const char* ConnectingRamp {"connectingRamp"};
+        constexpr static const char* SlipLane {"slipLane"};
+        constexpr static const char* Unknown {"unknown"};
 
         enum class LaneType {driving, sidewalk, walking, shoulder, border, stop,
                               restricted, parking, median, biking, curb, entry,
@@ -207,43 +208,41 @@ namespace Odr
                 LaneType::entry, LaneType::exit, LaneType::onRamp, LaneType::offRamp,
                 LaneType::connectingRamp, LaneType::slipLane };
 
-        static const char* Unknown;
+        constexpr static const char* Start {"start"};
+        constexpr static const char* End {"end"};
 
-        static const char* Start;
-        static const char* End;
+        constexpr static const char* Road {"road"};
+        constexpr static const char* Junction {"junction"};
 
-        static const char* Road;
-        static const char* Junction;
+        constexpr static const char* arcLength {"arcLength"};
+        constexpr static const char* normalized {"normalized"};
 
-        static const char* arcLength;
-        static const char* normalized;
+        constexpr static const char* mph {"mph"};
+        constexpr static const char* ms {"m/s"};
+        constexpr static const char* kmh {"km/h"};
 
-        static const char* mph;
-        static const char* ms;
-        static const char* kmh;
+        constexpr static const char* Plus {"+"};
+        constexpr static const char* Minus {"-"};
+        constexpr static const char* None {"none"};
 
-        static const char* Plus;
-        static const char* Minus;
-        static const char* None;
+        constexpr static const char* False {"false"};
+        constexpr static const char* True {"true"};
 
-        static const char* False;
-        static const char* True;
+        constexpr static const char* LHT {"LHT"};
+        constexpr static const char* RHT {"RHT"};
 
-        static const char* LHT;
-        static const char* RHT;
-
-        static const char* Bicycle;
-        static const char* LowSpeed;
-        static const char* Motorway;
-        static const char* Pedestrian;
-        static const char* Rural;
-        static const char* TownArterial;
-        static const char* TownCollector;
-        static const char* TownExpressway;
-        static const char* TownLocal;
-        static const char* TownPlayStreet;
-        static const char* TownPrivate;
-        static const char* Town;
+        constexpr static const char* Bicycle {"bicycle"};
+        constexpr static const char* LowSpeed {"lowSpeed"};
+        constexpr static const char* Motorway {"motorway"};
+        constexpr static const char* Pedestrian {"pedestrian"};
+        constexpr static const char* Rural {"rural"};
+        constexpr static const char* TownArterial {"townArterial"};
+        constexpr static const char* TownCollector {"townCollector"};
+        constexpr static const char* TownExpressway {"townExpressway"};
+        constexpr static const char* TownLocal {"townLocal"};
+        constexpr static const char* TownPlayStreet {"townPlayStreet"};
+        constexpr static const char* TownPrivate {"townPrivate"};
+        constexpr static const char* Town {"town"};
 
         enum class RoadType { bicycle, lowSpeed, motorway, pedestrian, rural,
                               townArterial, townCollector, townExpressway, townLocal,
@@ -256,9 +255,9 @@ namespace Odr
                               RoadType::townExpressway, RoadType::townLocal,
                               RoadType::townPlayStreet, RoadType::townPrivate, RoadType::town};
 
-        static const char* Map;
+        constexpr static const char* Map {"map"};
 
-        static const char* Maximum;
+        constexpr static const char* Maximum {"maximum"};
     };
 
 

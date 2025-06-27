@@ -58,8 +58,6 @@ class section;
 class lane;
 class conflict;
 
-typedef odrones::scalar scalar;
-typedef odrones::arr2 arr2;
 typedef odrones::mvf mvf;
 typedef odrones::bezier2 bezier2;
 typedef odrones::bezier3 bezier3;

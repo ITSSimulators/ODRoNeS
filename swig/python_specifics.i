@@ -9,6 +9,8 @@
 %ignore odrones::Odr::offset::operator=;
 %rename (_print) odrones::Odr::offset::print;
 %rename (_print) odrones::Odr::geometry::print;
+%rename (_print) odrones::Odr::smaL::print;
+%rename (_print) odrones::Odr::smaS::print;
 %ignore odrones::ReadOdr::operator=;
 
 %ignore odrones::RNS::operator=;
