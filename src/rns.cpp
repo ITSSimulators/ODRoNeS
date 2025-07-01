@@ -650,22 +650,15 @@ void RNS::printLanes() const
 
             std::string sideString = ", has port lane ";
             if (l->getPortLane())
-            {
                 sideString += l->getPortLane()->getCSUID();
-            }
             else
-            {
                 sideString += "<null>";
-            }
+
             sideString += ", has starboard lane ";
             if (l->getStarboardLane())
-            {
                 sideString += l->getStarboardLane()->getCSUID();
-            }
             else
-            {
                 sideString += "<null>";
-            }
 
             std::cout << BOLDWHITE << l->getShapeString() << " lane: " << l->getCSUID() << RESET;
             std::cout << " starts in: (" << o[0] << ", " << o[1] <<  "), ends in: (" << d[0] << ", " << d[1] << ")"
@@ -673,7 +666,6 @@ void RNS::printLanes() const
                       << ", is " << l->getLength() << " m long, has max speed: " << l->getSpeed()
                       // << ", bounding box: " << bli[0] << ", " << bli[1] << " to " << tri[0] << ", " << tri[1] << std::endl;
                       << plString << nlString << sideString << std::endl;
-
         }
     }
 
@@ -689,7 +681,6 @@ void RNS::printLanes() const
                   << ", _to: (" << l->getTo()[0] << ", " << l->getTo()[1] << ")"
                   << ", is " << l->getLength() << " m long" << std::endl;
     }
-
 }
 
 void RNS::write(const std::string &mapFile) const
@@ -887,6 +878,7 @@ void RNS::write(const std::string &mapFile) const
 
 void RNS::linkLanesGeometrically(scalar tol)
 {
+    // scalar largeTol = 20 * tol;
     // 1 - Link two-way sections, we've already run setPortAndStarboard which flips them correctly.
     for (uint i = 0; i < sectionsSize(); ++i)
     {
@@ -894,7 +886,10 @@ void RNS::linkLanesGeometrically(scalar tol)
         for (uint j = i + 1; j < sectionsSize(); ++j)
         {
             if (_sections[j].isOneWay()) continue;
-            linkLanesInSectionsOD(_sections[i], _sections[j], tol);
+            if (!sectionEdgesInRange(_sections[i], _sections[j])) continue;
+            if ((!linkLanesInSectionsOD(_sections[i], _sections[j], tol)) && (verbose()))
+                std::cerr << "[ WARNING ] no lanes between sections: " << _sections[i].getCSUID() << " and "
+                          << _sections[j].getCSUID() << " were linked because their edges are too separated" << std::endl;
         }
     }
 
@@ -907,14 +902,17 @@ void RNS::linkLanesGeometrically(scalar tol)
                  ( (!_sections[si].isOneWay()) && (_sections[sj].isOneWay()) ) ) )
                 continue;
 
+            if (!sectionEdgesInRange(_sections[si], _sections[sj])) continue;
+
             // From here on, either _section[si] or _sections[sj] is oneWay.
+            bool link = false;
             for (uint li = 0; li < _sections[si].size(); ++li)
             {
                 for (uint lj = 0; lj < _sections[sj].size(); ++lj)
                 {
                     uint linkErr = linkLanesIfSound(_sections[si][li], _sections[sj][lj], tol);
-                    if (linkErr != 2)
-                        continue;
+                    if (linkErr != 1) link = true;
+                    if (linkErr != 2) continue;
 
                     if (_sections[si].isOneWay())
                         _sections[si].flipBackwards();
@@ -922,6 +920,9 @@ void RNS::linkLanesGeometrically(scalar tol)
                         _sections[sj].flipBackwards();
                 }
             }
+            if ((!link) && (verbose()))
+                std::cerr << "[ WARNING ] no lanes between sections: " << _sections[si].getCSUID() << " and "
+                          << _sections[sj].getCSUID() << " were linked because their edges are too separated" << std::endl;
         }
     }
 
@@ -932,7 +933,11 @@ void RNS::linkLanesGeometrically(scalar tol)
         for (uint j = i + 1; j < sectionsSize(); ++j)
         {
             if (!_sections[j].isOneWay()) continue;
-            linkLanesInSectionsIfSound(_sections[i], _sections[j], tol);
+            scalar tij = tol;
+            if (!sectionEdgesInRange(_sections[i], _sections[j])) continue;
+            if ((!linkLanesInSectionsIfSound(_sections[i], _sections[j], tol)) && (verbose()))
+                std::cerr << "[ WARNING ] no lanes between sections: " << _sections[i].getCSUID() << " and "
+                          << _sections[j].getCSUID() << " were linked because their edges are too separated" << std::endl;
         }
     }
 
@@ -944,7 +949,6 @@ void RNS::linkLanesGeometrically(scalar tol)
 
 bool RNS::linkLanesIfInRangeAndOD(lane *li, lane *lj, scalar tol)
 {
-
     if (mvf::areCloseEnough(li->getDestination(), lj->getOrigin(), tol))
     {
         li->setNextLane(lj, true);
@@ -985,14 +989,9 @@ uint RNS::linkLanesIfInRange(lane *li, lane *lj, scalar tol)
 
 uint RNS::linkLanesIfSound(lane *li, lane *lj, scalar tol)
 {
-    if (li->isCSUID("11:0 (26:-1)") || (lj->isCSUID("11:0 (26:-1)")))
-    {
-        std::cout << "pause!" << std::endl;
-    }
-
     if (mvf::areCloseEnough(li->getDestination(), lj->getOrigin(), tol))
     {
-        if (! mvf::areCloseEnough( 1,  mvf::scalarProduct(li->getTangentInPoint(li->getDestination()), lj->getTo()), tol ) )
+        if (! mvf::areCloseEnough( 1,  mvf::scalarProduct(li->getTangentInPoint(li->getDestination()), lj->getTo()), lane::odrTol ) )
             return 1;
 
         li->setNextLane(lj, true);
@@ -1001,7 +1000,7 @@ uint RNS::linkLanesIfSound(lane *li, lane *lj, scalar tol)
 
     if (mvf::areCloseEnough(li->getOrigin(), lj->getDestination(), tol))
     {
-        if (! mvf::areCloseEnough( 1,  mvf::scalarProduct(lj->getTangentInPoint(lj->getDestination()), li->getTo()), tol ) )
+        if (! mvf::areCloseEnough( 1,  mvf::scalarProduct(lj->getTangentInPoint(lj->getDestination()), li->getTo()), lane::odrTol ) )
             return 1;
 
         li->setPrevLane(lj, true);
@@ -1012,7 +1011,7 @@ uint RNS::linkLanesIfSound(lane *li, lane *lj, scalar tol)
     if (mvf::areCloseEnough(li->getDestination(), lj->getDestination(), tol))
     {
         if (! mvf::areCloseEnough( -1,  mvf::scalarProduct( li->getTangentInPoint(lj->getDestination()),
-                                                            lj->getTangentInPoint(lj->getDestination())), tol ) )
+                                                            lj->getTangentInPoint(lj->getDestination())), lane::odrTol ) )
             return 1;
 
         lj->setNextLane(li, false);
@@ -1022,7 +1021,7 @@ uint RNS::linkLanesIfSound(lane *li, lane *lj, scalar tol)
 
     if (mvf::areCloseEnough(li->getOrigin(), lj->getOrigin(), tol))
     {
-        if (! mvf::areCloseEnough( -1,  mvf::scalarProduct( li->getTo(), lj->getTo()), tol ) )
+        if (! mvf::areCloseEnough( -1,  mvf::scalarProduct( li->getTo(), lj->getTo()), lane::odrTol ) )
             return 1;
 
         li->setPrevLane(lj, false);
@@ -1033,31 +1032,56 @@ uint RNS::linkLanesIfSound(lane *li, lane *lj, scalar tol)
     return 1;
 }
 
-void RNS::linkLanesInSections(section &si, section &sj, scalar tol)
+bool RNS::linkLanesInSections(section &si, section &sj, scalar tol)
 {
+    bool link = false;
     for (uint i = 0; i < si.size(); ++i)
     {
         for (uint j = 0; j < sj.size(); ++j)
-            linkLanesIfInRange(si[i], sj[j]);
+        {
+            if (linkLanesIfInRange(si[i], sj[j]) > 0)
+                link = true;
+        }
     }
+    return link;
 }
 
-void RNS::linkLanesInSectionsOD(section &si, section &sj, scalar tol)
+bool RNS::linkLanesInSectionsOD(section &si, section &sj, scalar tol)
 {
+    bool link = false;
     for (uint i = 0; i < si.size(); ++i)
     {
         for (uint j = 0; j < sj.size(); ++j)
-            linkLanesIfInRangeAndOD(si[i], sj[j]);
+        {
+            if (linkLanesIfInRangeAndOD(si[i], sj[j], tol) == true)
+                link = true;
+        }
     }
+    return link;
 }
 
-void RNS::linkLanesInSectionsIfSound(section &si, section &sj, scalar tol)
+bool RNS::linkLanesInSectionsIfSound(section &si, section &sj, scalar tol)
 {
+    bool link = false;
     for (uint i = 0; i < si.size(); ++i)
     {
         for (uint j = 0; j < sj.size(); ++j)
-            linkLanesIfSound(si[i], sj[j]);
+        {
+            if (linkLanesIfSound(si[i], sj[j], tol) != 1)
+                link = true;
+        }
     }
+    return link;
+}
+
+bool RNS::sectionEdgesInRange(section &si, section &sj, scalar tol) const
+{
+    if ((mvf::distance(si.zero()->getDestination(), sj.zero()->getOrigin()) < lane::odrTol) ||
+        (mvf::distance(si.zero()->getDestination(), sj.zero()->getDestination()) < lane::odrTol) ||
+        (mvf::distance(si.zero()->getOrigin(), sj.zero()->getOrigin()) < lane::odrTol) ||
+        (mvf::distance(si.zero()->getOrigin(), sj.zero()->getDestination()) < lane::odrTol) )
+        return true;
+    return false;
 }
 
 

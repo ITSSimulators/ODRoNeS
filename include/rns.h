@@ -151,10 +151,13 @@ private:
     //!  ... as long as any ending pair of points for li and lj are closer than tol and the tangents align correctly.
     uint linkLanesIfSound(lane *li, lane *lj, scalar tol = lane::odrTol);
 
-    //! Assign nextLanes and prevLanes to the lanes in sections si and sj by calling linkLanesIfInRange on a double loop.
-    void linkLanesInSections(section &si, section &sj, scalar tol = lane::odrTol);
-    void linkLanesInSectionsOD(section &si, section &sj, scalar tol = lane::odrTol);
-    void linkLanesInSectionsIfSound(section &si, section &sj, scalar tol = lane::odrTol);
+    //! Assign nextLanes and prevLanes to the lanes in sections si and sj by calling linkLanesIfInRange on a double loop. Return true if anything was linked.
+    bool linkLanesInSections(section &si, section &sj, scalar tol = lane::odrTol);
+    bool linkLanesInSectionsOD(section &si, section &sj, scalar tol = lane::odrTol);
+    bool linkLanesInSectionsIfSound(section &si, section &sj, scalar tol = lane::odrTol);
+
+    /*! Check if any two edges of these two sections are close enough */
+    bool sectionEdgesInRange(section &si, section &sj, scalar tol = lane::odrTol) const;
 
     /*! arrange conflicts and default priorities for lanes in different sections and same ending: priority is to the right */
     bool makePrioritiesSameEndingDifferentSectionLanes(scalar anticipationTime);
