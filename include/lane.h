@@ -169,16 +169,18 @@ public:
     public:
         lCoord()
         {
-            l = nullptr;  pos = {0., 0.}; s = 0; loff = 0;
+            l = nullptr;  pos = {0., 0.}; s = 0; _loff = 0;
         }
         lCoord(const lane *li, const arr2& posi, scalar si, scalar loffi)
         {
-            l = li; pos = posi; s = si; loff = loffi;
+            l = li; pos = posi; s = si; _loff = loffi;
         }
         const lane *l;       ///< the lane it's on.
         arr2 pos;            ///< position projected onto the center of the lane
         scalar s;            ///< distance down the lane
-        scalar loff;         ///< lateral offset, positive to the right in the direction of the lane (starboard).
+    private:
+        scalar _loff;         ///< lateral offset, positive to the right in the direction of the lane (starboard).
+    public:
         scalar toEOL() const ///< return the distance to the end of the lane; -1 if no lane.
         {
             if (!l) return -1;
@@ -187,9 +189,46 @@ public:
         std::string print() const
         {
             if (l)
-                return l->getCSUID() + " s: " + std::to_string(s) + " loff: " + std::to_string(loff);
+                return l->getCSUID() + " s: " + std::to_string(s) + " loff: " + std::to_string(_loff);
             else
                 return "invalid lane";
+        }
+        bool loff(const arr2& p)
+        {
+            if (!l)
+                return false;
+
+            // magnitude:
+            _loff = mvf::distance(p, pos);
+            if (mvf::areSameValues(_loff, 0))
+                return true;
+
+            // sign:
+            vec2 v = {p[0] - pos[0], p[1] - pos[1]};
+            if (v.cross(l->getTangentInPoint(pos)) < 0)
+                _loff *= -1;
+
+            return true;
+        }
+        void loff(scalar loffi)
+        {
+            _loff = loffi;
+        }
+        scalar loff() const
+        {
+            return _loff;
+        }
+        void setOrigin()
+        {
+            pos = l->getOrigin();
+            s = 0;
+            _loff = 0;
+        }
+        void setDestination()
+        {
+            pos = l->getDestination();
+            s = l->getLength();
+            _loff = 0;
         }
     };
 

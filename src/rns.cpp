@@ -679,6 +679,7 @@ void RNS::printLanes() const
         arr2 d = l->getDestination();
         std::cout << " starts in: (" << o[0] << ", " << o[1] <<  "), ends in: (" << d[0] << ", " << d[1] << ")"
                   << ", _to: (" << l->getTo()[0] << ", " << l->getTo()[1] << ")"
+                  << ", _te: (" << l->getTangentInPoint(l->getDestination())[0] << ", " << l->getTangentInPoint(l->getDestination())[1] << ")"
                   << ", is " << l->getLength() << " m long" << std::endl;
     }
 }
@@ -887,7 +888,7 @@ void RNS::linkLanesGeometrically(scalar tol)
         {
             if (_sections[j].isOneWay()) continue;
             if (!sectionEdgesInRange(_sections[i], _sections[j])) continue;
-            if ((!linkLanesInSectionsOD(_sections[i], _sections[j], tol)) && (verbose()))
+            if ((!linkLanesInSectionsOD(_sections[i], _sections[j], tol)) && (false))
                 std::cerr << "[ WARNING ] no lanes between sections: " << _sections[i].getCSUID() << " and "
                           << _sections[j].getCSUID() << " were linked because their edges are too separated" << std::endl;
         }
@@ -920,7 +921,7 @@ void RNS::linkLanesGeometrically(scalar tol)
                         _sections[sj].flipBackwards();
                 }
             }
-            if ((!link) && (verbose()))
+            if ((!link) && (false))
                 std::cerr << "[ WARNING ] no lanes between sections: " << _sections[si].getCSUID() << " and "
                           << _sections[sj].getCSUID() << " were linked because their edges are too separated" << std::endl;
         }
@@ -933,9 +934,8 @@ void RNS::linkLanesGeometrically(scalar tol)
         for (uint j = i + 1; j < sectionsSize(); ++j)
         {
             if (!_sections[j].isOneWay()) continue;
-            scalar tij = tol;
             if (!sectionEdgesInRange(_sections[i], _sections[j])) continue;
-            if ((!linkLanesInSectionsIfSound(_sections[i], _sections[j], tol)) && (verbose()))
+            if ((!linkLanesInSectionsIfSound(_sections[i], _sections[j], tol)) && (false))
                 std::cerr << "[ WARNING ] no lanes between sections: " << _sections[i].getCSUID() << " and "
                           << _sections[j].getCSUID() << " were linked because their edges are too separated" << std::endl;
         }
@@ -1007,7 +1007,6 @@ uint RNS::linkLanesIfSound(lane *li, lane *lj, scalar tol)
         return 0;
     }
 
-
     if (mvf::areCloseEnough(li->getDestination(), lj->getDestination(), tol))
     {
         if (! mvf::areCloseEnough( -1,  mvf::scalarProduct( li->getTangentInPoint(lj->getDestination()),
@@ -1018,6 +1017,7 @@ uint RNS::linkLanesIfSound(lane *li, lane *lj, scalar tol)
         li->setNextLane(lj, false);
         return 2;
     }
+
 
     if (mvf::areCloseEnough(li->getOrigin(), lj->getOrigin(), tol))
     {
@@ -1291,9 +1291,9 @@ lane::lCoord RNS::getLaneCoordsForPoint(const arr2 &o, scalar tol) const
 
             scalar oj = mvf::distance(pj, o);
             if (oj > tol) continue;
-            if (oj < lcoo.loff)
+            if (oj < lcoo.loff())
             {
-                lcoo.loff = oj;
+                lcoo.loff(oj);
                 lcoo.l = _sections[is][jl];
                 lcoo.pos = pj;
                 lcoo.s = lcoo.l->unsafeDistanceFromTheBoL(pj);
@@ -1301,13 +1301,14 @@ lane::lCoord RNS::getLaneCoordsForPoint(const arr2 &o, scalar tol) const
         }
     }
 
+    lcoo.loff(o);
     return lcoo;
 }
 
 arr2 RNS::getPosForLaneCoords(const lane::lCoord &lc) const
 {
     arr2 p;
-    lc.l->getPointWithOffset(p, lc.pos, lc.loff);
+    lc.l->getPointWithOffset(p, lc.pos, lc.loff());
     return p;
 }
 
@@ -1328,7 +1329,7 @@ arr2 RNS::getPosForRoadCoords(uint rID, scalar s, scalar offset, scalar height) 
 const lane* RNS::getLaneWithPoint(const arr2 &p, scalar tol) const
 {
     lane::lCoord lcoo = getLaneCoordsForPoint(p, tol);
-    if (lcoo.loff < tol) return lcoo.l;
+    if (std::abs(lcoo.loff()) < tol) return lcoo.l;
     else return nullptr;
 }
 
