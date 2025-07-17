@@ -1293,10 +1293,10 @@ lane::lCoord RNS::getLaneCoordsForPoint(const arr2 &o, scalar tol) const
             if (oj > tol) continue;
             if (oj < lcoo.loff())
             {
+                lcoo.l(_sections[is][jl]);
+                lcoo.pos(pj);
+                lcoo.sConsistentWithLAndPos();
                 lcoo.loff(oj);
-                lcoo.l = _sections[is][jl];
-                lcoo.pos = pj;
-                lcoo.s = lcoo.l->unsafeDistanceFromTheBoL(pj);
             }
         }
     }
@@ -1308,7 +1308,7 @@ lane::lCoord RNS::getLaneCoordsForPoint(const arr2 &o, scalar tol) const
 arr2 RNS::getPosForLaneCoords(const lane::lCoord &lc) const
 {
     arr2 p;
-    lc.l->getPointWithOffset(p, lc.pos, lc.loff());
+    lc.l()->getPointWithOffset(p, lc.pos(), lc.loff());
     return p;
 }
 
@@ -1329,7 +1329,7 @@ arr2 RNS::getPosForRoadCoords(uint rID, scalar s, scalar offset, scalar height) 
 const lane* RNS::getLaneWithPoint(const arr2 &p, scalar tol) const
 {
     lane::lCoord lcoo = getLaneCoordsForPoint(p, tol);
-    if (std::abs(lcoo.loff()) < tol) return lcoo.l;
+    if (std::abs(lcoo.loff()) < tol) return lcoo.l();
     else return nullptr;
 }
 
