@@ -180,7 +180,7 @@ public:
         // // Accessors // //
         void l(const lane *l) { _l = l; }
         const lane* l() const { return _l; }
-        void deleteL() { delete _l; }
+        void deleteL() { delete _l; _l = nullptr; }
 
         void pos(const arr2& pos) { _pos = pos; }
         arr2 pos() const { return _pos; }
