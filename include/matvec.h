@@ -104,6 +104,7 @@ public:
     static void substract1stTo2ndInto3rd(const arr2 &a, const arr2 &b, arr2 &c);
     static void add1stTo2ndInto3rd(const arr2 &a, const arr2 &b, arr2 &c);
     static scalar scalarProduct(const arr2 &a, const arr2 &b);
+    static scalar crossProduct(const arr2 &a, const arr2 &b);
     static bool areSamePoints(const arr2 &a, const arr2 &b);
 
     // 3 - Geometry
