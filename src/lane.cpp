@@ -1791,8 +1791,7 @@ scalar lane::unsafeDistanceFromTheBoL(const arr2 &p) const
 void lane::getPointWithOffset(arr2 &p, const arr2 &o, scalar loff) const
 {
     arr2 v = getTangentInPoint(o);
-    scalar angle = 0.5 * ct::pi;
-    mvf::rotateVectorByAngle(v, angle);
+    v = {-v[1], v[0]};
     p = {o[0] + loff * v[0], o[1] + loff * v[1]};
     return;
 }
