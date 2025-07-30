@@ -567,6 +567,9 @@ public:
 
     //! Writing:
     void writeDown(); ///< For debugging purposes: write down getCSUID.box, getCSUID.geom, getCSUID.geom.boxes, getCSUID.geom.numerical, getCSUID.geom.S
+    //! FUNCTION TO CALL IN ORDER TO CONVERT BEZIER POINTS FROM GLOBAL TO LOCAL COORDINATES AND THEN INTO PARAMPOLY3 COEFFICIENTS
+    void convertBezierToParamPoly3(const vwBezier3* bez, tinyxml2::XMLElement* geometry,
+                                       tinyxml2::XMLDocument& doc) const;
 
 
 
