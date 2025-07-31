@@ -41,7 +41,7 @@ class RNS
 
 public:
     RNS();
-    RNS(std::string odrMap, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk, bool verbose = false);
+    RNS(std::string odrMap, const char* drivingSide, bool exhaustiveLinking, bool fineTune, bool loadSidewalk, bool verbose = false);
     RNS(const RNS &r); ///< copy construct
     RNS& operator=(RNS& r); ///< copy assign
     ~RNS();
@@ -69,9 +69,10 @@ public:
     concepts::drivingSide drivingSide() const; ///< return the driving side.
     void drivingSide(concepts::drivingSide side); ///< manually set the driving side.
 
-    bool makeRoads(std::string mapFile, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk);
+    bool makeRoads(std::string mapFile, const char* drivingSide, bool exhaustiveLinking, bool fineTune, bool loadSidewalk);
     bool makeOpenDRIVERoads(std::string mapFile, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk);
-    bool makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk);
+    bool makeOpenDRIVERoads(std::string mapFile, const char* drivingSide, bool exhaustiveLinking, bool fineTune, bool loadSidewalk);
+    bool makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool exhaustiveLinking, bool fineTune, bool loadSidewalk);
     bool makeOneVersionRoads(std::string mapFile);
     void printLanes() const; ///< print sections and lanes
     void write(const std::string &mapFile) const;
@@ -167,6 +168,8 @@ private:
     void makePrioritiesDifferentEndingDifferentSectionCrossingLanes(scalar anticipationTime);
 
 
+    /*! adjust Beziers to improve the exhaustive linkage */
+    void fineTuneReadOdr(ReadOdr &read) const;
 
 
 
