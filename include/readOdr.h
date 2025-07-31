@@ -45,6 +45,8 @@ public:
     void renumber(uint shift); ///< renumber the Odr ids of the sections.
     void transform(const arr2 &position, scalar angle); ///< rotate and translate this map
 
+    void simplifyGeometries(bool singleArc, bool straight, bool bezierToArcSeries); ///< loop over every section simplify their geometries, using arcs and straights where possible.
+
     bool uniqueSectionOdrIDs(); ///< check whether there are sections with repeated odrIDs
 
 protected:
@@ -75,7 +77,7 @@ private:
     void append(const ReadOdr& r);
 
 protected:
-    void simplifyGeometries(Odr::smaS &s); ///< will consider whether any of s.geom[i] can be swapped for
+    void simplifyGeometries(Odr::smaS &s, bool singleArc, bool straight, bool bezierToArcSeries); ///< will consider whether any of s.geom[i] can be swapped for
 
     bool simplifySingleArc(Odr::smaS &s); ///< if equivalent, modify s.geom into a single arc and return true;
 

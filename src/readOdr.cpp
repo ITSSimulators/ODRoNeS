@@ -504,13 +504,22 @@ bool ReadOdr::simplifyStraights(Odr::smaS &s)
     return swaps;
 }
 
-void ReadOdr::simplifyGeometries(Odr::smaS &s)
+void ReadOdr::simplifyGeometries(Odr::smaS &s, bool singleArc, bool straight, bool bezierToArcSeries)
 {
+    if (singleArc)
+        simplifySingleArc(s);
 
-    simplifySingleArc(s);
+    if (straight)
+        simplifyStraights(s);
 
-    simplifyStraights(s);
+    if (bezierToArcSeries)
+        simplifyMultipleArcs(s);
+}
 
-    simplifyMultipleArcs(s);
+void ReadOdr::simplifyGeometries(bool singleArc, bool straight, bool bezierToArcSeries)
+{
+    for (uint i = 0; i < _sections.size(); ++i)
+        simplifyGeometries(_sections[i], singleArc, straight, bezierToArcSeries);
 
+    return;
 }

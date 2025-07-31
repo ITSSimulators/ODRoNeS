@@ -366,7 +366,10 @@ bool RNS::makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool exhaus
     _ready = false;
 
     if (fineTune)
+    {
         fineTuneReadOdr(read);
+        read.simplifyGeometries(true, true, false);
+    }
     _letter = read;
 
     // Allocate and do the geometry for the lanes:
@@ -2150,7 +2153,6 @@ void RNS::fineTuneReadOdr(ReadOdr &read) const
         }
     }
 }
-
 
 lane* RNS::getLane(const lane *l)
 {
