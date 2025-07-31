@@ -593,6 +593,14 @@ namespace Odr
             return "road: " + std::to_string(odrID);
         }
 
+        scalar length() const
+        {
+            scalar l = 0;
+            for (uint i = 0; i < geom.size(); ++i)
+                l += geom[i].length;
+            return l;
+        }
+
     public:
         std::vector<smaL> lanes;
         uint id;
