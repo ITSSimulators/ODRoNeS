@@ -962,6 +962,8 @@ void lane::assignInputLaneToThis(const lane &t)
             _geom.push_back(new vwParamPoly3(*(dynamic_cast<vwParamPoly3*>(t._geom[i]))));
         else if (t._geom[i]->shape() == mvf::shape::vwSpiral)
             _geom.push_back(new vwSpiral(*(dynamic_cast<vwSpiral*>(t._geom[i]))));
+        else if (t._geom[i]->shape() == mvf::shape::vwBezier3)
+            _geom.push_back(new vwBezier3(*dynamic_cast<vwBezier3*>(t._geom[i])));
 
         else
             std::cout << "[ WARNING ] lane::assignInputToThis doesn't know about this geometry" << std::endl;
@@ -1429,6 +1431,11 @@ uint lane::getGeometrySize() const
     return static_cast<uint>(_geom.size());
 }
 
+
+const std::vector<geometry*> lane::geometries() const
+{
+    return _geom;
+}
 
 /*
 std::vector<std::unique_ptr<geometry>> lane::getGeometries() const

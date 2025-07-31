@@ -365,7 +365,7 @@ public:
     scalar getCurvature(const arr2 &p) const; ///< returns the curvature (1/R) at one point.
     scalar getLength() const; ///< returns the length of the lane.
     uint getGeometrySize() const; ///< get the size of the _geom array.
-    // const std::vector<odrones::geometry*> geometries() const;
+    const std::vector<odrones::geometry*> geometries() const;
     // std::vector<std::unique_ptr<odrones::geometry>> getGeometries() const;
     scalar maxSo() const; ///< odr; return the max So coordinate of lane 0.
 
