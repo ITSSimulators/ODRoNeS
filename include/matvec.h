@@ -198,6 +198,7 @@ public:
     vec2& operator+=(const arr2& b) { _data[0] += b[0]; _data[1] += b[1]; return *this; }
     scalar operator*(const vec2 &b) const { return _data[0] * b[0] + _data[1] * b[1]; }
     vec2 operator*(scalar x) const { return vec2(x * _data[0], x * _data[1]); }
+    vec2 operator*=(scalar x) { _data[0] *= x; _data[1] *= x; return *this;}
     vec2 operator/=(scalar x) { _data[0] /= x; _data[1] /= x; return *this;}
     // friend vec2 operator*(const scalar s, const vec2& v);
     vec2 operator+(const vec2 &b) const { return vec2(_data[0] + b[0], _data[1] + b[1]); }
@@ -213,6 +214,9 @@ public:
 
     scalar cross(const vec2& b) { return _data[0] * b[1] - b[0] * _data[1]; }
     scalar cross(const arr2& b) { return _data[0] * b[1] - b[0] * _data[1]; }
+
+    void rotate(scalar angle) { mvf::rotateVectorByAngle(_data, angle); }
+    scalar angle(const vec2& b) const { return mvf::subtendedAngle(_data, b._data); }
 
     const std::array<scalar, 2> &data = _data;
     arr2 a2() const { return {_data[0], data[1]}; } // arr2 compatibility
