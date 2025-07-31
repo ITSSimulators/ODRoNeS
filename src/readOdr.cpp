@@ -286,6 +286,16 @@ void ReadOdr::append(const ReadOdr &r)
 }
 
 
+Odr::smaS* ReadOdr::odrSection(uint odrID)
+{
+    for (uint i = 0; i < _sections.size(); ++i)
+    {
+        if (odrID == _sections[i].odrID)
+            return &(_sections[i]);
+    }
+    return nullptr;
+}
+
 const Odr::smaS* ReadOdr::odrSection(uint odrID) const
 {
     for (uint i = 0; i < _sections.size(); ++i)

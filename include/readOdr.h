@@ -62,8 +62,10 @@ public:
     const kind k() const { return _k; }
 
     const std::vector<Odr::smaS> &sections = _sections; ///< share a read-only version of _sections.
+    Odr::smaS* section(uint i) { return &_sections[i]; }; ///< share a non const section
 
     const Odr::smaS* odrSection(uint odrID) const; ///< return the section with ID = OdrID.
+    Odr::smaS* odrSection(uint odrID); ///< return the section with ID = OdrID.
 
     const std::vector<Odr::udIndexed6DPoint> &udConnections = _udConnections; ///< share a read-only version
 
