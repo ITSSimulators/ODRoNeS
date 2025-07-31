@@ -403,6 +403,8 @@ void lane::convertBezierToParamPoly3(const vwBezier3 *bez, tinyxml2::XMLElement 
     xmlUtils::setAttrDouble(xmlPP3, "cV", cV);
     xmlUtils::setAttrDouble(xmlPP3, "dV", dV);
     xmlPP3->SetAttribute("pRange", "normalized");
+
+    geometry->InsertEndChild(xmlPP3);
 }
 
 void lane::writeDown()
@@ -651,8 +653,35 @@ bool lane::xmlPlanView(tinyxml2::XMLElement *planView, tinyxml2::XMLDocument &do
         }
         else if (_geom[i]->shape() == mvf::shape::vwBezier3)
         {
-            vwBezier3*bez=static_cast<vwBezier3*>(_geom[i]);
-            convertBezierToParamPoly3(bez,geometry,doc);
+            bool writeAsPP3 = false;
+            if (writeAsPP3)
+            {
+                vwBezier3* bez=static_cast<vwBezier3*>(_geom[i]);
+                convertBezierToParamPoly3(bez,geometry,doc);
+            }
+            else
+            {
+                tinyxml2::XMLElement *xmlBezier = doc.NewElement(Odr::Elem::Bezier3);
+
+                xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz0x,
+                                        (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(0)[0] ));
+                xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz0y,
+                                        (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(0)[1] ));
+                xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz1x,
+                                        (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(1)[0] ));
+                xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz1y,
+                                        (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(1)[1] ));
+                xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz2x,
+                                        (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(2)[0] ));
+                xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz2y,
+                                        (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(2)[1] ));
+                xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz3x,
+                                        (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(3)[0] ));
+                xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz3y,
+                                        (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(3)[1] ));
+
+                geometry->InsertEndChild(xmlBezier);
+            }
         }
         else
         {
