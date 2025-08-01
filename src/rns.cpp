@@ -29,7 +29,6 @@
 #include "readOneVersion.h"
 #endif // USE_ONEVERSION
 
-
 using namespace odrones;
 
 RNS::RNS()
@@ -368,7 +367,7 @@ bool RNS::makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool exhaus
     if (fineTune)
     {
         fineTuneReadOdr(read);
-        read.simplifyGeometries(true, true, false);
+        // read.simplifyGeometries(true, true, false);
     }
     _letter = read;
 
@@ -1826,6 +1825,8 @@ void RNS::fineTuneReadOdr(ReadOdr &read) const
 
     std::vector<bool> changedO(zs.size(),false);
     std::vector<bool> changedE(zs.size(),false);
+    std::vector<vec2> to(zs.size(), {0., 0.});
+    std::vector<vec2> te(zs.size(), {0., 0.});
     for (uint i = 0; i < zs.size(); ++i)
     {
         uint edges_i = 0; // 1 for start, 2 for end, 3 for both.
@@ -1838,6 +1839,9 @@ void RNS::fineTuneReadOdr(ReadOdr &read) const
             edges_i += 2;
 
         std::string csuidi = std::to_string(i) + ":-1 (" + std::to_string(zs[i].odrID()) + ":0)";
+        if (!changedO[i]) to[i] = li->getTo();
+        if (!changedE[i]) te[i] = li->getTangentInPoint(li->getDestination());
+
         for (uint j = i + 1; j < zs.size(); ++j)
         {
             uint edges_j = 0;
@@ -1852,25 +1856,25 @@ void RNS::fineTuneReadOdr(ReadOdr &read) const
             if ((edges_j == 0) && (edges_i == 0))
                 continue;
 
-            vec2 toi = li->getTo();
-            vec2 tei = li->getTangentInPoint(li->getDestination());
-            vec2 toj = lj->getTo();
-            vec2 tej = lj->getTangentInPoint(lj->getDestination());
-
             std::string csuidj = std::to_string(j) + ":-1 (" + std::to_string(zs[j].odrID()) + ":0)";
+            if (!changedO[j]) to[j] = lj->getTo();
+            if (!changedE[j]) te[j] = lj->getTangentInPoint(lj->getDestination());
 
             // origin_i, origin_j
             if ((mvf::areCloseEnough(li->getOrigin(), lj->getOrigin(), lane::odrTol)) &&
-                (mvf::areCloseEnough(toi * toj, -1, 2e-1)))
+                (mvf::areCloseEnough(to[i] * to[j], -1, 2e-1)))
             {
                 if (((edges_i == 1) || (edges_i == 3)) &&
                     ((edges_j == 1) || (edges_j == 3)) &&
                     (changedO[i] == false) && (changedO[j] == false))
                 {
-                    scalar angle = 0.5 * toi.angle(toj * -1.);
-                    vec2 p1i = toi;
+                    scalar angle = 0.5 * to[i].angle(to[j] * -1.);
+                    vec2 p1i = to[i];
                     p1i.rotate(angle);
                     vec2 p1j = p1i * -1.;
+
+                    to[i] = p1i;
+                    to[j] = p1j;
 
                     vwBezier3* bz3i = static_cast<vwBezier3*>(li->geometries()[0]);
                     p1i *= mvf::distance(bz3i->l0ControlPoint(0), bz3i->l0ControlPoint(1));
@@ -1878,7 +1882,7 @@ void RNS::fineTuneReadOdr(ReadOdr &read) const
                     changedO[i] = true;
 
                     std::cout << csuidi << " 1 - write : (" << p1i[0] << ", " << p1i[1] << ") instead of ("
-                              << bz3i->l0ControlPoint(1)[0] << ", " << bz3i->l0ControlPoint(1)[1] << ")" << std::endl;
+                              << bz3i->l0ControlPoint(1)[0] << ", " << bz3i->l0ControlPoint(1)[1] << ")" << csuidj << std::endl;
 
                     read.odrSection(li->odrSectionID())->geom[0].bz1x = p1i[0];
                     read.odrSection(li->odrSectionID())->geom[0].bz1y = p1i[1];
@@ -1892,12 +1896,13 @@ void RNS::fineTuneReadOdr(ReadOdr &read) const
                     read.odrSection(lj->odrSectionID())->geom[0].bz1y = p1j[1];
 
                     std::cout << csuidj << " 2 - write: (" << p1j[0] << ", " << p1j[1] << ") instead of ("
-                              << bz3j->l0ControlPoint(1)[0] << ", " << bz3j->l0ControlPoint(1)[1] << ")" << std::endl;
+                              << bz3j->l0ControlPoint(1)[0] << ", " << bz3j->l0ControlPoint(1)[1] << ")" << csuidi << std::endl;
                 }
 
                 else if ( ((edges_i == 1) || (edges_i == 3)) && (changedO[i] == false))
                 {
-                    vec2 p1i = toj * -1.;
+                    vec2 p1i = to[j] * -1.;
+                    to[i] = p1i;
                     vwBezier3* bz3i = static_cast<vwBezier3*>(li->geometries()[0]);
                     p1i *= mvf::distance(bz3i->l0ControlPoint(0), bz3i->l0ControlPoint(1));
                     p1i += li->getOrigin();
@@ -1907,12 +1912,13 @@ void RNS::fineTuneReadOdr(ReadOdr &read) const
                     read.odrSection(li->odrSectionID())->geom[0].bz1y = p1i[1];
 
                     std::cout << csuidi << " 3 - write : (" << p1i[0] << ", " << p1i[1] << ") instead of ("
-                              << bz3i->l0ControlPoint(1)[0] << ", " << bz3i->l0ControlPoint(1)[1] << ")" << std::endl;
+                              << bz3i->l0ControlPoint(1)[0] << ", " << bz3i->l0ControlPoint(1)[1] << ")" << csuidj << std::endl;
                 }
 
                 else if ( ((edges_j == 1) || (edges_j == 3)) && (changedO[j] == false))
                 {
-                    vec2 p1j = toi * -1.;
+                    vec2 p1j = to[i] * -1.;
+                    to[j] = p1j;
                     vwBezier3* bz3j = static_cast<vwBezier3*>(lj->geometries()[0]);
                     p1j *= mvf::distance(bz3j->l0ControlPoint(0), bz3j->l0ControlPoint(1));
                     p1j += lj->getOrigin();
@@ -1922,23 +1928,26 @@ void RNS::fineTuneReadOdr(ReadOdr &read) const
                     read.odrSection(lj->odrSectionID())->geom[0].bz1y = p1j[1];
 
                     std::cout << csuidj << " 4 - write: (" << p1j[0] << ", " << p1j[1] << ") instead of ("
-                              << bz3j->l0ControlPoint(1)[0] << ", " << bz3j->l0ControlPoint(1)[1] << ")" << std::endl;
+                              << bz3j->l0ControlPoint(1)[0] << ", " << bz3j->l0ControlPoint(1)[1] << ")" << csuidi << std::endl;
                 }
             }
 
             // origin_i, dest_j
             else if ((mvf::areCloseEnough(li->getOrigin(), lj->getDestination(), lane::odrTol)) &&
-                     (mvf::areCloseEnough(toi * tej, 1, 2e-1)))
+                     (mvf::areCloseEnough(to[i] * te[j], 1, 2e-1)))
             {
                 if (((edges_i == 1) || (edges_i == 3)) &&
                     ((edges_j == 2) || (edges_j == 3)) &&
                     (changedO[i] == false) && (changedE[j] == false))
                 {
-                    scalar angle = 0.5 * toi.angle(tej);
+                    scalar angle = 0.5 * to[i].angle(te[j]);
 
-                    vec2 p1i = toi;
+                    vec2 p1i = to[i];
                     p1i.rotate(angle);
                     vec2 p2j = p1i * -1;
+
+                    to[i] = p1i;
+                    te[j] = p1i;
 
                     vwBezier3* bz3i = static_cast<vwBezier3*>(li->geometries()[0]);
                     p1i *= mvf::distance(bz3i->l0ControlPoint(0), bz3i->l0ControlPoint(1));
@@ -1949,7 +1958,7 @@ void RNS::fineTuneReadOdr(ReadOdr &read) const
                     read.odrSection(li->odrSectionID())->geom[0].bz1y = p1i[1];
 
                     std::cout << csuidi << " 5 - write : (" << p1i[0] << ", " << p1i[1] << ") instead of ("
-                              << bz3i->l0ControlPoint(1)[0] << ", " << bz3i->l0ControlPoint(1)[1] << ")" << std::endl;
+                              << bz3i->l0ControlPoint(1)[0] << ", " << bz3i->l0ControlPoint(1)[1] << ")" << csuidj << std::endl;
 
                     vwBezier3* bz3j = static_cast<vwBezier3*>(lj->geometries().back());
                     p2j *= mvf::distance(bz3j->l0ControlPoint(2), bz3j->l0ControlPoint(3));
@@ -1960,12 +1969,13 @@ void RNS::fineTuneReadOdr(ReadOdr &read) const
                     read.odrSection(lj->odrSectionID())->geom.back().bz2y = p2j[1];
 
                     std::cout << csuidj << " 6 - write: (" << p2j[0] << ", " << p2j[1] << ") instead of ("
-                              << bz3j->l0ControlPoint(2)[0] << ", " << bz3j->l0ControlPoint(2)[1] << ")" << std::endl;
+                              << bz3j->l0ControlPoint(2)[0] << ", " << bz3j->l0ControlPoint(2)[1] << ")" << csuidi << std::endl;
                 }
 
                 else if ( ((edges_i == 1) || (edges_i == 3)) && (changedO[i] == false))
                 {
-                    vec2 p1i = tej;
+                    vec2 p1i = te[j];
+                    to[i] = p1i;
                     vwBezier3* bz3i = static_cast<vwBezier3*>(li->geometries()[0]);
                     p1i *= mvf::distance(bz3i->l0ControlPoint(0), bz3i->l0ControlPoint(1));
                     p1i += li->getOrigin();
@@ -1975,12 +1985,13 @@ void RNS::fineTuneReadOdr(ReadOdr &read) const
                     read.odrSection(li->odrSectionID())->geom[0].bz1y = p1i[1];
 
                     std::cout << csuidi << " 7 - write : (" << p1i[0] << ", " << p1i[1] << ") instead of ("
-                              << bz3i->l0ControlPoint(1)[0] << ", " << bz3i->l0ControlPoint(1)[1] << ")" << std::endl;
+                              << bz3i->l0ControlPoint(1)[0] << ", " << bz3i->l0ControlPoint(1)[1] << ")" << csuidj << std::endl;
                 }
 
                 else if ( ((edges_j == 2) || (edges_j == 3)) && (changedE[j] == false))
                 {
-                    vec2 p2j = toi * -1;
+                    vec2 p2j = to[i] * -1;
+                    te[j] = to[i];
                     vwBezier3* bz3j = static_cast<vwBezier3*>(lj->geometries().back());
                     p2j *= mvf::distance(bz3j->l0ControlPoint(2), bz3j->l0ControlPoint(3));
                     p2j += lj->getDestination();
@@ -1997,17 +2008,20 @@ void RNS::fineTuneReadOdr(ReadOdr &read) const
 
             // dest_i, origin_j
             else if ((mvf::areCloseEnough(li->getDestination(), lj->getOrigin(), lane::odrTol)) &&
-                     (mvf::areCloseEnough(tei * toj, 1, 2e-1)))
+                     (mvf::areCloseEnough(te[i] * to[j], 1, 2e-1)))
             {
                 if (((edges_i == 2) || (edges_i == 3)) &&
                     ((edges_j == 1) || (edges_j == 3)) &&
                     (changedE[i] == false) && (changedO[j] == false))
                 {
-                    scalar angle = 0.5 * toj.angle(tei);
+                    scalar angle = 0.5 * to[j].angle(te[i]);
 
-                    vec2 p1j = toj;
+                    vec2 p1j = to[j];
                     p1j.rotate(angle);
                     vec2 p2i = p1j * -1;
+
+                    te[i] = p1j;
+                    to[j] = p1j;
 
                     vwBezier3* bz3j = static_cast<vwBezier3*>(lj->geometries()[0]);
                     p1j *= mvf::distance(bz3j->l0ControlPoint(0), bz3j->l0ControlPoint(1));
@@ -2034,7 +2048,8 @@ void RNS::fineTuneReadOdr(ReadOdr &read) const
 
                 else if ( ((edges_j == 1) || (edges_j == 3)) && (changedO[j] == false))
                 {
-                    vec2 p1j = tei;
+                    vec2 p1j = te[i];
+                    to[j] = p1j;
                     vwBezier3* bz3j = static_cast<vwBezier3*>(lj->geometries()[0]);
                     p1j *= mvf::distance(bz3j->l0ControlPoint(0), bz3j->l0ControlPoint(1));
                     p1j += lj->getOrigin();
@@ -2049,7 +2064,8 @@ void RNS::fineTuneReadOdr(ReadOdr &read) const
 
                 else if ( ((edges_i == 2) || (edges_i == 3)) && (changedE[i] == false))
                 {
-                    vec2 p2i = toj * -1.;
+                    vec2 p2i = to[j] * -1.;
+                    te[i] = to[j];
                     vwBezier3* bz3i = static_cast<vwBezier3*>(li->geometries().back());
                     p2i *= mvf::distance(bz3i->l0ControlPoint(2), bz3i->l0ControlPoint(3));
                     p2i += li->getDestination();
@@ -2065,17 +2081,20 @@ void RNS::fineTuneReadOdr(ReadOdr &read) const
 
             // dest_i, dest_j
             else if ((mvf::areCloseEnough(li->getDestination(), lj->getDestination(), lane::odrTol)) &&
-                     (mvf::areCloseEnough(tei * tej, -1, 2e-1)))
+                     (mvf::areCloseEnough(te[i] * te[j], -1, 2e-1)))
             {
                 if (((edges_i == 2) || (edges_i == 3)) &&
                     ((edges_j == 2) || (edges_j == 3)) &&
                     (changedE[i] == false) && (changedE[j] == false))
                 {
-                    scalar angle = 0.5 * mvf::subtendedAngle({-tei[0], -tei[1]}, tej.data);
+                    scalar angle = 0.5 * mvf::subtendedAngle({-te[i][0], -te[i][1]}, te[j].data);
 
-                    vec2 p2i = tei * -1.;
+                    vec2 p2i = te[i] * -1.;
                     p2i.rotate(angle);
                     vec2 p2j = p2i * -1.;
+
+                    te[i] = p2j;
+                    te[j] = p2i;
 
                     vwBezier3* bz3i = static_cast<vwBezier3*>(li->geometries().back());
                     p2i *= mvf::distance(bz3i->l0ControlPoint(2), bz3i->l0ControlPoint(3));
@@ -2103,7 +2122,8 @@ void RNS::fineTuneReadOdr(ReadOdr &read) const
 
                 else if ( ((edges_i == 2) || (edges_i == 3)) && (changedE[i] == false))
                 {
-                    vec2 p2i = tej;
+                    vec2 p2i = te[j];
+                    te[i] = te[j] * -1.;
                     vwBezier3* bz3i = static_cast<vwBezier3*>(li->geometries().back());
                     p2i *= mvf::distance(bz3i->l0ControlPoint(2), bz3i->l0ControlPoint(3));
                     p2i += li->getDestination();
@@ -2118,7 +2138,8 @@ void RNS::fineTuneReadOdr(ReadOdr &read) const
 
                 else if ( ((edges_j == 2) || (edges_j == 3)) && (changedE[j] == false))
                 {
-                    vec2 p2j = tei;
+                    vec2 p2j = te[i];
+                    te[j] = te[i] * -1;
                     vwBezier3* bz3j = static_cast<vwBezier3*>(lj->geometries().back());
                     p2j *= mvf::distance(bz3j->l0ControlPoint(2), bz3j->l0ControlPoint(3));
                     p2j += lj->getDestination();
