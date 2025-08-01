@@ -106,7 +106,6 @@ private:
     lane* getLaneWithODRIds(uint rID, int lID) const;
     lane* getLaneWithOVId(const OneVersion::OVID &lID) const;
     section* getSectionWithOVId(const OneVersion::OVID &sID) const;
-    const section* getSectionWithODRId(uint rID) const;
 
 public:
     const lane* getCLaneWithSUID(uint sID, uint lID) const;
@@ -116,6 +115,7 @@ public:
     std::vector<uint> getSectionIDsWithOVRoadNodeId(int rnMID, int rnmID) const; ///< returning a vector because a node may have a number of laneGroups, and rns store each one in a different section. That will be an empty vector if roadIDM or roadIDm are < 0
     std::vector<uint> getSectionIDsWithOVNodeId(int nID) const; ///< returning a vector because a node may have a number of laneGroups, and rns store each one in a different section. That will result in an empty vector if nID is < 0;
 
+    const section* getSectionWithODRId(uint rID) const;
     int getSectionIDWithODRIDWithRoadCoord(uint rID, scalar s) const; ///< -1 if not found.
 
 
