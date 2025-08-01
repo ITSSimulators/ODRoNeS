@@ -1153,6 +1153,15 @@ lane* RNS::getLaneWithODRIds(uint rID, int lID) const
     return nullptr;
 }
 
+const section* RNS::getSectionWithODRId(uint rID) const
+{
+    for (uint i = 0; i < _sectionsSize; ++i)
+    {
+        if (_sections[i].odrID() == rID)
+            return &(_sections[i]);
+    }
+    return nullptr;
+}
 
 lane* RNS::getLaneWithOVId(const OneVersion::OVID &lID) const
 {

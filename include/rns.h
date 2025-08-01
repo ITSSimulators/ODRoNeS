@@ -106,6 +106,7 @@ private:
     lane* getLaneWithODRIds(uint rID, int lID) const;
     lane* getLaneWithOVId(const OneVersion::OVID &lID) const;
     section* getSectionWithOVId(const OneVersion::OVID &sID) const;
+    const section* getSectionWithODRId(uint rID) const;
 
 public:
     const lane* getCLaneWithSUID(uint sID, uint lID) const;
