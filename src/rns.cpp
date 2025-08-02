@@ -1088,6 +1088,7 @@ bool RNS::linkLanesInSectionsIfSound(section &si, section &sj, scalar tol)
 
 bool RNS::sectionEdgesInRange(section &si, section &sj, scalar tol) const
 {
+    return true;
     if ((mvf::distance(si.zero()->getDestination(), sj.zero()->getOrigin()) < lane::odrTol) ||
         (mvf::distance(si.zero()->getDestination(), sj.zero()->getDestination()) < lane::odrTol) ||
         (mvf::distance(si.zero()->getOrigin(), sj.zero()->getOrigin()) < lane::odrTol) ||
@@ -2166,21 +2167,31 @@ void RNS::fineTuneReadOdr(ReadOdr &read) const
 
     for (uint i = 0; i < zs.size(); ++i)
     {
-        if (changedO[i])
+        if ((changedO[i]) || (changedE[i]))
         {
             const lane* li = zs[i].zero();
             Odr::smaS* smas = read.odrSection(li->odrSectionID());
-            bezier3 bz3(smas->geom[0]);
-            smas->geom[0].length = bz3.length();
+
+            if (changedO[i])
+            {
+                bezier3 bz3(smas->geom[0]);
+                scalar delta = bz3.length() - smas->geom[0].length;
+                smas->geom[0].length = bz3.length();
+                for (uint j = 1; j < smas->geom.size(); ++j)
+                    smas->geom[j].s += delta;
+            }
+
+            if (changedE[i])
+            {
+                bezier3 bz3(smas->geom.back());
+                smas->geom.back().length = bz3.length();
+            }
+
+            for (uint j = 0; j < smas->lanes.size(); ++j)
+                smas->lanes[j].length = smas->length();
         }
 
-        if (changedE[i])
-        {
-            const lane* li = zs[i].zero();
-            Odr::smaS* smas = read.odrSection(li->odrSectionID());
-            bezier3 bz3(smas->geom.back());
-            smas->geom.back().length = bz3.length();
-        }
+
     }
 }
 
