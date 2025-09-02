@@ -382,18 +382,33 @@ void lane::convertBezierToParamPoly3(const vwBezier3 *bez, tinyxml2::XMLElement 
 
     // Convert global to local
     auto toLocal = [&](const arr2& pt) {double dx = pt[0] - x0;
-    double dy = pt[1] - y0; double cos_h = cos(-hdg); double sin_h = sin(-hdg);
+    double dy = pt[1] - y0;
+    double cos_h = cos(-hdg);
+    double sin_h = sin(-hdg);
         return arr2{dx * cos_h - dy * sin_h, dx * sin_h + dy * cos_h};};
 
     // Control points (global coords)
-    auto p0_global = bez->l0ControlPoint(3);auto p1_global = bez->l0ControlPoint(2);auto p2_global = bez->l0ControlPoint(1);auto p3_global = bez->l0ControlPoint(0);
+    auto p0_global = bez->l0ControlPoint(0);
+    auto p1_global = bez->l0ControlPoint(1);
+    auto p2_global = bez->l0ControlPoint(2);
+    auto p3_global = bez->l0ControlPoint(3);
 
     // Convert to local coordinates and assign to polynomial coefficients
-    auto p0 = toLocal(p0_global);auto p1 = toLocal(p1_global);auto p2 = toLocal(p2_global);auto p3 = toLocal(p3_global);
-    double aU = p0[0]; double bU = 3 * (p1[0] - p0[0]); double cU = 3 * (p2[0] - 2 * p1[0] + p0[0]);double dU = p3[0] - 3 * p2[0] + 3 * p1[0] - p0[0];
-    double aV = p0[1];double bV = 3 * (p1[1] - p0[1]);double cV = 3 * (p2[1] - 2 * p1[1] + p0[1]);double dV = p3[1] - 3 * p2[1] + 3 * p1[1] - p0[1];
+    auto p0 = toLocal(p0_global);
+    auto p1 = toLocal(p1_global);
+    auto p2 = toLocal(p2_global);
+    auto p3 = toLocal(p3_global);
+    double aU = p0[0];
+    double bU = 3 * (p1[0] - p0[0]);
+    double cU = 3 * (p2[0] - 2 * p1[0] + p0[0]);
+    double dU = p3[0] - 3 * p2[0] + 3 * p1[0] - p0[0];
+    double aV = p0[1];
+    double bV = 3 * (p1[1] - p0[1]);
+    double cV = 3 * (p2[1] - 2 * p1[1] + p0[1]);
+    double dV = p3[1] - 3 * p2[1] + 3 * p1[1] - p0[1];
 
-    auto* xmlPP3 = doc.NewElement("paramPoly3");
+    auto* xmlPP3 = geometry->InsertNewChildElement("paramPoly3");
+    doc.NewElement("paramPoly3");
     xmlUtils::setAttrDouble(xmlPP3, "aU", aU);
     xmlUtils::setAttrDouble(xmlPP3, "bU", bU);
     xmlUtils::setAttrDouble(xmlPP3, "cU", cU);
@@ -651,11 +666,13 @@ bool lane::xmlPlanView(tinyxml2::XMLElement *planView, tinyxml2::XMLDocument &do
         }
         else if (_geom[i]->shape() == mvf::shape::vwBezier3)
         {
+            std::cout << "Handling bezier3 for lane " << odrID() << std::endl;
             vwBezier3*bez=static_cast<vwBezier3*>(_geom[i]);
             convertBezierToParamPoly3(bez,geometry,doc);
         }
         else
         {
+            std::cerr << "warning team:Not handling shape " << mvf::shapeString(_geom[i]->shape())   << '\n';
             return false;
         }
         planView->InsertEndChild(geometry);

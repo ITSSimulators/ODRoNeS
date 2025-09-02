@@ -842,9 +842,51 @@ void RNS::write(const std::string &mapFile) const
 
             root->InsertEndChild(xmlRoad); // into root.
         }
+
+        //Ruby starting to identify/group junction
+        // Start a for loop which will iterate through all the junctions stored in data structure
+
+        // tinyxml2::XMLElement*junction=xmlMap.NewElement(Odr::Elem::Junction);
+        // Create XML element called "junction"
+        // Create the attributes to <junction> (within <road>) "name" and "id"
+       // junction->SetAttribute(Odr::Elem::name, );
+       // junction->SetAttribute(Odr::Elem::Id, );
+
+        //Create attributes to <connection> (within <junction>) "id", "incomingRoad", "connectingRoad", "contactPoint"
+
+        // Create attributes to <laneLink> (within <connection>) "from" and "to"
+        // There may be multiple <laneLink> elements within <connection> which link specific lanes across the road
+
+
+        // Nest a for loop inside each junction to iterate over the connections within the single junction
+        // These connections are stored in <connection> element
+        // <connection> stores each road connection within a junction
+
+        // Insert <laneLink> as child of <connection>
+
+        // Add <connection> to <junction>
+
+        // Add junction subtree to root element <OpenDRIVE>
+
+
     }
     else
     {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         /*
             // loop over letter.sections:
@@ -877,7 +919,7 @@ void RNS::write(const std::string &mapFile) const
     xmlUtils::CheckResult(xmlMap.SaveFile(mapFile.c_str()));
 }
 
-void RNS::linkLanesGeometrically(scalar tol)
+void RN S::linkLanesGeometrically(scalar tol)
 {
     // scalar largeTol = 20 * tol;
     // 1 - Link two-way sections, we've already run setPortAndStarboard which flips them correctly.

@@ -24,6 +24,7 @@
 #include "xmlUtils.h"
 
 #include <tinyxml2.h>
+#include <set>
 
 using namespace odrones;
 
@@ -730,9 +731,20 @@ int ReadXOdr::loadXodr(std::string iFile, bool isOdrFile)
     // We don't read the junctions tables,
     //  but we could load it into a series of vectors of connections.
     //  If needed, this:
-    // std::vector<Odr::connection> j = readJunction(root->FirstChildElement(Odr::Elem::Junction));
-    //  reads the first Junction, and then you'd need a loop.
-
+    auto junctionElement = root->FirstChildElement(Odr::Elem::Junction);
+    std::set<uint> junctionRoads;
+    while (junctionElement)
+    {
+        std::vector<Odr::connection> j = readJunction(junctionElement);
+        for (uint connectionIndex=0; connectionIndex<j.size(); connectionIndex++)
+        {
+            auto connection = j[connectionIndex];
+            junctionRoads.insert(connection.incomingRoad);
+            junctionRoads.insert(connection.connectingRoad);
+        }
+        junctionElement = junctionElement->NextSiblingElement(Odr::Elem::Junction);
+    }
+//      reads the first Junction, and then you'd need a loop.
     // Now loop over and figure out who's prev and who's next:
     r = root->FirstChildElement(Odr::Elem::Road);
     ndxS = 0;
