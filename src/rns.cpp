@@ -51,7 +51,7 @@ RNS::~RNS()
     clearMemory();
 }
 
-RNS& RNS::operator=(RNS& r)
+RNS& RNS::operator=(const RNS& r)
 {
     assignInputRNSToThis(r);
     return *this;

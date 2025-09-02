@@ -43,7 +43,7 @@ public:
     RNS();
     RNS(std::string odrMap, const char* drivingSide, bool exhaustiveLinking, bool fineTune, bool loadSidewalk, bool verbose = false);
     RNS(const RNS &r); ///< copy construct
-    RNS& operator=(RNS& r); ///< copy assign
+    RNS& operator=(const RNS& r); ///< copy assign
     ~RNS();
 
     void clearMemory();
