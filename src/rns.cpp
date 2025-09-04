@@ -43,6 +43,7 @@ void RNS::initialise()
     _sectionsSize = 0;
     _verbose = true;
     _ready = false;
+    _linkTol = lane::odrTol;
 }
 
 
@@ -143,6 +144,7 @@ void RNS::assignInputRNSToThis(const RNS& r)
         }
     }
 
+    _linkTol = r._linkTol;
     _ready = r._ready;
 
 }
@@ -499,8 +501,7 @@ bool RNS::makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool exhaus
     setPortAndStarboard(_drivingSide);
 
     if (exhaustiveLinking)
-        linkLanesGeometrically();
-
+        linkLanesGeometrically(_linkTol);
 
     // Get the traffic signs:
     for (uint i = 0; i < _sectionsSize; ++i)
@@ -521,6 +522,7 @@ bool RNS::makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool exhaus
     _ready = true;
     return true;
 }
+
 
 
 void RNS::setPortAndStarboard(concepts::drivingSide drivingSide)
@@ -2068,7 +2070,7 @@ void RNS::fineTuneReadOdr(ReadOdr &read) const
                     read.odrSection(lj->odrSectionID())->geom[0].bz1x = p1j[0];
                     read.odrSection(lj->odrSectionID())->geom[0].bz1y = p1j[1];
 
-                    std::cout << csuidj << " 11 o write : (" << p1j[0] << ", " << p1j[1] << ") instead of ("
+                    std::cout << csuidj << " 11 - write : (" << p1j[0] << ", " << p1j[1] << ") instead of ("
                               << bz3j->l0ControlPoint(1)[0] << ", " << bz3j->l0ControlPoint(1)[1] << ") " << csuidi << std::endl;
                 }
 
@@ -2084,7 +2086,7 @@ void RNS::fineTuneReadOdr(ReadOdr &read) const
                     read.odrSection(li->odrSectionID())->geom.back().bz2x = p2i[0];
                     read.odrSection(li->odrSectionID())->geom.back().bz2y = p2i[1];
 
-                    std::cout << csuidi << " 12 e write: (" << p2i[0] << ", " << p2i[1] << ") instead of ("
+                    std::cout << csuidi << " 12 - write: (" << p2i[0] << ", " << p2i[1] << ") instead of ("
                               << bz3i->l0ControlPoint(2)[0] << ", " << bz3i->l0ControlPoint(2)[1] << ") " << csuidj << std::endl;
                 }
             }
@@ -2120,13 +2122,13 @@ void RNS::fineTuneReadOdr(ReadOdr &read) const
                     vwBezier3* bz3j = static_cast<vwBezier3*>(lj->geometries().back());
                     p2j *= mvf::distance(bz3j->l0ControlPoint(0), bz3j->l0ControlPoint(1));
                     p2j += lj->getDestination();
-                    changedO[j] = true;
+                    changedE[j] = true;
 
                     read.odrSection(lj->odrSectionID())->geom.back().bz2x = p2j[0];
                     read.odrSection(lj->odrSectionID())->geom.back().bz2y = p2j[1];
 
                     std::cout << csuidj << " 14 - write : (" << p2j[0] << ", " << p2j[1] << ") instead of ("
-                              << bz3j->l0ControlPoint(1)[2] << ", " << bz3j->l0ControlPoint(1)[3] << ") " << csuidi << std::endl;
+                              << bz3j->l0ControlPoint(1)[0] << ", " << bz3j->l0ControlPoint(1)[1] << ") against: " << csuidi << ", j: " << j << std::endl;
 
                 }
 
@@ -2159,7 +2161,7 @@ void RNS::fineTuneReadOdr(ReadOdr &read) const
                     read.odrSection(lj->odrSectionID())->geom.back().bz2y = p2j[1];
 
                     std::cout << csuidj << " 16 - write: (" << p2j[0] << ", " << p2j[1] << ") instead of ("
-                              << bz3j->l0ControlPoint(2)[0] << ", " << bz3j->l0ControlPoint(2)[1] << ") " << csuidi << std::endl;
+                              << bz3j->l0ControlPoint(2)[0] << ", " << bz3j->l0ControlPoint(2)[1] << ") against: " << csuidi << ", j = " << j << std::endl;
                 }
             }
         }
@@ -2185,6 +2187,7 @@ void RNS::fineTuneReadOdr(ReadOdr &read) const
             {
                 bezier3 bz3(smas->geom.back());
                 smas->geom.back().length = bz3.length();
+                std::cout << "### id: " << smas->id << " has length: " << smas->geom.back().length << std::endl;
             }
 
             for (uint j = 0; j < smas->lanes.size(); ++j)

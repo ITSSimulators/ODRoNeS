@@ -66,6 +66,9 @@ public:
     bool verbose() const { return _verbose; }
     void verbose(bool v) { _verbose = v; }
 
+    scalar linkTolerance() const { return _linkTol; }
+    void linkTolerance(scalar tol) { _linkTol = tol; }
+
     concepts::drivingSide drivingSide() const; ///< return the driving side.
     void drivingSide(concepts::drivingSide side); ///< manually set the driving side.
 
@@ -192,6 +195,7 @@ private:
     bool _ready; ///< whether the RNS is ready or not.
     bool _verbose; ///< whether to print out to std::out or not.
 
+    scalar _linkTol; ///< linking tolerance.
 
 };
 
