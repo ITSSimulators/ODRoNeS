@@ -46,15 +46,16 @@ int main(int argc, char *argv[])
     options.allow_unrecognised_options();
 
     options.add_options()
-	    ("h,help", "Print usage message") 
-            ("m,map", "Input file map", cxxopts::value<std::string>())
-            ("v,version", "Print RNS version")
-            ("i,identify", "Identify lanes")
-            ("z,zero", "Include the centre lane")
-            ("c,zero-only", "Consider the centre lane only")
-            ("a,all-but-zero", "Include every lane")
-            ("e,exhaustive-linking", "Geometrically link lanes with close enough ends")
-            ("t,fine-tune", "Adjust Bezier points so that the tangents match, thus improving the linking");
+        ("h,help", "Print usage message")
+        ("m,map", "Input file map", cxxopts::value<std::string>())
+        ("v,version", "Print RNS version")
+        ("i,identify", "Identify lanes")
+        ("z,zero", "Include the centre lane")
+        ("c,zero-only", "Consider the centre lane only")
+        ("a,all-but-zero", "Include every lane")
+        ("e,exhaustive-linking", "Geometrically link lanes with close enough ends")
+        ("l,link-tolerance", "<float> to link lanes which ends are closer", cxxopts::value<double>())
+        ("t,fine-tune", "Adjust Bezier points so that the tangents match, thus improving the linking");
 
     options.parse_positional("map");
 
@@ -146,16 +147,31 @@ int main(int argc, char *argv[])
     if (result.count("fine-tune"))
         ft = true;
 
+    bool lt = false;
+    double linkTolerance = 1e-2;
+    if (result.count("link-tolerance"))
+    {
+        lt = true;
+        linkTolerance = result["link-tolerance"].as<double>();
+    }
+
+
 
 
 #ifdef QT_CORE_LIB
     QApplication app(argc, argv);
-    RNS *rns = new RNS(iFile, Odr::Kind::LHT, el, ft, true);
+    RNS *rns = new RNS();
+    if (lt)
+        rns->linkTolerance(linkTolerance);
+    rns->makeRoads(iFile, Odr::Kind::LHT, el, ft, true);
     RNSWindow rw(rns, gSettings);
     rw.show();
     return app.exec();
 #else
-    RNS rns(iFile, Odr::Kind::LHT, el, true);
+    RNS rns();
+    if (lt)
+        rns.linkTolerance(linkTolerance);
+    rns.makeRoads(iFile, Odr::Kind::LHT, el, ft, true);
     rns.printLanes();
     return 0;
 #endif // QT_CORE_LIB
