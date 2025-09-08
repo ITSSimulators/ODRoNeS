@@ -1694,8 +1694,42 @@ bool lane::isPointOnLane(const arr2 &p, scalar tol) const
 
 int lane::getGeometryIndex(const arr2 &p) const
 {
+    std::vector<int> psb;
+    for (uint i = 0; i < _geom.size(); ++i)
+        if (mvf::isPointInBoxBLcTRcTol(p, _geom[i]->blc(), _geom[i]->trc(), odrTol))
+            psb.push_back(i);
+
+    if (psb.empty())
+        return -1;
+
+    else if (psb.size() == 1)
+        return psb[0];
+
+
+    // Otherwise, try projecting it:
+    scalar dmin2 = 1e4;
+    constexpr scalar dthreshold2 = 25e-4;
+    int idx = -1;
+    for (uint i = 0; i < _geom.size(); ++i)
+    {
+        if (std::find(psb.begin(), psb.end(), i) == psb.end())
+            continue;
+
+
+        arr2 prj = _geom[i]->projectPointHere(p);
+        scalar di2 = mvf::sqrDistance(prj, p);
+        if (di2 < dmin2)
+        {
+            dmin2 = di2;
+            idx = static_cast<int>(i);
+        }
+    }
+
+    return idx;
+
+    /*
     bool fast = true;
-    if (fast) /* Fast and slightly insecure */
+    if (fast) // Fast and slightly insecure
     {
         for (uint i = 0; i < _geom.size(); ++i)
             if (mvf::isPointInBoxBLcTRcTol(p, _geom[i]->blc(), _geom[i]->trc(), odrTol))
@@ -1705,7 +1739,7 @@ int lane::getGeometryIndex(const arr2 &p) const
     }
 
 
-    /* Slow but safe */
+    // Slow but safe
     // If the point is exactly on the lane, find the right bit:
     for (uint i = 0; i < _geom.size(); ++i)
         if (_geom[i]->isPointHere(p)) return static_cast<int>(i);
@@ -1732,6 +1766,7 @@ int lane::getGeometryIndex(const arr2 &p) const
         return idx;
 
     return -1;
+    */
 }
 
 int lane::getGeometryIndex(scalar d) const
