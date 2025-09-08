@@ -318,12 +318,13 @@ scalar numerical::nProjectPointHere(arr2 &p, const arr2 &o) const
             minIdx = idx;
             d2o = d2i;
         }
+        else
+            break;
     }
 
     scalar si;
     scalar so = _pointsS[minIdx]; // minIdx * _pointsDs;
-    if (minIdx == _pointsSize -1) so = maxS();
-    scalar ds = maxS() / parts;
+    scalar ds = 2 * maxS() / parts; // not every interval is the same so that helps.
     while (ds > mvf::distPrecision)
     {
         // look for a better s in the upper half of the interval:
