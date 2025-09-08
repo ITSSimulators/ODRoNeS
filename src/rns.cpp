@@ -369,7 +369,7 @@ bool RNS::makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool exhaus
     if (fineTune)
     {
         fineTuneReadOdr(read);
-        // read.simplifyGeometries(true, true, false);
+        read.simplifyGeometries(false, true, false);
     }
     _letter = read;
 
@@ -2099,7 +2099,7 @@ void RNS::fineTuneReadOdr(ReadOdr &read) const
                     ((edges_j == 2) || (edges_j == 3)) &&
                     (changedE[i] == false) && (changedE[j] == false))
                 {
-                    scalar angle = 0.5 * mvf::subtendedAngle({-te[i][0], -te[i][1]}, te[j].data);
+                    scalar angle = 0.5 * te[i].angle(te[j] * -1.);
 
                     vec2 p2i = te[i] * -1.;
                     p2i.rotate(angle);
@@ -2120,7 +2120,7 @@ void RNS::fineTuneReadOdr(ReadOdr &read) const
                               << bz3i->l0ControlPoint(2)[0] << ", " << bz3i->l0ControlPoint(2)[1] << ") " << csuidj << std::endl;
 
                     vwBezier3* bz3j = static_cast<vwBezier3*>(lj->geometries().back());
-                    p2j *= mvf::distance(bz3j->l0ControlPoint(0), bz3j->l0ControlPoint(1));
+                    p2j *= mvf::distance(bz3j->l0ControlPoint(2), bz3j->l0ControlPoint(3));
                     p2j += lj->getDestination();
                     changedE[j] = true;
 
