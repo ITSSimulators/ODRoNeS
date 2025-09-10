@@ -506,11 +506,11 @@ bool ReadOdr::simplifyStraights(Odr::smaS &s)
 
 void ReadOdr::simplifyGeometries(Odr::smaS &s, bool singleArc, bool straight, bool bezierToArcSeries)
 {
-    if (singleArc)
-        simplifySingleArc(s);
-
     if (straight)
         simplifyStraights(s);
+
+    if (singleArc)
+        simplifySingleArc(s);
 
     if (bezierToArcSeries)
         simplifyMultipleArcs(s);
