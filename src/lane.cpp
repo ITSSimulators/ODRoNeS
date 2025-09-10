@@ -1864,20 +1864,20 @@ scalar lane::unsafeDistanceFromTheBoL(const arr2 &p) const
 
 
 // TEST
-void lane::getPointWithOffset(arr2 &p, const arr2 &o, scalar loff) const
+bool lane::getPointWithOffset(arr2 &p, const arr2 &o, scalar loff) const
 {
     arr2 v = getTangentInPoint(o);
     v = {-v[1], v[0]};
     p = {o[0] + loff * v[0], o[1] + loff * v[1]};
-    return;
+    return true;
 }
 
-void lane::getPointWithOffset(arr2 &p, scalar s, scalar loff) const
+bool lane::getPointWithOffset(arr2 &p, scalar s, scalar loff) const
 {
     arr2 o;
-    getPointAtDistance(o, s);
-    getPointWithOffset(p, o, loff);
-    return;
+    if (!getPointAtDistance(o, s))
+        return false;
+    return getPointWithOffset(p, o, loff);
 }
 
 

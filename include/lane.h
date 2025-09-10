@@ -487,9 +487,9 @@ public:
     scalar unsafeDistanceToTheEoL(const arr2 &p) const;
     scalar unsafeDistanceFromTheBoL(const arr2 &p) const;
     //! return a point p, given a point on the lane o, and a lateral offset loff (positive is starboard, negative is port)
-    void getPointWithOffset(arr2& p, const arr2 &o, scalar loff) const;
+    bool getPointWithOffset(arr2& p, const arr2 &o, scalar loff) const;
     //! return a point p, given a distance down the lane, and a lateral offset loff (positive is starboard, negative is port)
-    void getPointWithOffset(arr2& p, scalar d, scalar loff) const;
+    bool getPointWithOffset(arr2& p, scalar d, scalar loff) const;
     //! return a vector with all the intersection points between "this" and lane l;
     //!   It will configure numerical base class if needed.
     //!   we'll have intersection points on every type of lane, just not today!
