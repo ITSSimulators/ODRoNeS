@@ -40,14 +40,11 @@ namespace odrones
  *  leading to nextLane, prevLane, etc. would be invalidated.
  */
 
-typedef odrones::arr2 arr2;
-typedef odrones::scalar scalar;
 typedef odrones::concepts concepts;
 typedef odrones::mvf mvf;
 typedef odrones::bezier2 bezier2;
 typedef odrones::bezier3 bezier3;
 typedef odrones::lane lane;
-// typedef odrones::Odr Odr;
 typedef odrones::OneVersion OneVersion;
 
 
@@ -63,7 +60,7 @@ public:
     void assignInputSectionToThis(const section& s);
     void set(size_t size);
 
-    bool isReady();
+    bool isReady() const;
 
     // int addLane(lane* l); ///< add a lane to this section
     int addLane(const arr2 &origin, const arr2 &dest, scalar width, scalar speed, mvf::shape shp, lane::sign sgn);
@@ -113,7 +110,7 @@ public:
     lane* operator[](size_t index); ///< get a lane
     const lane* getLane(size_t index) const; ///< get a constant lane
     const lane* getOdrLane(size_t odrId) const; ///< get the lane with _odrID == odrID;
-    lane* zero(); ///< get the reference lane.
+    const lane* zero() const; ///< get the reference lane.
     bool isSameSection(const section *s) const; ///< true if *s == this
     bool isConnected(const section &s) const; ///< true if any lane in *s is connected to any lane of this.
     size_t size() const; ///< return the amount of stuff stored

@@ -101,7 +101,7 @@ void section::assignInputSectionToThis(const section &s)
 }
 
 
-bool section::isReady()
+bool section::isReady() const
 {
     if (_allocSize == 0) return false;
     return true;
@@ -646,7 +646,7 @@ const lane* section::getOdrLane(size_t id) const
     return nullptr;
 }
 
-lane* section::zero()
+const lane* section::zero() const
 {
     return &_zero;
 }
@@ -847,10 +847,10 @@ void section::setPortAndStarboard(bool assumeLeftHandDriving, bool assumeRightHa
     if (assumeLeftHandDriving)
     {
         _lanes[leftToRight[0]].lockFlippable();
-        // std::cout << "[ lane ] " << _lanes[leftToRight[0]].getSUID() << " goes from: "
-                  // << _lanes[leftToRight[0]].getOrigin()[0] << ", " << _lanes[leftToRight[0]].getOrigin()[1] << " to "
-                  // << _lanes[leftToRight[0]].getDestination()[0] << ", " << _lanes[leftToRight[0]].getDestination()[1] << " to "
-                  // << std::endl;
+        /* std::cout << "[ lane0 ] " << _lanes[leftToRight[0]].getCSUID() << " goes from: "
+                  << _lanes[leftToRight[0]].getOrigin()[0] << ", " << _lanes[leftToRight[0]].getOrigin()[1] << " to "
+                  << _lanes[leftToRight[0]].getDestination()[0] << ", " << _lanes[leftToRight[0]].getDestination()[1] << " to "
+                  << std::endl; */
         for (uint i = 1; i < size(); ++i)
         {
             if (leftToRight[i] == -1) break;
@@ -859,10 +859,10 @@ void section::setPortAndStarboard(bool assumeLeftHandDriving, bool assumeRightHa
 
             _lanes[leftToRight[i]].lockFlippable();
 
-            // std::cout << "[ lane ] " << _lanes[leftToRight[i]].getSUID() << " goes from: "
-                  // << _lanes[leftToRight[i]].getOrigin()[0] << ", " << _lanes[leftToRight[i]].getOrigin()[1] << " to "
-                  // << _lanes[leftToRight[i]].getDestination()[0] << ", " << _lanes[leftToRight[i]].getDestination()[1] << " to "
-                  // << std::endl;
+            /* std::cout << "[ lane ] " << _lanes[leftToRight[i]].getCSUID() << " goes from: "
+                  << _lanes[leftToRight[i]].getOrigin()[0] << ", " << _lanes[leftToRight[i]].getOrigin()[1] << " to "
+                  << _lanes[leftToRight[i]].getDestination()[0] << ", " << _lanes[leftToRight[i]].getDestination()[1] << " to "
+                  << std::endl; */
         }
     }
 

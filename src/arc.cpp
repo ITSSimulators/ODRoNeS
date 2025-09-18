@@ -659,5 +659,17 @@ QPainterPath arc::getQPainterPath([[maybe_unused]] uint n) const
 #endif
 
 
+Odr::geometry arc::writeGeometry() const
+{
+    Odr::geometry g;
+    g.g = Odr::Attr::Geometry::arc;
+    g.s = _roadSo;
+    g.x = _origin[0];
+    g.y = _origin[1];
+    g.hdg = std::atan2(_to[1], _to[0]);
+    g.length = _length;
+    g.curvature = 1.0 / _radiusOfCurvature;
+    return g;
+}
 
 

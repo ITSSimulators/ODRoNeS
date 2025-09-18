@@ -29,6 +29,7 @@
 #include <cstdarg>
 #include <tuple>
 #include "parametric.h"
+#include "arc.h"
 
 #ifdef QT_CORE_LIB
 #include <QPainterPath>
@@ -114,6 +115,9 @@ public:
     bool isArc() const override {return false;}
     bool isNumerical() const override {return false;}
     arr2 controlPoint(uint i) const; ///< Return the ith control point;
+
+    arc Arc() const; ///< Form an arc with 3 points at t = 0, 0.5 and 1
+    scalar arcError() const; ///< Form an arc with 3 points at t = 0, 0.5 and 1, and return the error for t = 0.25 and 0.75
 
 #ifdef QT_CORE_LIB
     QPainterPath getQPainterPath(uint n) const override;

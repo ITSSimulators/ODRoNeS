@@ -43,7 +43,9 @@ public:
     ReadOdr& operator+=(const ReadOdr& r);
 
     void renumber(uint shift); ///< renumber the Odr ids of the sections.
-    void transform(const arr2 &position, scalar angle);
+    void transform(const arr2 &position, scalar angle); ///< rotate and translate this map
+
+    void simplifyGeometries(bool singleArc, bool straight, bool bezierToArcSeries); ///< loop over every section simplify their geometries, using arcs and straights where possible.
 
     bool uniqueSectionOdrIDs(); ///< check whether there are sections with repeated odrIDs
 
@@ -62,8 +64,10 @@ public:
     const kind k() const { return _k; }
 
     const std::vector<Odr::smaS> &sections = _sections; ///< share a read-only version of _sections.
+    Odr::smaS* section(uint i) { return &_sections[i]; }; ///< share a non const section
 
     const Odr::smaS* odrSection(uint odrID) const; ///< return the section with ID = OdrID.
+    Odr::smaS* odrSection(uint odrID); ///< return the section with ID = OdrID.
 
     const std::vector<Odr::udIndexed6DPoint> &udConnections = _udConnections; ///< share a read-only version
 
@@ -73,11 +77,13 @@ private:
     void append(const ReadOdr& r);
 
 protected:
-    void simplifyGeometries(Odr::smaS &s); ///< will consider whether any of s.geom[i] can be swapped for
+    void simplifyGeometries(Odr::smaS &s, bool singleArc, bool straight, bool bezierToArcSeries); ///< will consider whether any of s.geom[i] can be swapped for
 
     bool simplifySingleArc(Odr::smaS &s); ///< if equivalent, modify s.geom into a single arc and return true;
 
     bool simplifyStraights(Odr::smaS &s); ///< simplify every straight bezier into a real straight.
+
+    bool simplifyMultipleArcs(Odr::smaS &s); ///< cut the beziers into short arcs that accurately fit
 
 protected:
     std::vector<Odr::smaS> _sections;

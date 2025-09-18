@@ -9,6 +9,9 @@
 %ignore odrones::Odr::offset::operator=;
 %rename (_print) odrones::Odr::offset::print;
 %rename (_print) odrones::Odr::geometry::print;
+%rename (_print) odrones::Odr::smaL::print;
+%rename (_print) odrones::Odr::smaS::print;
+%rename (_print) odrones::lane::print;
 %ignore odrones::ReadOdr::operator=;
 
 %ignore odrones::RNS::operator=;
@@ -23,4 +26,3 @@
 %rename(Odr_Kind_True) odrones::Odr::Kind::True;
 %rename(Odr_Kind_None) odrones::Odr::Kind::None;
 %rename(Odr_laneLink_from) odrones::Odr::laneLink::from;
-

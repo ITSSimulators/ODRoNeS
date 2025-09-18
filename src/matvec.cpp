@@ -380,6 +380,11 @@ scalar mvf::scalarProduct(const arr2 &a, const arr2 &b)
     return a[0]*b[0] + a[1]*b[1];
 }
 
+scalar mvf::crossProduct(const arr2 &a, const arr2 &b)
+{
+    return a[0] * b[1] - b[0] * a[1];
+}
+
 bool mvf::areSamePoints(const arr2 &a, const arr2 &b)
 {
     if (areSameValues(0, distance(a, b))) return true;

@@ -25,7 +25,11 @@ The Road Network System `rns` is essentially an array of connected `sections` on
 Thus, lanes calculate these things differently depending on whether their geometry,
   and the underlying maths belong to the `mvf` class.
 
-Ultimately, see the `rns.h` and the `lane.h` headers to find out more.
+Ultimately, users are intended be using only `rns`, `lane` and `mvf`,
+ and until there's better documantation they will need to go 
+ through the `rns.h`, `lane.h` and `mvf.h` headers to find out more.
+
+The rest of this document is mostly for developers. 
 
 
 

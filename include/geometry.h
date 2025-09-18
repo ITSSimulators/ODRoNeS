@@ -82,7 +82,7 @@ public:
 
 
 protected:
-    arr2 _origin; ///< real shape of the lane
+    arr2 _origin; ///< real origin of the lane
     arr2 _dest; ///< real dest of the lane
     mvf::shape _shape; ///< shape of the lane
     scalar _length; ///< the real length of this bit, rather than the length of lane zero.

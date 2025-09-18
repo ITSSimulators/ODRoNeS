@@ -75,7 +75,7 @@ bool numerical::isSet() const
 
 scalar numerical::defaultDs(scalar length)
 {
-    return std::min(0.50, length / static_cast<scalar>(minPointsSize - 1)); // we need these many points to be able to differentiate.
+    return std::min(static_cast<scalar>(0.50), length / static_cast<scalar>(minPointsSize - 1)); // we need these many points to be able to differentiate.
 }
 
 uint numerical::pointsSize() const
@@ -230,13 +230,13 @@ void numerical::interpolateSCore(uint &ndx, scalar &frac, scalar s) const
 
 
     // Take a good initial guess for ndx:
-    ndx = std::floor((scalar) s / _approxDs);
-    if (ndx > _pointsSize -1) ndx = _pointsSize -1; // this can very rarely.
+    ndx = std::floor(s / _approxDs);
+    if (ndx > _pointsSize -1) ndx = _pointsSize -1; // this happen can very rarely.
     //  and now refine it:
+    while ( (ndx < _pointsSize - 2) && (_pointsS[ndx + 1] < s) )
+            ndx += 1;
     while ( (ndx > 0) && (_pointsS[ndx] > s) )
             ndx -= 1;
-    while ( (ndx < _pointsSize - 1) && (_pointsS[ndx + 1] < s) )
-            ndx += 1;
 
 
     if (ndx == _pointsSize -1)
@@ -261,8 +261,11 @@ arr2 numerical::interpolate(scalar d) const
     uint ndx;
     scalar frac;
     interpolateSCore(ndx, frac, d);
-    return {_pointsX[ndx] * (1 - frac) + _pointsX[ndx+1] * frac,
-            _pointsY[ndx] * (1 - frac) + _pointsY[ndx+1] * frac};
+    if (frac != 0)
+        return {_pointsX[ndx] * (1 - frac) + _pointsX[ndx+1] * frac,
+                _pointsY[ndx] * (1 - frac) + _pointsY[ndx+1] * frac};
+    else
+        return {_pointsX[ndx], _pointsY[ndx]};
 }
 
 scalar numerical::interpolateSo(scalar d) const
@@ -270,7 +273,10 @@ scalar numerical::interpolateSo(scalar d) const
     uint ndx;
     scalar frac;
     interpolateSCore(ndx, frac, d);
-    return _pointsSo[ndx] * (1 - frac) + _pointsSo[ndx+1] * frac;
+    if (frac != 0)
+        return _pointsSo[ndx] * (1 - frac) + _pointsSo[ndx+1] * frac;
+    else
+        return _pointsSo[ndx];
 }
 
 
@@ -285,6 +291,12 @@ void numerical::nCalcBoundingBox(arr2 &blc, arr2 &trc)
 
 scalar numerical::nProjectPointHere(arr2 &p, const arr2 &o) const
 {
+    if (mvf::areSamePoints(o, {_pointsX[0], _pointsY[0]}))
+    {
+        p = {_pointsX[0], _pointsY[0]};
+        return 0;
+    }
+
     uint minIdx = 0;
     scalar d2o = 1e12;
     uint prt = minPointsSize;
@@ -306,12 +318,13 @@ scalar numerical::nProjectPointHere(arr2 &p, const arr2 &o) const
             minIdx = idx;
             d2o = d2i;
         }
+        else
+            break;
     }
 
     scalar si;
     scalar so = _pointsS[minIdx]; // minIdx * _pointsDs;
-    if (minIdx == _pointsSize -1) so = maxS();
-    scalar ds = maxS() / parts;
+    scalar ds = 2 * maxS() / parts; // not every interval is the same so that helps.
     while (ds > mvf::distPrecision)
     {
         // look for a better s in the upper half of the interval:

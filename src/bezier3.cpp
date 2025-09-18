@@ -28,6 +28,12 @@ bezier3::bezier3()
 
 }
 
+bezier3::bezier3(const Odr::geometry &g)
+{
+    set({g.bz0x, g.bz0y}, {g.bz1x, g.bz1y},
+        {g.bz2x, g.bz2y}, {g.bz3x, g.bz3y});
+}
+
 bezier3::bezier3(const arr2 &p0, const arr2 &p1, const arr2 &p2, const arr2 &p3)
 {
     set(p0, p1, p2, p3);
@@ -468,6 +474,9 @@ scalar bezier3::calcLength() const
 
 scalar bezier3::calcLength(scalar t) const
 {
+    if (mvf::areSameValues(t, 0))
+        return 0;
+
     uint order = 30;
     scalar l = 0;
     for (uint i = 0; i < order; ++i)

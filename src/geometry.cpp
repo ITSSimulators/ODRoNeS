@@ -55,6 +55,7 @@ void geometry::base()
     _o = {0., 0.};
     _d = {0., 0.};
     _roadSo = 0;
+    _roadSe = 0;
     _ready = false;
 }
 

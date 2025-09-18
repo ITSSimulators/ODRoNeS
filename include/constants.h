@@ -43,10 +43,12 @@ namespace constants
 
     constexpr scalar infinityScalar = std::numeric_limits<scalar>::infinity();
     constexpr scalar largestScalar = std::numeric_limits<scalar>::max();
+
     constexpr scalar pi = 3.14159265358979323846;
     constexpr scalar sqrt2 = 1.4142135623730951;
     constexpr scalar rad2deg = 180 / pi;
     constexpr scalar deg2rad = pi / 180;
+	 constexpr scalar half = 0.5;
     constexpr scalar oneThird = 0.33333333333333333333;
     constexpr scalar oneSixth = 0.16666666666666666666;
 
@@ -230,7 +232,7 @@ namespace constants
         0.0079681924961666,
         0.0079681924961666};
 
-    }
+	 }
 
 }
 

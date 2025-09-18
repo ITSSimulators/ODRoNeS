@@ -22,13 +22,12 @@
 
 #include <filesystem>
 #include <boost/format.hpp>
+#include <tinyxml2.h>
 #include "rns.h"
 #include "xmlUtils.h"
 #ifdef USE_ONEVERSION
 #include "readOneVersion.h"
 #endif // USE_ONEVERSION
-
-#include <tinyxml2.h>
 
 using namespace odrones;
 
@@ -44,6 +43,7 @@ void RNS::initialise()
     _sectionsSize = 0;
     _verbose = true;
     _ready = false;
+    _linkTol = lane::odrTol;
 }
 
 
@@ -52,7 +52,7 @@ RNS::~RNS()
     clearMemory();
 }
 
-RNS& RNS::operator=(RNS& r)
+RNS& RNS::operator=(const RNS& r)
 {
     assignInputRNSToThis(r);
     return *this;
@@ -64,11 +64,11 @@ RNS::RNS(const RNS& r)
 }
 
 
-RNS::RNS(std::string mapFile, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk, bool verbose)
+RNS::RNS(std::string mapFile, const char* drivingSide, bool exhaustiveLinking, bool fineTune, bool loadSidewalk, bool verbose)
 {
     initialise();
     _verbose = verbose;
-    _ready = makeRoads(mapFile, drivingSide, exhaustiveLinking, loadSidewalk);
+    _ready = makeRoads(mapFile, drivingSide, exhaustiveLinking, fineTune, loadSidewalk);
     return;
 }
 
@@ -144,6 +144,7 @@ void RNS::assignInputRNSToThis(const RNS& r)
         }
     }
 
+    _linkTol = r._linkTol;
     _ready = r._ready;
 
 }
@@ -222,11 +223,11 @@ void RNS::tSigns(const std::vector<lane::tSign> &t)
 
 }
 
-bool RNS::makeRoads(std::string mapFile, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk)
+bool RNS::makeRoads(std::string mapFile, const char* drivingSide, bool exhaustiveLinking, bool fineTune, bool loadSidewalk)
 {
 
     if ( !std::filesystem::path{mapFile}.extension().string().compare(".xodr"))
-        return makeOpenDRIVERoads(mapFile, drivingSide, exhaustiveLinking, loadSidewalk);
+        return makeOpenDRIVERoads(mapFile, drivingSide, exhaustiveLinking, fineTune, loadSidewalk);
     else if ( !std::filesystem::path{mapFile}.extension().string().compare(".bin"))
 #ifdef USE_ONEVERSION
         return makeOneVersionRoads(mapFile);
@@ -333,7 +334,7 @@ bool RNS::makeOneVersionRoads(std::string mapFile)
     return _ready;
 }
 
-bool RNS::makeOpenDRIVERoads(std::string odrMap, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk)
+bool RNS::makeOpenDRIVERoads(std::string odrMap, const char* drivingSide, bool exhaustiveLinking, bool fineTune, bool loadSidewalk)
 {
     if (verbose())
         std::cout << "[ Warning ] work in progress; ignoring loadSidewalk value: " << loadSidewalk << std::endl;
@@ -350,14 +351,26 @@ bool RNS::makeOpenDRIVERoads(std::string odrMap, const char* drivingSide, bool e
         return false;
     }
 
-    return makeOpenDRIVERoads(read, drivingSide, exhaustiveLinking, loadSidewalk);
+    return makeOpenDRIVERoads(read, drivingSide, exhaustiveLinking, fineTune, loadSidewalk);
 }
 
-bool RNS::makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk)
+
+bool RNS::makeOpenDRIVERoads(std::string mapFile, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk)
+{
+    return makeOpenDRIVERoads(mapFile, drivingSide, exhaustiveLinking, false, loadSidewalk);
+}
+
+
+bool RNS::makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool exhaustiveLinking, bool fineTune, bool loadSidewalk)
 {
 
     _ready = false;
 
+    if (fineTune)
+    {
+        fineTuneReadOdr(read);
+        read.simplifyGeometries(false, true, false);
+    }
     _letter = read;
 
     // Allocate and do the geometry for the lanes:
@@ -488,8 +501,7 @@ bool RNS::makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool exhaus
     setPortAndStarboard(_drivingSide);
 
     if (exhaustiveLinking)
-        linkLanesGeometrically();
-
+        linkLanesGeometrically(_linkTol);
 
     // Get the traffic signs:
     for (uint i = 0; i < _sectionsSize; ++i)
@@ -510,6 +522,7 @@ bool RNS::makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool exhaus
     _ready = true;
     return true;
 }
+
 
 
 void RNS::setPortAndStarboard(concepts::drivingSide drivingSide)
@@ -534,7 +547,6 @@ void RNS::setPortAndStarboard()
 
 void RNS::flipOneWaySections()
 {
-
     // Flip lanes in one-way sections linked to two-way sections
     //   for which "prev" and "next" don't match.
     bool satisfaction = false;
@@ -572,7 +584,7 @@ void RNS::flipOneWaySections()
                         (std::find(knowledge.begin(), knowledge.end(), nls[k]->getSection()->getID()) == knowledge.end()))
                         continue;
                     if (!mvf::areCloseEnough(_sections[i][j]->getDestination(),
-                                             nls[k]->getOrigin(), 1e-6))
+                                             nls[k]->getOrigin(), lane::odrTol))
                         flipThisSection = true;
 
                     conclusion = true;
@@ -589,7 +601,7 @@ void RNS::flipOneWaySections()
                              (std::find(knowledge.begin(), knowledge.end(), pls[k]->getSection()->getID()) == knowledge.end())))
                             continue;
                         if (!mvf::areCloseEnough(_sections[i][j]->getOrigin(),
-                                                 pls[k]->getDestination(), 1e-6))
+                                                 pls[k]->getDestination(), lane::odrTol))
                             flipThisSection = true;
 
                         conclusion = true;
@@ -619,6 +631,8 @@ void RNS::flipOneWaySections()
 
 void RNS::printLanes() const
 {
+    constexpr char RESET[5] = "\033[0m";
+    constexpr char BOLDWHITE[10] = "\033[1m\033[37m";
 
     for (uint i = 0; i < _sectionsSize; ++i)
     {
@@ -649,34 +663,26 @@ void RNS::printLanes() const
 
             std::string sideString = ", has port lane ";
             if (l->getPortLane())
-            {
                 sideString += l->getPortLane()->getCSUID();
-            }
             else
-            {
                 sideString += "<null>";
-            }
+
             sideString += ", has starboard lane ";
             if (l->getStarboardLane())
-            {
                 sideString += l->getStarboardLane()->getCSUID();
-            }
             else
-            {
                 sideString += "<null>";
-            }
 
+            // std::cout << BOLDWHITE << l->getShapeString() << " lane: " << l->getCSUID() << RESET;
             std::cout << l->getShapeString() << " lane: " << l->getCSUID();
             std::cout << " starts in: (" << o[0] << ", " << o[1] <<  "), ends in: (" << d[0] << ", " << d[1] << ")"
                       << ", _to: (" << l->getTo()[0] << ", " << l->getTo()[1] << ")"
                       << ", is " << l->getLength() << " m long, has max speed: " << l->getSpeed()
                       // << ", bounding box: " << bli[0] << ", " << bli[1] << " to " << tri[0] << ", " << tri[1] << std::endl;
                       << plString << nlString << sideString << std::endl;
-
         }
     }
 
-    /*
     std::cout << "--- Zero Lanes ---" << std::endl;
     std::cout << "------------------" << std::endl;
     for (uint i = 0; i < _sectionsSize; ++i)
@@ -687,10 +693,9 @@ void RNS::printLanes() const
         arr2 d = l->getDestination();
         std::cout << " starts in: (" << o[0] << ", " << o[1] <<  "), ends in: (" << d[0] << ", " << d[1] << ")"
                   << ", _to: (" << l->getTo()[0] << ", " << l->getTo()[1] << ")"
+                  << ", _te: (" << l->getTangentInPoint(l->getDestination())[0] << ", " << l->getTangentInPoint(l->getDestination())[1] << ")"
                   << ", is " << l->getLength() << " m long" << std::endl;
     }
-    */
-
 }
 
 void RNS::write(const std::string &mapFile) const
@@ -888,6 +893,7 @@ void RNS::write(const std::string &mapFile) const
 
 void RNS::linkLanesGeometrically(scalar tol)
 {
+    // scalar largeTol = 20 * tol;
     // 1 - Link two-way sections, we've already run setPortAndStarboard which flips them correctly.
     for (uint i = 0; i < sectionsSize(); ++i)
     {
@@ -895,7 +901,10 @@ void RNS::linkLanesGeometrically(scalar tol)
         for (uint j = i + 1; j < sectionsSize(); ++j)
         {
             if (_sections[j].isOneWay()) continue;
-            linkLanesInSectionsOD(_sections[i], _sections[j], tol);
+            if (!sectionEdgesInRange(_sections[i], _sections[j])) continue;
+            if ((!linkLanesInSectionsOD(_sections[i], _sections[j], tol)) && (false))
+                std::cerr << "[ WARNING ] no lanes between sections: " << _sections[i].getCSUID() << " and "
+                          << _sections[j].getCSUID() << " were linked because their edges are too separated" << std::endl;
         }
     }
 
@@ -908,14 +917,17 @@ void RNS::linkLanesGeometrically(scalar tol)
                  ( (!_sections[si].isOneWay()) && (_sections[sj].isOneWay()) ) ) )
                 continue;
 
+            if (!sectionEdgesInRange(_sections[si], _sections[sj])) continue;
+
             // From here on, either _section[si] or _sections[sj] is oneWay.
+            bool link = false;
             for (uint li = 0; li < _sections[si].size(); ++li)
             {
                 for (uint lj = 0; lj < _sections[sj].size(); ++lj)
                 {
-                    uint linkErr = linkLanesIfInRange(_sections[si][li], _sections[sj][lj]);
-                    if (linkErr != 2)
-                        continue;
+                    uint linkErr = linkLanesIfSound(_sections[si][li], _sections[sj][lj], tol);
+                    if (linkErr != 1) link = true;
+                    if (linkErr != 2) continue;
 
                     if (_sections[si].isOneWay())
                         _sections[si].flipBackwards();
@@ -923,6 +935,9 @@ void RNS::linkLanesGeometrically(scalar tol)
                         _sections[sj].flipBackwards();
                 }
             }
+            if ((!link) && (false))
+                std::cerr << "[ WARNING ] no lanes between sections: " << _sections[si].getCSUID() << " and "
+                          << _sections[sj].getCSUID() << " were linked because their edges are too separated" << std::endl;
         }
     }
 
@@ -933,7 +948,10 @@ void RNS::linkLanesGeometrically(scalar tol)
         for (uint j = i + 1; j < sectionsSize(); ++j)
         {
             if (!_sections[j].isOneWay()) continue;
-            linkLanesInSections(_sections[i], _sections[j], tol);
+            if (!sectionEdgesInRange(_sections[i], _sections[j])) continue;
+            if ((!linkLanesInSectionsIfSound(_sections[i], _sections[j], tol)) && (false))
+                std::cerr << "[ WARNING ] no lanes between sections: " << _sections[i].getCSUID() << " and "
+                          << _sections[j].getCSUID() << " were linked because their edges are too separated" << std::endl;
         }
     }
 
@@ -945,7 +963,6 @@ void RNS::linkLanesGeometrically(scalar tol)
 
 bool RNS::linkLanesIfInRangeAndOD(lane *li, lane *lj, scalar tol)
 {
-
     if (mvf::areCloseEnough(li->getDestination(), lj->getOrigin(), tol))
     {
         li->setNextLane(lj, true);
@@ -981,25 +998,105 @@ uint RNS::linkLanesIfInRange(lane *li, lane *lj, scalar tol)
     }
 
     return 0;
-
 }
 
-void RNS::linkLanesInSections(section &si, section &sj, scalar tol)
+
+uint RNS::linkLanesIfSound(lane *li, lane *lj, scalar tol)
 {
+    if (mvf::areCloseEnough(li->getDestination(), lj->getOrigin(), tol))
+    {
+        if (! mvf::areCloseEnough( 1,  mvf::scalarProduct(li->getTangentInPoint(li->getDestination()), lj->getTo()), lane::odrTol ) )
+            return 1;
+
+        li->setNextLane(lj, true);
+        return 0;
+    }
+
+    if (mvf::areCloseEnough(li->getOrigin(), lj->getDestination(), tol))
+    {
+        if (! mvf::areCloseEnough( 1,  mvf::scalarProduct(lj->getTangentInPoint(lj->getDestination()), li->getTo()), lane::odrTol ) )
+            return 1;
+
+        li->setPrevLane(lj, true);
+        return 0;
+    }
+
+    if (mvf::areCloseEnough(li->getDestination(), lj->getDestination(), tol))
+    {
+        if (! mvf::areCloseEnough( -1,  mvf::scalarProduct( li->getTangentInPoint(lj->getDestination()),
+                                                            lj->getTangentInPoint(lj->getDestination())), lane::odrTol ) )
+            return 1;
+
+        lj->setNextLane(li, false);
+        li->setNextLane(lj, false);
+        return 2;
+    }
+
+
+    if (mvf::areCloseEnough(li->getOrigin(), lj->getOrigin(), tol))
+    {
+        if (! mvf::areCloseEnough( -1,  mvf::scalarProduct( li->getTo(), lj->getTo()), lane::odrTol ) )
+            return 1;
+
+        li->setPrevLane(lj, false);
+        lj->setPrevLane(li, false);
+        return 2;
+    }
+
+    return 1;
+}
+
+bool RNS::linkLanesInSections(section &si, section &sj, scalar tol)
+{
+    bool link = false;
     for (uint i = 0; i < si.size(); ++i)
     {
         for (uint j = 0; j < sj.size(); ++j)
-            linkLanesIfInRange(si[i], sj[j]);
+        {
+            if (linkLanesIfInRange(si[i], sj[j]) > 0)
+                link = true;
+        }
     }
+    return link;
 }
 
-void RNS::linkLanesInSectionsOD(section &si, section &sj, scalar tol)
+bool RNS::linkLanesInSectionsOD(section &si, section &sj, scalar tol)
 {
+    bool link = false;
     for (uint i = 0; i < si.size(); ++i)
     {
         for (uint j = 0; j < sj.size(); ++j)
-            linkLanesIfInRangeAndOD(si[i], sj[j]);
+        {
+            if (linkLanesIfInRangeAndOD(si[i], sj[j], tol) == true)
+                link = true;
+        }
     }
+    return link;
+}
+
+bool RNS::linkLanesInSectionsIfSound(section &si, section &sj, scalar tol)
+{
+    bool link = false;
+    for (uint i = 0; i < si.size(); ++i)
+    {
+        for (uint j = 0; j < sj.size(); ++j)
+        {
+            if (linkLanesIfSound(si[i], sj[j], tol) != 1)
+                link = true;
+        }
+    }
+    return link;
+}
+
+bool RNS::sectionEdgesInRange(section &si, section &sj, scalar tol) const
+{
+    return true;
+    if ((mvf::distance(si.zero()->getDestination(), sj.zero()->getOrigin()) < lane::odrTol) ||
+        (mvf::distance(si.zero()->getDestination(), sj.zero()->getDestination()) < lane::odrTol) ||
+        (mvf::distance(si.zero()->getOrigin(), sj.zero()->getOrigin()) < lane::odrTol) ||
+        (mvf::distance(si.zero()->getOrigin(), sj.zero()->getDestination()) < lane::odrTol) )
+        return true;
+    return false;
 }
 
 
@@ -1040,6 +1137,11 @@ const lane* RNS::getCLaneWithODRIds(uint rID, int lID) const
     return nullptr;
 }
 
+const lane* RNS::getCLaneWithSUID(uint sID, uint lID) const
+{
+    return _sections[sID][lID];
+}
+
 lane* RNS::getLaneWithODRIds(uint rID, int lID) const
 {
     for (uint i = 0; i < _sectionsSize; ++i)
@@ -1054,6 +1156,15 @@ lane* RNS::getLaneWithODRIds(uint rID, int lID) const
     return nullptr;
 }
 
+const section* RNS::getSectionWithODRId(uint rID) const
+{
+    for (uint i = 0; i < _sectionsSize; ++i)
+    {
+        if (_sections[i].odrID() == rID)
+            return &(_sections[i]);
+    }
+    return nullptr;
+}
 
 lane* RNS::getLaneWithOVId(const OneVersion::OVID &lID) const
 {
@@ -1204,23 +1315,24 @@ lane::lCoord RNS::getLaneCoordsForPoint(const arr2 &o, scalar tol) const
 
             scalar oj = mvf::distance(pj, o);
             if (oj > tol) continue;
-            if (oj < lcoo.loff)
+            if (oj < lcoo.loff())
             {
-                lcoo.loff = oj;
-                lcoo.l = _sections[is][jl];
-                lcoo.pos = pj;
-                lcoo.s = lcoo.l->unsafeDistanceFromTheBoL(pj);
+                lcoo.l(_sections[is][jl]);
+                lcoo.pos(pj);
+                lcoo.sConsistentWithLAndPos();
+                lcoo.loff(oj);
             }
         }
     }
 
+    lcoo.loff(o);
     return lcoo;
 }
 
 arr2 RNS::getPosForLaneCoords(const lane::lCoord &lc) const
 {
     arr2 p;
-    lc.l->getPointWithOffset(p, lc.pos, lc.loff);
+    lc.l()->getPointWithOffset(p, lc.pos(), lc.loff());
     return p;
 }
 
@@ -1241,7 +1353,7 @@ arr2 RNS::getPosForRoadCoords(uint rID, scalar s, scalar offset, scalar height) 
 const lane* RNS::getLaneWithPoint(const arr2 &p, scalar tol) const
 {
     lane::lCoord lcoo = getLaneCoordsForPoint(p, tol);
-    if (lcoo.loff < tol) return lcoo.l;
+    if (std::abs(lcoo.loff()) < tol) return lcoo.l();
     else return nullptr;
 }
 
@@ -1454,7 +1566,7 @@ bool RNS::makePrioritiesSameEndingDifferentSectionLanes(scalar anticipationTime)
 
                     // create a conflict and assign it to the lower priority lane:
                     conflict lpCnf = conflict::createEoLConflict(lpLane, hpLane, anticipationTime);
-                    if (verbose())
+                    if ((verbose()) && (false))
                     {
                         for (uint pk = 0; pk < lpCnf.hpLane.size(); ++pk)
                             std::cout << "lane: " << lpCnf.hpLane[pk]->getSUID() << " has priority over " << lpLane->getSUID() << std::endl;
@@ -1602,7 +1714,7 @@ void RNS::makePrioritiesDifferentEndingDifferentSectionCrossingLanes(scalar anti
                     if (v.size() == 0) continue;
 
                     // Print out the intersections:
-                    if (verbose())
+                    if ((verbose()) && (false))
                     {
                         std::cout << "lanes: " << _sections[i][li]->getCSUID() << ", and " << _sections[j][lj]->getCSUID()
                                   << " intersect in " << v.size() << " point";
@@ -1648,7 +1760,7 @@ void RNS::makePrioritiesDifferentEndingDifferentSectionCrossingLanes(scalar anti
                         lane *portLane, *starboardLane;
                         if (findPortAndStarboardLanes(portLane, starboardLane, _sections[i][li], _sections[j][lj], dToEoLi, dToEoLj) > 0)
                         {
-                            if (verbose())
+                            if ((verbose()) && (false))
                                 std::cerr << "[ Warning ] unable to find out which one is port between: " <<
                                          _sections[i][li]->getCSUID() << " and " << _sections[j][lj]->getCSUID() <<
                                          " at the intersection point (" << v[ck][0] << ", " << v[ck][1] << ")" << std::endl;
@@ -1686,7 +1798,7 @@ void RNS::makePrioritiesDifferentEndingDifferentSectionCrossingLanes(scalar anti
                         }
 
 
-                        if (verbose())
+                        if ((verbose()) && (false))
                             std::cout << " Lane " << lpLane->getSUID() << " has lower priority than " << hpLane->getSUID()
                                       << " at the intersection point (" << v[ck][0] << ", " << v[ck][1] << ")" << std::endl;
 
@@ -1701,6 +1813,388 @@ void RNS::makePrioritiesDifferentEndingDifferentSectionCrossingLanes(scalar anti
                 }
             }
         }
+    }
+}
+
+
+void RNS::fineTuneReadOdr(ReadOdr &read) const
+{
+    std::vector<section> zs;
+
+    std::cout << "--- fineTuneReadOdr:" << std::endl;
+    for (uint i = 0; i < read.sections.size(); ++i)
+    {
+        zs.push_back(section()); // push in a section so that we preserve the order for later matching.
+        if (read.sections[i].geom.empty())
+            continue;
+        zs.back().setID(i);
+        zs.back().setOdrID(read.sections[i].odrID);
+        zs.back().setZero(read.sections[i].geom, read.sections[i].geom[0].s, read.sections[i].length());
+    }
+
+    // this is about linking roads, so we're just interested in the edges:
+    std::cout << "--- fineTuneReadOdr zs.size(): " << zs.size() << std::endl;
+
+    std::vector<bool> changedO(zs.size(),false);
+    std::vector<bool> changedE(zs.size(),false);
+    std::vector<vec2> to(zs.size(), {0., 0.});
+    std::vector<vec2> te(zs.size(), {0., 0.});
+    for (uint i = 0; i < zs.size(); ++i)
+    {
+        uint edges_i = 0; // 1 for start, 2 for end, 3 for both.
+        const lane* li = zs[i].zero();
+
+        if (li->geometries().empty()) continue;
+        if (li->geometries()[0]->shape() == mvf::shape::vwBezier3)
+            edges_i += 1;
+        if (li->geometries().back()->shape() == mvf::shape::vwBezier3)
+            edges_i += 2;
+
+        std::string csuidi = std::to_string(i) + ":-1 (" + std::to_string(zs[i].odrID()) + ":0)";
+        if (!changedO[i]) to[i] = li->getTo();
+        if (!changedE[i]) te[i] = li->getTangentInPoint(li->getDestination());
+
+        for (uint j = i + 1; j < zs.size(); ++j)
+        {
+            uint edges_j = 0;
+            const lane* lj = zs[j].zero();
+
+            if (lj->geometries().empty()) continue;
+            if (lj->geometries()[0]->shape() == mvf::shape::vwBezier3)
+                edges_j += 1;
+            if (lj->geometries().back()->shape() == mvf::shape::vwBezier3)
+                edges_j +=2;
+
+            if ((edges_j == 0) && (edges_i == 0))
+                continue;
+
+            std::string csuidj = std::to_string(j) + ":-1 (" + std::to_string(zs[j].odrID()) + ":0)";
+            if (!changedO[j]) to[j] = lj->getTo();
+            if (!changedE[j]) te[j] = lj->getTangentInPoint(lj->getDestination());
+
+            // origin_i, origin_j
+            if ((mvf::areCloseEnough(li->getOrigin(), lj->getOrigin(), lane::odrTol)) &&
+                (mvf::areCloseEnough(to[i] * to[j], -1, 2e-1)))
+            {
+                if (((edges_i == 1) || (edges_i == 3)) &&
+                    ((edges_j == 1) || (edges_j == 3)) &&
+                    (changedO[i] == false) && (changedO[j] == false))
+                {
+                    scalar angle = 0.5 * to[i].angle(to[j] * -1.);
+                    vec2 p1i = to[i];
+                    p1i.rotate(angle);
+                    vec2 p1j = p1i * -1.;
+
+                    to[i] = p1i;
+                    to[j] = p1j;
+
+                    vwBezier3* bz3i = static_cast<vwBezier3*>(li->geometries()[0]);
+                    p1i *= mvf::distance(bz3i->l0ControlPoint(0), bz3i->l0ControlPoint(1));
+                    p1i += li->getOrigin();
+                    changedO[i] = true;
+
+                    std::cout << csuidi << " 1 - write : (" << p1i[0] << ", " << p1i[1] << ") instead of ("
+                              << bz3i->l0ControlPoint(1)[0] << ", " << bz3i->l0ControlPoint(1)[1] << ")" << csuidj << std::endl;
+
+                    read.odrSection(li->odrSectionID())->geom[0].bz1x = p1i[0];
+                    read.odrSection(li->odrSectionID())->geom[0].bz1y = p1i[1];
+
+                    vwBezier3* bz3j = static_cast<vwBezier3*>(lj->geometries()[0]);
+                    p1j *= mvf::distance(bz3j->l0ControlPoint(0), bz3j->l0ControlPoint(1));
+                    p1j += lj->getOrigin();
+                    changedO[j] = true;
+
+                    read.odrSection(lj->odrSectionID())->geom[0].bz1x = p1j[0];
+                    read.odrSection(lj->odrSectionID())->geom[0].bz1y = p1j[1];
+
+                    std::cout << csuidj << " 2 - write: (" << p1j[0] << ", " << p1j[1] << ") instead of ("
+                              << bz3j->l0ControlPoint(1)[0] << ", " << bz3j->l0ControlPoint(1)[1] << ")" << csuidi << std::endl;
+                }
+
+                else if ( ((edges_i == 1) || (edges_i == 3)) && (changedO[i] == false))
+                {
+                    vec2 p1i = to[j] * -1.;
+                    to[i] = p1i;
+                    vwBezier3* bz3i = static_cast<vwBezier3*>(li->geometries()[0]);
+                    p1i *= mvf::distance(bz3i->l0ControlPoint(0), bz3i->l0ControlPoint(1));
+                    p1i += li->getOrigin();
+                    changedO[i] = true;
+
+                    read.odrSection(li->odrSectionID())->geom[0].bz1x = p1i[0];
+                    read.odrSection(li->odrSectionID())->geom[0].bz1y = p1i[1];
+
+                    std::cout << csuidi << " 3 - write : (" << p1i[0] << ", " << p1i[1] << ") instead of ("
+                              << bz3i->l0ControlPoint(1)[0] << ", " << bz3i->l0ControlPoint(1)[1] << ")" << csuidj << std::endl;
+                }
+
+                else if ( ((edges_j == 1) || (edges_j == 3)) && (changedO[j] == false))
+                {
+                    vec2 p1j = to[i] * -1.;
+                    to[j] = p1j;
+                    vwBezier3* bz3j = static_cast<vwBezier3*>(lj->geometries()[0]);
+                    p1j *= mvf::distance(bz3j->l0ControlPoint(0), bz3j->l0ControlPoint(1));
+                    p1j += lj->getOrigin();
+                    changedO[j] = true;
+
+                    read.odrSection(lj->odrSectionID())->geom[0].bz1x = p1j[0];
+                    read.odrSection(lj->odrSectionID())->geom[0].bz1y = p1j[1];
+
+                    std::cout << csuidj << " 4 - write: (" << p1j[0] << ", " << p1j[1] << ") instead of ("
+                              << bz3j->l0ControlPoint(1)[0] << ", " << bz3j->l0ControlPoint(1)[1] << ")" << csuidi << std::endl;
+                }
+            }
+
+            // origin_i, dest_j
+            else if ((mvf::areCloseEnough(li->getOrigin(), lj->getDestination(), lane::odrTol)) &&
+                     (mvf::areCloseEnough(to[i] * te[j], 1, 2e-1)))
+            {
+                if (((edges_i == 1) || (edges_i == 3)) &&
+                    ((edges_j == 2) || (edges_j == 3)) &&
+                    (changedO[i] == false) && (changedE[j] == false))
+                {
+                    scalar angle = 0.5 * to[i].angle(te[j]);
+
+                    vec2 p1i = to[i];
+                    p1i.rotate(angle);
+                    vec2 p2j = p1i * -1;
+
+                    to[i] = p1i;
+                    te[j] = p1i;
+
+                    vwBezier3* bz3i = static_cast<vwBezier3*>(li->geometries()[0]);
+                    p1i *= mvf::distance(bz3i->l0ControlPoint(0), bz3i->l0ControlPoint(1));
+                    p1i += li->getOrigin();
+                    changedO[i] = true;
+
+                    read.odrSection(li->odrSectionID())->geom[0].bz1x = p1i[0];
+                    read.odrSection(li->odrSectionID())->geom[0].bz1y = p1i[1];
+
+                    std::cout << csuidi << " 5 - write : (" << p1i[0] << ", " << p1i[1] << ") instead of ("
+                              << bz3i->l0ControlPoint(1)[0] << ", " << bz3i->l0ControlPoint(1)[1] << ")" << csuidj << std::endl;
+
+                    vwBezier3* bz3j = static_cast<vwBezier3*>(lj->geometries().back());
+                    p2j *= mvf::distance(bz3j->l0ControlPoint(2), bz3j->l0ControlPoint(3));
+                    p2j += lj->getDestination();
+                    changedE[j] = true;
+
+                    read.odrSection(lj->odrSectionID())->geom.back().bz2x = p2j[0];
+                    read.odrSection(lj->odrSectionID())->geom.back().bz2y = p2j[1];
+
+                    std::cout << csuidj << " 6 - write: (" << p2j[0] << ", " << p2j[1] << ") instead of ("
+                              << bz3j->l0ControlPoint(2)[0] << ", " << bz3j->l0ControlPoint(2)[1] << ")" << csuidi << std::endl;
+                }
+
+                else if ( ((edges_i == 1) || (edges_i == 3)) && (changedO[i] == false))
+                {
+                    vec2 p1i = te[j];
+                    to[i] = p1i;
+                    vwBezier3* bz3i = static_cast<vwBezier3*>(li->geometries()[0]);
+                    p1i *= mvf::distance(bz3i->l0ControlPoint(0), bz3i->l0ControlPoint(1));
+                    p1i += li->getOrigin();
+                    changedO[i] = true;
+
+                    read.odrSection(li->odrSectionID())->geom[0].bz1x = p1i[0];
+                    read.odrSection(li->odrSectionID())->geom[0].bz1y = p1i[1];
+
+                    std::cout << csuidi << " 7 - write : (" << p1i[0] << ", " << p1i[1] << ") instead of ("
+                              << bz3i->l0ControlPoint(1)[0] << ", " << bz3i->l0ControlPoint(1)[1] << ")" << csuidj << std::endl;
+                }
+
+                else if ( ((edges_j == 2) || (edges_j == 3)) && (changedE[j] == false))
+                {
+                    vec2 p2j = to[i] * -1;
+                    te[j] = to[i];
+                    vwBezier3* bz3j = static_cast<vwBezier3*>(lj->geometries().back());
+                    p2j *= mvf::distance(bz3j->l0ControlPoint(2), bz3j->l0ControlPoint(3));
+                    p2j += lj->getDestination();
+                    changedE[j] = true;
+
+                    read.odrSection(lj->odrSectionID())->geom.back().bz2x = p2j[0];
+                    read.odrSection(lj->odrSectionID())->geom.back().bz2y = p2j[1];
+
+                    std::cout << csuidj << " 8 - write: (" << p2j[0] << ", " << p2j[1] << ") instead of ("
+                              << bz3j->l0ControlPoint(2)[0] << ", " << bz3j->l0ControlPoint(2)[1] << ") " << csuidj << std::endl;
+                }
+
+            }
+
+            // dest_i, origin_j
+            else if ((mvf::areCloseEnough(li->getDestination(), lj->getOrigin(), lane::odrTol)) &&
+                     (mvf::areCloseEnough(te[i] * to[j], 1, 2e-1)))
+            {
+                if (((edges_i == 2) || (edges_i == 3)) &&
+                    ((edges_j == 1) || (edges_j == 3)) &&
+                    (changedE[i] == false) && (changedO[j] == false))
+                {
+                    scalar angle = 0.5 * to[j].angle(te[i]);
+
+                    vec2 p1j = to[j];
+                    p1j.rotate(angle);
+                    vec2 p2i = p1j * -1;
+
+                    te[i] = p1j;
+                    to[j] = p1j;
+
+                    vwBezier3* bz3j = static_cast<vwBezier3*>(lj->geometries()[0]);
+                    p1j *= mvf::distance(bz3j->l0ControlPoint(0), bz3j->l0ControlPoint(1));
+                    p1j += lj->getOrigin();
+                    changedO[j] = true;
+
+                    std::cout << csuidj << " 9 - write : (" << p1j[0] << ", " << p1j[1] << ") instead of ("
+                              << bz3j->l0ControlPoint(1)[0] << ", " << bz3j->l0ControlPoint(1)[1] << ") " << csuidi << std::endl;
+
+                    read.odrSection(lj->odrSectionID())->geom[0].bz1x = p1j[0];
+                    read.odrSection(lj->odrSectionID())->geom[0].bz1y = p1j[1];
+
+                    vwBezier3* bz3i = static_cast<vwBezier3*>(li->geometries().back());
+                    p2i *= mvf::distance(bz3i->l0ControlPoint(2), bz3i->l0ControlPoint(3));
+                    p2i += li->getDestination();
+                    changedE[i] = true;
+
+                    read.odrSection(li->odrSectionID())->geom.back().bz2x = p2i[0];
+                    read.odrSection(li->odrSectionID())->geom.back().bz2y = p2i[1];
+
+                    std::cout << csuidi << " 10 - write: (" << p2i[0] << ", " << p2i[1] << ") instead of ("
+                              << bz3i->l0ControlPoint(2)[0] << ", " << bz3i->l0ControlPoint(2)[1] << ") " << csuidj << std::endl;
+                }
+
+                else if ( ((edges_j == 1) || (edges_j == 3)) && (changedO[j] == false))
+                {
+                    vec2 p1j = te[i];
+                    to[j] = p1j;
+                    vwBezier3* bz3j = static_cast<vwBezier3*>(lj->geometries()[0]);
+                    p1j *= mvf::distance(bz3j->l0ControlPoint(0), bz3j->l0ControlPoint(1));
+                    p1j += lj->getOrigin();
+                    changedO[j] = true;
+
+                    read.odrSection(lj->odrSectionID())->geom[0].bz1x = p1j[0];
+                    read.odrSection(lj->odrSectionID())->geom[0].bz1y = p1j[1];
+
+                    std::cout << csuidj << " 11 - write : (" << p1j[0] << ", " << p1j[1] << ") instead of ("
+                              << bz3j->l0ControlPoint(1)[0] << ", " << bz3j->l0ControlPoint(1)[1] << ") " << csuidi << std::endl;
+                }
+
+                else if ( ((edges_i == 2) || (edges_i == 3)) && (changedE[i] == false))
+                {
+                    vec2 p2i = to[j] * -1.;
+                    te[i] = to[j];
+                    vwBezier3* bz3i = static_cast<vwBezier3*>(li->geometries().back());
+                    p2i *= mvf::distance(bz3i->l0ControlPoint(2), bz3i->l0ControlPoint(3));
+                    p2i += li->getDestination();
+                    changedE[i] = true;
+
+                    read.odrSection(li->odrSectionID())->geom.back().bz2x = p2i[0];
+                    read.odrSection(li->odrSectionID())->geom.back().bz2y = p2i[1];
+
+                    std::cout << csuidi << " 12 - write: (" << p2i[0] << ", " << p2i[1] << ") instead of ("
+                              << bz3i->l0ControlPoint(2)[0] << ", " << bz3i->l0ControlPoint(2)[1] << ") " << csuidj << std::endl;
+                }
+            }
+
+            // dest_i, dest_j
+            else if ((mvf::areCloseEnough(li->getDestination(), lj->getDestination(), lane::odrTol)) &&
+                     (mvf::areCloseEnough(te[i] * te[j], -1, 2e-1)))
+            {
+                if (((edges_i == 2) || (edges_i == 3)) &&
+                    ((edges_j == 2) || (edges_j == 3)) &&
+                    (changedE[i] == false) && (changedE[j] == false))
+                {
+                    scalar angle = 0.5 * te[i].angle(te[j] * -1.);
+
+                    vec2 p2i = te[i] * -1.;
+                    p2i.rotate(angle);
+                    vec2 p2j = p2i * -1.;
+
+                    te[i] = p2j;
+                    te[j] = p2i;
+
+                    vwBezier3* bz3i = static_cast<vwBezier3*>(li->geometries().back());
+                    p2i *= mvf::distance(bz3i->l0ControlPoint(2), bz3i->l0ControlPoint(3));
+                    p2i += li->getDestination();
+                    changedE[i] = true;
+
+                    read.odrSection(li->odrSectionID())->geom.back().bz2x = p2i[0];
+                    read.odrSection(li->odrSectionID())->geom.back().bz2y = p2i[1];
+
+                    std::cout << csuidi << " 13 - write: (" << p2i[0] << ", " << p2i[1] << ") instead of ("
+                              << bz3i->l0ControlPoint(2)[0] << ", " << bz3i->l0ControlPoint(2)[1] << ") " << csuidj << std::endl;
+
+                    vwBezier3* bz3j = static_cast<vwBezier3*>(lj->geometries().back());
+                    p2j *= mvf::distance(bz3j->l0ControlPoint(2), bz3j->l0ControlPoint(3));
+                    p2j += lj->getDestination();
+                    changedE[j] = true;
+
+                    read.odrSection(lj->odrSectionID())->geom.back().bz2x = p2j[0];
+                    read.odrSection(lj->odrSectionID())->geom.back().bz2y = p2j[1];
+
+                    std::cout << csuidj << " 14 - write : (" << p2j[0] << ", " << p2j[1] << ") instead of ("
+                              << bz3j->l0ControlPoint(1)[0] << ", " << bz3j->l0ControlPoint(1)[1] << ") against: " << csuidi << ", j: " << j << std::endl;
+
+                }
+
+                else if ( ((edges_i == 2) || (edges_i == 3)) && (changedE[i] == false))
+                {
+                    vec2 p2i = te[j];
+                    te[i] = te[j] * -1.;
+                    vwBezier3* bz3i = static_cast<vwBezier3*>(li->geometries().back());
+                    p2i *= mvf::distance(bz3i->l0ControlPoint(2), bz3i->l0ControlPoint(3));
+                    p2i += li->getDestination();
+                    changedE[i] = true;
+
+                    read.odrSection(li->odrSectionID())->geom.back().bz2x = p2i[0];
+                    read.odrSection(li->odrSectionID())->geom.back().bz2y = p2i[1];
+
+                    std::cout << csuidi << " 15 e write: (" << p2i[0] << ", " << p2i[1] << ") instead of ("
+                              << bz3i->l0ControlPoint(2)[0] << ", " << bz3i->l0ControlPoint(2)[1] << ") " << csuidj << std::endl;
+                }
+
+                else if ( ((edges_j == 2) || (edges_j == 3)) && (changedE[j] == false))
+                {
+                    vec2 p2j = te[i];
+                    te[j] = te[i] * -1;
+                    vwBezier3* bz3j = static_cast<vwBezier3*>(lj->geometries().back());
+                    p2j *= mvf::distance(bz3j->l0ControlPoint(2), bz3j->l0ControlPoint(3));
+                    p2j += lj->getDestination();
+                    changedE[j] = true;
+
+                    read.odrSection(lj->odrSectionID())->geom.back().bz2x = p2j[0];
+                    read.odrSection(lj->odrSectionID())->geom.back().bz2y = p2j[1];
+
+                    std::cout << csuidj << " 16 - write: (" << p2j[0] << ", " << p2j[1] << ") instead of ("
+                              << bz3j->l0ControlPoint(2)[0] << ", " << bz3j->l0ControlPoint(2)[1] << ") against: " << csuidi << ", j = " << j << std::endl;
+                }
+            }
+        }
+    }
+
+    for (uint i = 0; i < zs.size(); ++i)
+    {
+        if ((changedO[i]) || (changedE[i]))
+        {
+            const lane* li = zs[i].zero();
+            Odr::smaS* smas = read.odrSection(li->odrSectionID());
+
+            if (changedO[i])
+            {
+                bezier3 bz3(smas->geom[0]);
+                scalar delta = bz3.length() - smas->geom[0].length;
+                smas->geom[0].length = bz3.length();
+                for (uint j = 1; j < smas->geom.size(); ++j)
+                    smas->geom[j].s += delta;
+            }
+
+            if (changedE[i])
+            {
+                bezier3 bz3(smas->geom.back());
+                smas->geom.back().length = bz3.length();
+                std::cout << "### id: " << smas->id << " has length: " << smas->geom.back().length << std::endl;
+            }
+
+            for (uint j = 0; j < smas->lanes.size(); ++j)
+                smas->lanes[j].length = smas->length();
+        }
+
+
     }
 }
 
@@ -1779,7 +2273,7 @@ bool RNS::swapConflictPriority(lane *l, uint ci)
         uint uck = static_cast<uint>(ick);
         l->setConflictKind(ci, cnf.hpLane[lj]->getConflictKind(uck));
         getLane(cnf.hpLane[lj])->setConflictKind(uck, ko);
-        if (verbose())
+        if ((verbose()) && (false))
         {
             std::cout << "swapped priorities and now: " << l->getSUID() << ":"
                       << conflict::kindString(l->getConflictKind(ci))

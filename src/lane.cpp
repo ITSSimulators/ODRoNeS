@@ -1,4 +1,4 @@
-﻿// 
+﻿//
 //  This file is part of the ODRoNeS (OpenDRIVE Road Network System) package.
 //  
 //  Copyright (c) 2023 Albert Solernou, University of Leeds.
@@ -27,6 +27,7 @@
 #include <fstream>
 #include <boost/format.hpp>
 #include <tinyxml2.h>
+
 
 using namespace odrones;
 
@@ -372,6 +373,40 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
 }
 
 
+void lane::convertBezierToParamPoly3(const vwBezier3 *bez, tinyxml2::XMLElement *geometry, tinyxml2::XMLDocument &doc) const
+{
+    // Read geometry origin  attributes (global position and heading)
+    double x0 = geometry->DoubleAttribute("x");
+    double y0 = geometry->DoubleAttribute("y");
+    double hdg = geometry->DoubleAttribute("hdg");
+
+    // Convert global to local
+    auto toLocal = [&](const arr2& pt) {double dx = pt[0] - x0;
+    double dy = pt[1] - y0; double cos_h = cos(-hdg); double sin_h = sin(-hdg);
+        return arr2{dx * cos_h - dy * sin_h, dx * sin_h + dy * cos_h};};
+
+    // Control points (global coords)
+    auto p0_global = bez->l0ControlPoint(3);auto p1_global = bez->l0ControlPoint(2);auto p2_global = bez->l0ControlPoint(1);auto p3_global = bez->l0ControlPoint(0);
+
+    // Convert to local coordinates and assign to polynomial coefficients
+    auto p0 = toLocal(p0_global);auto p1 = toLocal(p1_global);auto p2 = toLocal(p2_global);auto p3 = toLocal(p3_global);
+    double aU = p0[0]; double bU = 3 * (p1[0] - p0[0]); double cU = 3 * (p2[0] - 2 * p1[0] + p0[0]);double dU = p3[0] - 3 * p2[0] + 3 * p1[0] - p0[0];
+    double aV = p0[1];double bV = 3 * (p1[1] - p0[1]);double cV = 3 * (p2[1] - 2 * p1[1] + p0[1]);double dV = p3[1] - 3 * p2[1] + 3 * p1[1] - p0[1];
+
+    auto* xmlPP3 = doc.NewElement("paramPoly3");
+    xmlUtils::setAttrDouble(xmlPP3, "aU", aU);
+    xmlUtils::setAttrDouble(xmlPP3, "bU", bU);
+    xmlUtils::setAttrDouble(xmlPP3, "cU", cU);
+    xmlUtils::setAttrDouble(xmlPP3, "dU", dU);
+    xmlUtils::setAttrDouble(xmlPP3, "aV", aV);
+    xmlUtils::setAttrDouble(xmlPP3, "bV", bV);
+    xmlUtils::setAttrDouble(xmlPP3, "cV", cV);
+    xmlUtils::setAttrDouble(xmlPP3, "dV", dV);
+    xmlPP3->SetAttribute("pRange", "normalized");
+
+    geometry->InsertEndChild(xmlPP3);
+}
+
 void lane::writeDown()
 {
     std::cout << "lane " << getCSUID()
@@ -559,13 +594,14 @@ bool lane::xmlPlanView(tinyxml2::XMLElement *planView, tinyxml2::XMLDocument &do
             std::cerr << "[ Error ] Lane::xmlPlanView unable to create geometry element" << std::endl;
             return false;
         }
+
         xmlUtils::setAttrDouble(geometry, Odr::Attr::S, _geom[i]->roadSo());
         xmlUtils::setAttrDouble(geometry, Odr::Attr::X, _geom[i]->o()[0]);
         xmlUtils::setAttrDouble(geometry, Odr::Attr::Y,  _geom[i]->o()[1]);
         xmlUtils::setAttrDouble(geometry, Odr::Attr::Hdg,
                                 std::atan2(_geom[i]->to()[1], _geom[i]->to()[0]));
         xmlUtils::setAttrDouble(geometry, Odr::Attr::Length,
-                               _geom[i]->roadSe() - _geom[i]->roadSo());
+                                _geom[i]->roadSe() - _geom[i]->roadSo());
         if (_geom[i]->shape() == mvf::shape::straight)
         {
             tinyxml2::XMLElement *xmlLine = doc.NewElement(Odr::Elem::Line);
@@ -575,29 +611,29 @@ bool lane::xmlPlanView(tinyxml2::XMLElement *planView, tinyxml2::XMLDocument &do
         {
             tinyxml2::XMLElement *xmlArc = doc.NewElement(Odr::Elem::Arc);
             xmlUtils::setAttrDouble(xmlArc, Odr::Attr::Curvature,
-                              (1. / static_cast<arc*>(_geom[i])->radiusOfCurvature()));
+                                    (1. / static_cast<arc*>(_geom[i])->radiusOfCurvature()));
             geometry->InsertEndChild(xmlArc);
         }
         else if (_geom[i]->shape() == mvf::shape::paramPoly3)
         {
             tinyxml2::XMLElement *xmlPP3 = doc.NewElement(Odr::Elem::ParamPoly3);
             xmlUtils::setAttrDouble(xmlPP3, Odr::Attr::aU,
-                                 (static_cast<paramPoly3*>(_geom[i])->u(0)));
+                                    (static_cast<paramPoly3*>(_geom[i])->u(0)));
             xmlUtils::setAttrDouble(xmlPP3,Odr::Attr::bU,
-                                 (static_cast<paramPoly3*>(_geom[i])->u(1)));
+                                    (static_cast<paramPoly3*>(_geom[i])->u(1)));
             xmlUtils::setAttrDouble(xmlPP3, Odr::Attr::cU,
-                                 (static_cast<paramPoly3*>(_geom[i])->u(2)));
+                                    (static_cast<paramPoly3*>(_geom[i])->u(2)));
             xmlUtils::setAttrDouble(xmlPP3, Odr::Attr::dU,
-                                 (static_cast<paramPoly3*>(_geom[i])->u(3)));
+                                    (static_cast<paramPoly3*>(_geom[i])->u(3)));
 
             xmlUtils::setAttrDouble(xmlPP3, Odr::Attr::aV,
-                                 (static_cast<paramPoly3*>(_geom[i])->v(0)));
+                                    (static_cast<paramPoly3*>(_geom[i])->v(0)));
             xmlUtils::setAttrDouble(xmlPP3,Odr::Attr::bV,
-                                 (static_cast<paramPoly3*>(_geom[i])->v(1)));
+                                    (static_cast<paramPoly3*>(_geom[i])->v(1)));
             xmlUtils::setAttrDouble(xmlPP3, Odr::Attr::cV,
-                                 (static_cast<paramPoly3*>(_geom[i])->v(2)));
+                                    (static_cast<paramPoly3*>(_geom[i])->v(2)));
             xmlUtils::setAttrDouble(xmlPP3, Odr::Attr::dV,
-                                 (static_cast<paramPoly3*>(_geom[i])->v(3)));
+                                    (static_cast<paramPoly3*>(_geom[i])->v(3)));
 
             if (static_cast<paramPoly3*>(_geom[i])->normalised())
                 xmlPP3->SetAttribute(Odr::Attr::pRange, Odr::Kind::normalized);
@@ -610,53 +646,51 @@ bool lane::xmlPlanView(tinyxml2::XMLElement *planView, tinyxml2::XMLDocument &do
         {
             tinyxml2::XMLElement *xmlSpiral = doc.NewElement(Odr::Elem::Spiral);
             xmlUtils::setAttrDouble(xmlSpiral, Odr::Attr::CurvStart,
-                                 (static_cast<vwSpiral*>(_geom[i])->l0CurvStart()));
+                                    (static_cast<vwSpiral*>(_geom[i])->l0CurvStart()));
             xmlUtils::setAttrDouble(xmlSpiral, Odr::Attr::CurvEnd,
-                                 (static_cast<vwSpiral*>(_geom[i])->l0CurvEnd()));
+                                    (static_cast<vwSpiral*>(_geom[i])->l0CurvEnd()));
             geometry->InsertEndChild(xmlSpiral);
         }
         else if (_geom[i]->shape() == mvf::shape::vwBezier3)
         {
-            tinyxml2::XMLElement *xmlBezier = doc.NewElement(Odr::Elem::Bezier3);
+            bool writeAsPP3 = false;
+            if (writeAsPP3)
+            {
+                vwBezier3* bez=static_cast<vwBezier3*>(_geom[i]);
+                convertBezierToParamPoly3(bez,geometry,doc);
+            }
+            else
+            {
+                tinyxml2::XMLElement *xmlBezier = doc.NewElement(Odr::Elem::Bezier3);
 
-            xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz0x,
-                                    (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(0)[0] ));
-            xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz0y,
-                                    (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(0)[1] ));
-            xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz1x,
-                                    (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(1)[0] ));
-            xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz1y,
-                                    (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(1)[1] ));
-            xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz2x,
-                                    (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(2)[0] ));
-            xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz2y,
-                                    (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(2)[1] ));
-            xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz3x,
-                                    (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(3)[0] ));
-            xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz3y,
-                                    (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(3)[1] ));
+                xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz0x,
+                                        (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(0)[0] ));
+                xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz0y,
+                                        (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(0)[1] ));
+                xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz1x,
+                                        (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(1)[0] ));
+                xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz1y,
+                                        (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(1)[1] ));
+                xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz2x,
+                                        (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(2)[0] ));
+                xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz2y,
+                                        (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(2)[1] ));
+                xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz3x,
+                                        (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(3)[0] ));
+                xmlUtils::setAttrDouble(xmlBezier, Odr::Attr::bz3y,
+                                        (static_cast<vwBezier3*>(_geom[i])->l0ControlPoint(3)[1] ));
 
-
-            geometry->InsertEndChild(xmlBezier);
+                geometry->InsertEndChild(xmlBezier);
+            }
         }
-        /* That should never happen because this is lane 0, that is constant and zero width.
-        else if (_geom[i]->shape() == mvf::shape::vwArc)
-        {
-            tinyxml2::XMLElement *xmlArc = doc.NewElement(Odr::Elem::Arc);
-            xmlArc->SetAttribute(Odr::Attr::Curvature,
-                              (boost::format(".17g") % (1. / static_cast<vwArc*>(_geom[i])->baseCurvature())).str().c_str());
-            geometry->InsertEndChild(xmlArc);
-        }
-        */ // Thus:
         else
+        {
             return false;
-
+        }
         planView->InsertEndChild(geometry);
     }
-
     return true;
 }
-
 
 bool lane::xmlLaneAttributesAndLinks(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc, const std::string &type) const
 {
@@ -962,6 +996,8 @@ void lane::assignInputLaneToThis(const lane &t)
             _geom.push_back(new vwParamPoly3(*(dynamic_cast<vwParamPoly3*>(t._geom[i]))));
         else if (t._geom[i]->shape() == mvf::shape::vwSpiral)
             _geom.push_back(new vwSpiral(*(dynamic_cast<vwSpiral*>(t._geom[i]))));
+        else if (t._geom[i]->shape() == mvf::shape::vwBezier3)
+            _geom.push_back(new vwBezier3(*dynamic_cast<vwBezier3*>(t._geom[i])));
 
         else
             std::cout << "[ WARNING ] lane::assignInputToThis doesn't know about this geometry" << std::endl;
@@ -1430,6 +1466,11 @@ uint lane::getGeometrySize() const
 }
 
 
+const std::vector<geometry*> lane::geometries() const
+{
+    return _geom;
+}
+
 /*
 std::vector<std::unique_ptr<geometry>> lane::getGeometries() const
 {
@@ -1653,17 +1694,52 @@ bool lane::isPointOnLane(const arr2 &p, scalar tol) const
 
 int lane::getGeometryIndex(const arr2 &p) const
 {
+    std::vector<int> psb;
+    for (uint i = 0; i < _geom.size(); ++i)
+        if (mvf::isPointInBoxBLcTRcTol(p, _geom[i]->blc(), _geom[i]->trc(), odrTol))
+            psb.push_back(i);
+
+    if (psb.empty())
+        return -1;
+
+    else if (psb.size() == 1)
+        return psb[0];
+
+
+    // Otherwise, try projecting it:
+    scalar dmin2 = 1e4;
+    constexpr scalar dthreshold2 = 25e-4;
+    int idx = -1;
+    for (uint i = 0; i < _geom.size(); ++i)
+    {
+        if (std::find(psb.begin(), psb.end(), i) == psb.end())
+            continue;
+
+
+        arr2 prj = _geom[i]->projectPointHere(p);
+        scalar di2 = mvf::sqrDistance(prj, p);
+        if (di2 < dmin2)
+        {
+            dmin2 = di2;
+            idx = static_cast<int>(i);
+        }
+    }
+
+    return idx;
+
+    /*
     bool fast = true;
-    if (fast) /* Fast and slightly insecure */
+    if (fast) // Fast and slightly insecure
     {
         for (uint i = 0; i < _geom.size(); ++i)
             if (mvf::isPointInBoxBLcTRcTol(p, _geom[i]->blc(), _geom[i]->trc(), odrTol))
                 return i;
+
         return -1;
     }
 
 
-    /* Slow but safe */
+    // Slow but safe
     // If the point is exactly on the lane, find the right bit:
     for (uint i = 0; i < _geom.size(); ++i)
         if (_geom[i]->isPointHere(p)) return static_cast<int>(i);
@@ -1690,6 +1766,7 @@ int lane::getGeometryIndex(const arr2 &p) const
         return idx;
 
     return -1;
+    */
 }
 
 int lane::getGeometryIndex(scalar d) const
@@ -1787,21 +1864,20 @@ scalar lane::unsafeDistanceFromTheBoL(const arr2 &p) const
 
 
 // TEST
-void lane::getPointWithOffset(arr2 &p, const arr2 &o, scalar loff) const
+bool lane::getPointWithOffset(arr2 &p, const arr2 &o, scalar loff) const
 {
     arr2 v = getTangentInPoint(o);
-    scalar angle = 0.5 * ct::pi;
-    mvf::rotateVectorByAngle(v, angle);
+    v = {-v[1], v[0]};
     p = {o[0] + loff * v[0], o[1] + loff * v[1]};
-    return;
+    return true;
 }
 
-void lane::getPointWithOffset(arr2 &p, scalar s, scalar loff) const
+bool lane::getPointWithOffset(arr2 &p, scalar s, scalar loff) const
 {
     arr2 o;
-    getPointAtDistance(o, s);
-    getPointWithOffset(p, o, loff);
-    return;
+    if (!getPointAtDistance(o, s))
+        return false;
+    return getPointWithOffset(p, o, loff);
 }
 
 
@@ -2539,6 +2615,23 @@ std::vector<QPainterPath> lane::getQPainterPaths(uint n) const
 
     return qpp;
 }
+
+std::vector<QPainterPath> lane::getBoxQPainterPaths() const
+{
+    std::vector<QPainterPath> qpp;
+    for (uint i = 0; i < _geom.size(); ++i)
+    {
+        QPainterPath qpi;
+        qpi.moveTo(ct::mToPix * _geom[i]->blc()[0], -ct::mToPix * _geom[i]->blc()[1]);
+        qpi.lineTo(ct::mToPix * _geom[i]->trc()[0], -ct::mToPix * _geom[i]->blc()[1]);
+        qpi.lineTo(ct::mToPix * _geom[i]->trc()[0], -ct::mToPix * _geom[i]->trc()[1]);
+        qpi.lineTo(ct::mToPix * _geom[i]->blc()[0], -ct::mToPix * _geom[i]->trc()[1]);
+        qpi.lineTo(ct::mToPix * _geom[i]->blc()[0], -ct::mToPix * _geom[i]->blc()[1]);
+        qpp.push_back(qpi);
+    }
+    return qpp;
+}
+
 
 QPainterPath lane::getEdgeQPainterPath(uint n, int e) const
 {

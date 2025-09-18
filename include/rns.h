@@ -31,8 +31,6 @@ namespace odrones {
 typedef odrones::concepts concepts;
 typedef odrones::lane lane;
 typedef odrones::section section;
-typedef odrones::scalar scalar;
-typedef odrones::arr2 arr2;
 typedef odrones::OneVersion OneVersion;
 typedef odrones::mvf mvf;
 typedef odrones::conflict conflict;
@@ -43,9 +41,9 @@ class RNS
 
 public:
     RNS();
-    RNS(std::string odrMap, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk, bool verbose = false);
+    RNS(std::string odrMap, const char* drivingSide, bool exhaustiveLinking, bool fineTune, bool loadSidewalk, bool verbose = false);
     RNS(const RNS &r); ///< copy construct
-    RNS& operator=(RNS& r); ///< copy assign
+    RNS& operator=(const RNS& r); ///< copy assign
     ~RNS();
 
     void clearMemory();
@@ -68,12 +66,16 @@ public:
     bool verbose() const { return _verbose; }
     void verbose(bool v) { _verbose = v; }
 
+    scalar linkTolerance() const { return _linkTol; }
+    void linkTolerance(scalar tol) { _linkTol = tol; }
+
     concepts::drivingSide drivingSide() const; ///< return the driving side.
     void drivingSide(concepts::drivingSide side); ///< manually set the driving side.
 
-    bool makeRoads(std::string mapFile, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk);
+    bool makeRoads(std::string mapFile, const char* drivingSide, bool exhaustiveLinking, bool fineTune, bool loadSidewalk);
     bool makeOpenDRIVERoads(std::string mapFile, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk);
-    bool makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool exhaustiveLinking, bool loadSidewalk);
+    bool makeOpenDRIVERoads(std::string mapFile, const char* drivingSide, bool exhaustiveLinking, bool fineTune, bool loadSidewalk);
+    bool makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool exhaustiveLinking, bool fineTune, bool loadSidewalk);
     bool makeOneVersionRoads(std::string mapFile);
     void printLanes() const; ///< print sections and lanes
     void write(const std::string &mapFile) const;
@@ -108,6 +110,7 @@ private:
     section* getSectionWithOVId(const OneVersion::OVID &sID) const;
 
 public:
+    const lane* getCLaneWithSUID(uint sID, uint lID) const;
     const lane* getCLaneWithODRIds(uint rID, int lID) const;
     lane* getLaneWithODRIds(uint rID, int lID) const;
 
@@ -115,6 +118,7 @@ public:
     std::vector<uint> getSectionIDsWithOVRoadNodeId(int rnMID, int rnmID) const; ///< returning a vector because a node may have a number of laneGroups, and rns store each one in a different section. That will be an empty vector if roadIDM or roadIDm are < 0
     std::vector<uint> getSectionIDsWithOVNodeId(int nID) const; ///< returning a vector because a node may have a number of laneGroups, and rns store each one in a different section. That will result in an empty vector if nID is < 0;
 
+    const section* getSectionWithODRId(uint rID) const;
     int getSectionIDWithODRIDWithRoadCoord(uint rID, scalar s) const; ///< -1 if not found.
 
 
@@ -145,13 +149,20 @@ private:
     const lane* getLaneWithPoint(const arr2 &p, scalar tol = mvf::absolutePrecision) const;
 
     //! Assign li as nextLane to lj or lj as nextLane to li, and set the corresponding prevLanes,
-    //!   as long as the end / start of li and lj are closer than tol.
+    //!  ... as long as any ending pair of points for li and lj are closer than tol.
     uint linkLanesIfInRange(lane *li, lane *lj, scalar tol = lane::odrTol);
+    //!  ... as long as the end / start of li and lj are closer than tol.
     bool linkLanesIfInRangeAndOD(lane *li, lane *lj, scalar tol = lane::odrTol);
+    //!  ... as long as any ending pair of points for li and lj are closer than tol and the tangents align correctly.
+    uint linkLanesIfSound(lane *li, lane *lj, scalar tol = lane::odrTol);
 
-    //! Assign nextLanes and prevLanes to the lanes in sections si and sj by calling linkLanesIfInRange on a double loop.
-    void linkLanesInSections(section &si, section &sj, scalar tol = lane::odrTol);
-    void linkLanesInSectionsOD(section &si, section &sj, scalar tol = lane::odrTol);
+    //! Assign nextLanes and prevLanes to the lanes in sections si and sj by calling linkLanesIfInRange on a double loop. Return true if anything was linked.
+    bool linkLanesInSections(section &si, section &sj, scalar tol = lane::odrTol);
+    bool linkLanesInSectionsOD(section &si, section &sj, scalar tol = lane::odrTol);
+    bool linkLanesInSectionsIfSound(section &si, section &sj, scalar tol = lane::odrTol);
+
+    /*! Check if any two edges of these two sections are close enough */
+    bool sectionEdgesInRange(section &si, section &sj, scalar tol = lane::odrTol) const;
 
     /*! arrange conflicts and default priorities for lanes in different sections and same ending: priority is to the right */
     bool makePrioritiesSameEndingDifferentSectionLanes(scalar anticipationTime);
@@ -161,6 +172,8 @@ private:
     void makePrioritiesDifferentEndingDifferentSectionCrossingLanes(scalar anticipationTime);
 
 
+    /*! adjust Beziers to improve the exhaustive linkage */
+    void fineTuneReadOdr(ReadOdr &read) const;
 
 
 
@@ -182,6 +195,7 @@ private:
     bool _ready; ///< whether the RNS is ready or not.
     bool _verbose; ///< whether to print out to std::out or not.
 
+    scalar _linkTol; ///< linking tolerance.
 
 };
 

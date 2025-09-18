@@ -23,9 +23,8 @@
 #include "readBOdr.h"
 using namespace odrones;
 
-void ReadBOdr::addRoad(Odr::smaS &s, bool simplify)
+void ReadBOdr::addRoad(Odr::smaS &s)
 {
-    if (simplify) simplifyGeometries(s);
     _sections.push_back(s);
 }
 
