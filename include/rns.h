@@ -104,12 +104,12 @@ private:
     void tSigns(const std::vector<lane::tSign> &t);
 
     lane* getLaneWithSUID(int sID, int lID) const;
-    lane* getLaneWithODRIds(uint rID, int lID) const;
     lane* getLaneWithOVId(const OneVersion::OVID &lID) const;
     section* getSectionWithOVId(const OneVersion::OVID &sID) const;
 
 public:
     const lane* getCLaneWithODRIds(uint rID, int lID) const;
+    lane* getLaneWithODRIds(uint rID, int lID) const;
 
     std::vector<uint> getSectionIDsWithOVRoadNodeId(const OneVersion::OVID &rnID) const; ///< returning a vector because a node may have a number of laneGroups, and rns store each one in a different section. That will be an empty vector if roadIDM or roadIDm are < 0
     std::vector<uint> getSectionIDsWithOVRoadNodeId(int rnMID, int rnmID) const; ///< returning a vector because a node may have a number of laneGroups, and rns store each one in a different section. That will be an empty vector if roadIDM or roadIDm are < 0
