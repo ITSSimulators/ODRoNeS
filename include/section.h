@@ -111,6 +111,10 @@ public:
     const lane* getLane(size_t index) const; ///< get a constant lane
     const lane* getOdrLane(size_t odrId) const; ///< get the lane with _odrID == odrID;
     const lane* zero() const; ///< get the reference lane.
+    lane* zero()
+    {
+        return &_zero;
+    }
     bool isSameSection(const section *s) const; ///< true if *s == this
     bool isConnected(const section &s) const; ///< true if any lane in *s is connected to any lane of this.
     size_t size() const; ///< return the amount of stuff stored
