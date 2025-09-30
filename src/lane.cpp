@@ -1983,7 +1983,52 @@ bool lane::projectPointOntoLane(arr2 &p, const arr2 &o) const
     }
     else if (_geom.size() > 1)
     {
+        // 1 - Find the best geometries first:
         scalar d2 = 1e12;
+        int interval = 0;  // 0 = origin, 1 = centre.
+        int gndx = 0;
+        for (uint i = 0; i < _geom.size(); ++i)
+        {
+            scalar d2i = mvf::sqrDistance(o, _geom[i]->origin());
+            if (d2i < d2)
+            {
+                d2 = d2i;
+                interval = 0;
+                gndx = i;
+            }
+
+            arr2 halfway;
+            _geom[i]->getPointAtDistance(halfway, 0.5 * _geom[i]->length());
+            d2i = mvf::sqrDistance(o, halfway);
+            if (d2i < d2)
+            {
+                d2 = d2i;
+                interval = 1;
+                gndx = i;
+            }
+        }
+        scalar d2e = mvf::sqrDistance(o, _geom.back()->dest());
+        if (d2 < d2e)
+        {
+            gndx = _geom.size() - 1;
+            interval = 1;
+        }
+
+        if ((interval == 1) || (gndx == 0))
+            p = _geom[gndx]->projectPointHere(o);
+        else
+        {
+            arr2 q1 = _geom[gndx]->projectPointHere(o);
+            arr2 q2 = _geom[gndx-1]->projectPointHere(o);
+            if (mvf::sqrDistance(q1, o) < mvf::sqrDistance(q2, o))
+                p = q1;
+            else
+                p = q2;
+        }
+
+
+        /*
+        // 2 - Brute force - project on every geometry:
         for (uint i = 0; i < _geom.size(); ++i)
         {
             arr2 q = _geom[i]->projectPointHere(o);
@@ -1994,6 +2039,7 @@ bool lane::projectPointOntoLane(arr2 &p, const arr2 &o) const
                 p = q;
             }
         }
+        */
         return true;
     /*  That used to be a check for the Bezier lanes. Not sure whether we should just ditch it.
         mvf::normalise(tg);
