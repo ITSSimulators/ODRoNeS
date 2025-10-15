@@ -45,6 +45,8 @@ public:
     enum class drivingSide { rightHand, leftHand };
     static std::string drivingString(drivingSide d);
 
+    static bool actorIsFourWheeled( actor a );
+
 };
 
 
