@@ -2008,7 +2008,7 @@ bool lane::projectPointOntoLane(arr2 &p, const arr2 &o) const
             }
         }
         scalar d2e = mvf::sqrDistance(o, _geom.back()->dest());
-        if (d2 < d2e)
+        if (d2e < d2)
         {
             gndx = _geom.size() - 1;
             interval = 1;
@@ -2040,6 +2040,7 @@ bool lane::projectPointOntoLane(arr2 &p, const arr2 &o) const
             }
         }
         */
+
         return true;
     /*  That used to be a check for the Bezier lanes. Not sure whether we should just ditch it.
         mvf::normalise(tg);
