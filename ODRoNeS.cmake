@@ -117,7 +117,7 @@ add_library(rns
     ${RNS_DIR}/include/bezier.h ${RNS_DIR}/include/bezier2.h ${RNS_DIR}/include/bezier3.h
     ${RNS_DIR}/src/vwBezier3.cpp ${RNS_DIR}/include/vwBezier3.h
     ${RNS_DIR}/src/vwSpiral.cpp ${RNS_DIR}/include/vwSpiral.h
-    ${RNS_DIR}/src/lane.cpp ${RNS_DIR}/include/lane.h
+    ${RNS_DIR}/src/lane.cpp ${RNS_DIR}/include/lane.h ${RNS_DIR}/include/lCoord.h
     ${RNS_DIR}/src/section.cpp ${RNS_DIR}/include/section.h
     ${RNS_DIR}/src/rns.cpp ${RNS_DIR}/include/rns.h
     # Some tests:

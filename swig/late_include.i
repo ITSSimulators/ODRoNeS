@@ -12,5 +12,6 @@
 
 //! Include matvec.h before rns.h ???
 %include "matvec.h"
-
+%include "lane.h"
+%include "lCoord.h"
 %include "rns.h"

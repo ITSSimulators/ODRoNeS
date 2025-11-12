@@ -1291,12 +1291,12 @@ int RNS::findPortAndStarboardLanes(lane* &port, lane* &starboard, lane *l1, lane
 
 
 
-lane::lCoord RNS::getLaneCoordsForPoint(const arr2 &o, scalar tol) const
+lCoord RNS::getLaneCoordsForPoint(const arr2 &o, scalar tol) const
 {
     // 1 - Generic algorithm to find the closest lane:
     //   For each section check if o is within its bounding box,
     //   and if it is, check whether o is within any of its lanes bounding boxes.
-    lane::lCoord lcoo = {nullptr, {0, 0}, 0., 1e3};
+    lCoord lcoo = {nullptr, {0, 0}, 0., 1e3};
     for (uint is = 0; is < sectionsSize(); ++is)
     {
         arr2 bli, tri;
@@ -1329,7 +1329,7 @@ lane::lCoord RNS::getLaneCoordsForPoint(const arr2 &o, scalar tol) const
     return lcoo;
 }
 
-arr2 RNS::getPosForLaneCoords(const lane::lCoord &lc) const
+arr2 RNS::getPosForLaneCoords(const lCoord &lc) const
 {
     arr2 p;
     lc.l()->getPointWithOffset(p, lc.pos(), lc.loff());
@@ -1352,7 +1352,7 @@ arr2 RNS::getPosForRoadCoords(uint rID, scalar s, scalar offset, scalar height) 
 
 const lane* RNS::getLaneWithPoint(const arr2 &p, scalar tol) const
 {
-    lane::lCoord lcoo = getLaneCoordsForPoint(p, tol);
+    lCoord lcoo = getLaneCoordsForPoint(p, tol);
     if (std::abs(lcoo.loff()) < tol) return lcoo.l();
     else return nullptr;
 }

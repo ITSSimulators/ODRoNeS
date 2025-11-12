@@ -25,6 +25,7 @@
 
 #include "rnsconcepts.h"
 #include "section.h"
+#include "lCoord.h"
 
 namespace odrones {
 
@@ -91,9 +92,9 @@ public:
 
     //! Given the point o, find the set of lane coordinates l, p (projected point), s, and loff (lateral offset)
     //!   that is not farther from o than tol. lCoord.l will be nullptr if nothing was found closer than tol.
-    lane::lCoord getLaneCoordsForPoint(const arr2 &o, scalar tol) const;
+    lCoord getLaneCoordsForPoint(const arr2 &o, scalar tol) const;
 
-    arr2 getPosForLaneCoords(const lane::lCoord &lc) const;
+    arr2 getPosForLaneCoords(const lCoord &lc) const;
     arr2 getPosForRoadCoords(uint rID, scalar s, scalar offset, scalar height) const;
 
     //! get the size of whole map rounded "up".
