@@ -90,19 +90,20 @@ public:
             return "invalid lane";
     }
 
-
     void setOrigin()
     {
         _pos = _l->getOrigin();
         _s = 0;
         _loff = 0;
     }
+
     void setDestination()
     {
         _pos = _l->getDestination();
         _s = _l->getLength();
         _loff = 0;
     }
+
     arr2 tangent()
     {
         if (!_l)
@@ -115,6 +116,15 @@ public:
             _tgCachePos = _pos;
         }
         return _tg;
+    }
+
+    arr2 posWithOffset()
+    {
+        arr2 t = tangent();
+        arr2 n = {-t[1], t[0]};
+        return {_pos[0] + _loff * n[0],
+                _pos[1] + _loff * n[1]};
+
     }
     // // End of Utilities // //
 
