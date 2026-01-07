@@ -94,7 +94,7 @@ protected:
 
     kind _k;
 
-    bool _ready;
+    bool _ready{ false };
 
 };
 

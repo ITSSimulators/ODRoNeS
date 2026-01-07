@@ -133,7 +133,7 @@ private:
     arr2 _pos;            ///< position projected onto the center of the lane
     scalar _s;            ///< distance down the lane
     scalar _loff;         ///< lateral offset, positive to the right in the direction of the lane (starboard).
-    arr2 _tg;             ///< cached tangent given l and pos.
+    arr2 _tg{ 0.0, 0.0 };             ///< cached tangent given l and pos.
     arr2 _tgCachePos{0., 0.}; ///<
     const lane* _tgCacheL{nullptr};
 };

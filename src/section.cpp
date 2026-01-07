@@ -290,6 +290,7 @@ void section::setOneVersionRoad(const OneVersion::smaS &sec, uint lgID)
 void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
 {
     _odrID = sec.odrID;
+    _ovID = sec.ovID;
     _type = sec.type;
 
     // Lanes within the same laneSection start at the same so and end at the same se,
@@ -596,7 +597,7 @@ uint section::odrID() const
 {
     return _odrID;
 }
-
+ 
 OneVersion::OVID section::ovID() const
 {
     return _ovID;

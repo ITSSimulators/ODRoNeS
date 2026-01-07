@@ -219,9 +219,10 @@ void ReadOdr::append(const ReadOdr &r)
     // Basics:
     for (uint i = 0; i < r.sections.size(); ++i)
     {
-        _sections.push_back(Odr::smaS());
+        _sections.emplace_back();
         _sections.back().id = _sections.size() -1; // r.sections[i].id;
         _sections.back().odrID = r.sections[i].odrID;
+        _sections.back().ovID = r.sections[i].ovID;
         _sections.back().lsSize = r.sections[i].lsSize;
         _sections.back().name = r.sections[i].name;
         _sections.back().type = r.sections[i].type;
