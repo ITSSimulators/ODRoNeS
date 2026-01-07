@@ -531,7 +531,7 @@ bool section::setZero(const std::vector<Odr::geometry> &g, scalar so, scalar se)
 
     _zero.setID(-1); ///< I hope this doesn't cause havoc.
     _zero.setOdrSectionID(_odrID);
-
+    _zero.setOVID(_ovID);
     Odr::smaL odrl0;
     odrl0.startingS = so;
     odrl0.sign = 1;

@@ -1576,7 +1576,7 @@ std::string lane::sUID(int sID, int lID)
 
 std::string lane::getCSUID() const
 {
-    if  (isOpenDrive()) return getSUID() + " (" + getOdrSUID() + ")";
+    if  (isOpenDrive()) return getSUID() + " (" + getOdrSUID() + ":" + getOVSUID() + ")";
     else if (isOneVersion()) return getSUID() + " (" + getOVSUID() + ")";
     return getSUID();
 }
@@ -1589,7 +1589,7 @@ std::string lane::getOdrSUID() const
 
 std::string lane::getOVSUID() const
 {
-    if (!isOneVersion()) return "";
+    if (!isOneVersion()) return "R" + std::to_string(_ovID.roadIDM) + "." + std::to_string(_ovID.roadIDm);
     return _ovID.to_string();
 }
 
