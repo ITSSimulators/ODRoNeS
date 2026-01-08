@@ -1879,7 +1879,7 @@ bool lane::getPointWithOffset(arr2 &p, const arr2 &o, scalar loff) const
 
 bool lane::getPointWithOffset(arr2 &p, scalar s, scalar loff) const
 {
-    arr2 o;
+    arr2 o{0.0, 0.0};
     if (!getPointAtDistance(o, s))
         return false;
     return getPointWithOffset(p, o, loff);
