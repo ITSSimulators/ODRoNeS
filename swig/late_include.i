@@ -14,4 +14,5 @@
 %include "matvec.h"
 %include "lane.h"
 %include "lCoord.h"
+%include "section.h"
 %include "rns.h"

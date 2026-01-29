@@ -13,6 +13,7 @@ using namespace odrones;
 #include "rnsconcepts.h"
 #include "lane.h"
 #include "lCoord.h"
+#include "section.h"
 #include "rns.h"
 %}
 
