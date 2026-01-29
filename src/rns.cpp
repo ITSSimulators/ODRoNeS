@@ -28,6 +28,7 @@
 #ifdef USE_ONEVERSION
 #include "readOneVersion.h"
 #endif // USE_ONEVERSION
+#include "readXOdr.h"
 
 using namespace odrones;
 

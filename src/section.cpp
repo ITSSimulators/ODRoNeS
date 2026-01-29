@@ -21,6 +21,8 @@
 //
 
 #include "section.h"
+#include "readXOdr.h"
+
 using namespace odrones;
 
 section::section() :
@@ -932,4 +934,42 @@ bool section::isOneWay() const
             return false;
     }
     return true;
+}
+
+
+lCoord section::getLaneCoordsForPoint(const arr2 &o, scalar tol) const
+{
+    lCoord lc(nullptr, {0., 0.}, 0., 1e3);
+
+    if (!mvf::isPointInBoxBLcTRc(o, {_bbblc[0] - tol, _bbblc[1] - tol}, {_bbtrc[0] + tol, _bbtrc[1] + tol}))
+        return lc;
+
+    for (uint i = 0; i < size(); ++i)
+    {
+        arr2 bli, tri, pi;
+        _lanes[i].getBoundingBox(bli, tri);
+        if (!mvf::isPointInBoxBLcTRc(o, {bli[0] - tol, bli[1] - tol}, {tri[0] + tol, tri[1] + tol})) continue;
+
+        _lanes[i].projectPointOntoLane(pi, o);
+
+        lCoord lco = lc;
+        scalar offi = mvf::distance(pi, o);
+        if (offi > tol) continue;
+        if (offi < lc.loff())
+        {
+            lc.l(&(_lanes[i]));
+            lc.pos(pi);
+            lc.sConsistentWithLAndPos();
+            lc.loff(pi);
+        }
+
+        // If tangent and v = lc.pos - o do not make a right angle, discard it.
+        vec2 v = {o[0] - lc.pos()[0], o[1] - lc.pos()[1]};
+        if (std::fabs(v * lc.tangent()) > 1e-3)
+            lc = lco;
+    }
+
+
+    return lc;
+
 }

@@ -25,10 +25,10 @@
 
 #include <vector>
 #include "matvec.h"
-#include "readXOdr.h"
 #include "readOneVersion.h"
 #include "rnsconcepts.h"
 #include "lane.h"
+#include "lCoord.h"
 
 
 
@@ -111,10 +111,8 @@ public:
     const lane* getLane(size_t index) const; ///< get a constant lane
     const lane* getOdrLane(size_t odrId) const; ///< get the lane with _odrID == odrID;
     const lane* zero() const; ///< get the reference lane.
-    lane* zero()
-    {
-        return &_zero;
-    }
+    lane* zero() { return &_zero; }
+
     bool isSameSection(const section *s) const; ///< true if *s == this
     bool isConnected(const section &s) const; ///< true if any lane in *s is connected to any lane of this.
     size_t size() const; ///< return the amount of stuff stored
@@ -125,8 +123,8 @@ public:
     std::string getCSUID() const; ///< just like in lane
 
     std::vector<lane::tSign> getTSigns() const; ///< return a vector with non-repeated traffic signs, i e, query the different _lanes and take the physical traffic signs rather than all the repeated allocations.
-    void getBoundingBox(arr2 &blc, arr2 &trc) const;
 
+    void getBoundingBox(arr2 &blc, arr2 &trc) const;
     void addUpBoundingBoxes(); ///< on  set the box to the sum of all the boxes
     void updateBoundingBox(const arr2 &blc, const arr2 &trc); ///< update the bounding box defined by _bbblc, bbtrc with the input box;
 
@@ -136,6 +134,8 @@ public:
     void setSpeed(scalar speed);
 
     Odr::Kind::RoadType type() const;
+
+    lCoord getLaneCoordsForPoint(const arr2 &o, scalar tol) const;
 
 private:
     void updateBoundingBox(uint ndx); ///< update the bounding box defined by _bbblc, bbtrc with the box of lane _sections[ndx];
