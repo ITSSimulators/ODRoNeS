@@ -1232,7 +1232,7 @@ const section* odrones::RNS::getSectionWithOVRoadNodeId(int major, int minor)
 {
     auto sectionIDs = getSectionIDsWithOVRoadNodeId(major, minor);
     if (sectionIDs.size() == 1)
-        return getSectionWithODRId(sectionIDs[0]);
+        return &_sections[sectionIDs[0]];
 
     return nullptr;
 }
