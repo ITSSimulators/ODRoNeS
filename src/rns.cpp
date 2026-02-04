@@ -1229,7 +1229,7 @@ std::vector<uint> RNS::getSectionIDsWithOVNodeId(int nID) const
     return s;
 }
 
-const section* odrones::RNS::getSectionWithOVRoadNodeId(int major, int minor)
+const section* odrones::RNS::getSectionWithOVRoadNodeId(int major, int minor) const
 {
     auto sectionIDs = getSectionIDsWithOVRoadNodeId(major, minor);
     if (sectionIDs.size() == 1)
