@@ -118,7 +118,7 @@ public:
             return true;
         }
 
-        bool validLane()
+        bool validLane() const
         {
             if (laneID == -1) return false;
             if (lgIndex == -1) return false;
