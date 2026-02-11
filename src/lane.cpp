@@ -307,7 +307,7 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
                 _geom.push_back(new paramPoly3(odrg[i], getSignInt(), off[0].a, soi, sei, roadSoi));
             else if (odrg[i].g == Odr::Attr::Geometry::spiral)
                 _geom.push_back(new vwSpiral(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
-            else if (odrg[0].g == Odr::Attr::Geometry::bezier3)
+            else if (odrg[i].g == Odr::Attr::Geometry::bezier3)
                 _geom.push_back(new vwBezier3(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
             else
             {
@@ -326,7 +326,7 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
                 _geom.push_back(new vwParamPoly3(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
             else if (odrg[i].g == Odr::Attr::Geometry::spiral)
                 _geom.push_back(new vwSpiral(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
-            else if (odrg[0].g == Odr::Attr::Geometry::bezier3)
+            else if (odrg[i].g == Odr::Attr::Geometry::bezier3)
                 _geom.push_back(new vwBezier3(odrg[i], getSignInt(), off, soi, sei, roadSoi, geomPrint));
             else
             {
@@ -1576,7 +1576,13 @@ std::string lane::sUID(int sID, int lID)
 
 std::string lane::getCSUID() const
 {
-    if  (isOpenDrive()) return getSUID() + " (" + getOdrSUID() + ":" + getOVSUID() + ")";
+    if  (isOpenDrive())
+    {
+        std::string csuid = getSUID() + " (" + getOdrSUID();
+        if (_ovID.validLane())
+            csuid += ":" + getOVSUID();
+        return csuid += ")";
+    }
     else if (isOneVersion()) return getSUID() + " (" + getOVSUID() + ")";
     return getSUID();
 }
@@ -1589,8 +1595,9 @@ std::string lane::getOdrSUID() const
 
 std::string lane::getOVSUID() const
 {
-    if (!isOneVersion()) return "R" + std::to_string(_ovID.roadIDM) + "." + std::to_string(_ovID.roadIDm);
-    return _ovID.to_string();
+    if (!_ovID.validLane()) return "";
+    return "R" + std::to_string(_ovID.roadIDM) + "." + std::to_string(_ovID.roadIDm);
+    // return _ovID.to_string();
 }
 
 std::string lane::getSUID() const
