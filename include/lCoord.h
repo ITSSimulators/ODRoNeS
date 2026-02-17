@@ -34,6 +34,7 @@ public:
         _l->getPointAtDistance(_pos, _s);
         return true;
     }
+    /* wrong: this sets _pos on an offset but it is supposed to be on the lane.
     bool posConsistentWithLandSandLoff()
     {
         if ((!_l) || (!sInRange()))
@@ -41,6 +42,7 @@ public:
         _l->getPointWithOffset(_pos, _s, _loff);
         return true;
     }
+    */
 
     void s(scalar s) { _s = s; }
     scalar s() const { return _s; }
@@ -121,7 +123,7 @@ public:
     arr2 posWithOffset()
     {
         arr2 t = tangent();
-        arr2 n = {-t[1], t[0]};
+        arr2 n = {t[1], -t[0]};
         return {_pos[0] + _loff * n[0],
                 _pos[1] + _loff * n[1]};
 
