@@ -98,7 +98,7 @@ scalar vwNumerical::offset_a(scalar t) const
     scalar o = 0.;
     for (uint i = 0; i < _vwOff.size(); ++i)
     {
-        if (_vwOff[i].inRange(t))
+        if (_vwOff[i].inRange(t, 0, mvf::distPrecision2))
         {
             scalar s = t - _vwOff[i].s;
             scalar s2 = s * s;

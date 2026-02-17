@@ -55,7 +55,6 @@ vwBezier3::vwBezier3(const Odr::geometry &odr, int sign, std::vector<Odr::offset
         std::cerr << "so is out of bonds!!" << std::endl;
 
     if (! mvf::isInRangeLR(se, 0, _l))
-    if ((se > odr.length) || (se < 0))
         std::cerr << "se is out of bonds!!" << std::endl;
 
     // offset is parametrised along s, we can't change that.
