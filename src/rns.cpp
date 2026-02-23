@@ -21,7 +21,6 @@
 //
 
 #include <filesystem>
-#include <boost/format.hpp>
 #include <tinyxml2.h>
 #include "rns.h"
 #include "xmlUtils.h"

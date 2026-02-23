@@ -1,6 +1,7 @@
 
-#include "xmlUtils.h"
 #include <tinyxml2.h>
+#include <format>
+#include "xmlUtils.h"
 
 using namespace odrones;
 
@@ -29,7 +30,7 @@ std::string xmlUtils::ReadConstCharAttr(tinyxml2::XMLElement *elem, const char *
 
 void xmlUtils::setAttrDouble(tinyxml2::XMLElement *elem, const char *c, double q)
 {
-    elem->SetAttribute(c, (boost::format("%.17e") % q).str().c_str());
+    elem->SetAttribute(c, (std::format("{0:.17e}", q).c_str()));
 }
 
 
