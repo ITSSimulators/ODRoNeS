@@ -38,6 +38,13 @@ class ReadOdr
 {
 public:
     enum class kind { none, bodr, xodr };
+    struct optimisation
+    {
+        bool singleArc;
+        bool straightBits;
+        bool arcSeries;
+    };
+
     ReadOdr() : _k(kind::none) {};
     ReadOdr& operator=(const ReadOdr& r);
     ReadOdr& operator+=(const ReadOdr& r);
@@ -45,7 +52,7 @@ public:
     void renumber(uint shift); ///< renumber the Odr ids of the sections.
     void transform(const arr2 &position, scalar angle); ///< rotate and translate this map
 
-    void simplifyGeometries(bool singleArc, bool straight, bool bezierToArcSeries); ///< loop over every section simplify their geometries, using arcs and straights where possible.
+    void simplifyGeometries(); // bool singleArc, bool straight, bool bezierToArcSeries); ///< loop over every section simplify their geometries, using arcs and straights where possible.
 
     bool uniqueSectionOdrIDs(); ///< check whether there are sections with repeated odrIDs
 
@@ -89,6 +96,8 @@ protected:
     std::vector<Odr::smaS> _sections;
 
     std::vector<Odr::udIndexed6DPoint> _udConnections;
+
+    std::vector<optimisation> _optimisations;
 
     std::vector<Odr::speedRegulation> _defaultSpeedLimit;
 
