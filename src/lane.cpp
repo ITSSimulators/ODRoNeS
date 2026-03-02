@@ -21,7 +21,8 @@
 //
 
 #include <sstream>
-#include <format>
+// #include <format>
+#include <boost/format.hpp>
 #include "lane.h"
 #include "xmlUtils.h"
 // DEBUG //
@@ -422,26 +423,35 @@ void lane::writeDown()
 
     f.open(basename);
     for (uint i = 0; i < _pointsSize; ++i)
-        f << std::format("{0:10d} {1:12.3f} {2:12.3f}\n",
-                         i, _pointsX[i], _pointsY[i]);
+		  f << boost::format("%10d %12.3f %12.3f") % i % _pointsX[i] % _pointsY[i] << std::endl;
+        // f << std::format("{0:10d} {1:12.3f} {2:12.3f}\n", i, _pointsX[i], _pointsY[i]);
     f.close();
 
     f.open(basename + ".box");
-    f << std::format("{0:12.3f} {1:12.3f}\n", _bbblc[0], _bbblc[1]);
+	 f << boost::format("%12.3f %12.3f") % _bbblc[0] % _bbblc[1] << std::endl;
+    f << boost::format("%12.3f %12.3f") % _bbblc[0] % _bbtrc[1] << std::endl;
+    f << boost::format("%12.3f %12.3f") % _bbtrc[0] % _bbtrc[1] << std::endl;
+    f << boost::format("%12.3f %12.3f") % _bbtrc[0] % _bbblc[1] << std::endl;
+    f << boost::format("%12.3f %12.3f") % _bbblc[0] % _bbblc[1] << std::endl;
+    /* f << std::format("{0:12.3f} {1:12.3f}\n", _bbblc[0], _bbblc[1]);
     f << std::format("{0:12.3f} {1:12.3f}\n", _bbblc[0], _bbtrc[1]);
     f << std::format("{0:12.3f} {1:12.3f}\n", _bbtrc[0], _bbtrc[1]);
     f << std::format("{0:12.3f} {1:12.3f}\n", _bbtrc[0], _bbblc[1]);
-    f << std::format("{0:12.3f} {1:12.3f}\n", _bbblc[0], _bbblc[1]);
+    f << std::format("{0:12.3f} {1:12.3f}\n", _bbblc[0], _bbblc[1]); */
     f.close();
 
 
     f.open(basename + ".geom");
     for (uint i = 0; i < _geom.size(); ++i)
     {
-        f << std::format("{0:12.3f} {1:12.3f}\n",
+		  f << boost::format("%12.3f %12.3f") %
+                 _geom[i]->origin()[0] % _geom[i]->origin()[1] << std::endl;
+        f << boost::format("%12.3f %12.3f") %
+                 _geom[i]->dest()[0] % _geom[i]->dest()[1] << std::endl;
+        /* f << std::format("{0:12.3f} {1:12.3f}\n",
                          _geom[i]->origin()[0], _geom[i]->origin()[1]);
         f << std::format("{0:12.3f} {1:12.3f}\n",
-                         _geom[i]->dest()[0], _geom[i]->dest()[1]);
+                         _geom[i]->dest()[0], _geom[i]->dest()[1]); */
     }
     f.close();
 
@@ -449,7 +459,18 @@ void lane::writeDown()
     for (uint i = 0; i < _geom.size(); ++i)
     {
         f << "#" << mvf::shapeString( _geom[i]->shape() ) << std::endl;
-        f << std::format("{0:12.3f} {1:12.3f}\n",
+		  f << boost::format("%12.3f %12.3f") %
+                 _geom[i]->blc()[0] % _geom[i]->blc()[1] << std::endl;
+        f << boost::format("%12.3f %12.3f") %
+                 _geom[i]->blc()[0] % _geom[i]->trc()[1] << std::endl;
+        f << boost::format("%12.3f %12.3f") %
+                 _geom[i]->trc()[0] % _geom[i]->trc()[1] << std::endl;
+        f << boost::format("%12.3f %12.3f") %
+                 _geom[i]->trc()[0] % _geom[i]->blc()[1] << std::endl;
+        f << boost::format("%12.3f %12.3f") %
+                 _geom[i]->blc()[0] % _geom[i]->blc()[1] << std::endl;
+
+        /* f << std::format("{0:12.3f} {1:12.3f}\n",
                          _geom[i]->blc()[0], _geom[i]->blc()[1]);
         f << std::format("{0:12.3f} {1:12.3f}\n",
                          _geom[i]->blc()[0], _geom[i]->trc()[1]);
@@ -458,7 +479,7 @@ void lane::writeDown()
         f << std::format("{0:12.3f} {1:12.3f}\n",
                          _geom[i]->trc()[0], _geom[i]->blc()[1]);
         f << std::format("{0:12.3f} {1:12.3f}\n",
-                         _geom[i]->blc()[0], _geom[i]->blc()[1]);
+                         _geom[i]->blc()[0], _geom[i]->blc()[1]); */
         f << std::endl << std::endl;
     }
     f.close();
@@ -488,10 +509,12 @@ void lane::writeDown()
         }
 
         for (uint j = 0; j < p.size(); ++j)
-            f << std::format("{0:12.3f} {1:12.3f}\n", p[j][0], p[j][1]);
+				f << boost::format("%12.3f %12.3f") % p[j][0] % p[j][1] << std::endl;
+            // f << std::format("{0:12.3f} {1:12.3f}\n", p[j][0], p[j][1]);
 
         for (uint j = 0; j < s.size(); ++j)
-            ff << std::format("{0:12.3f}\n", s[j]);
+            ff << boost::format("%12.3f") % s[j] << std::endl;
+            // ff << std::format("{0:12.3f}\n", s[j]);
     }
     f.close();
     ff.close();
