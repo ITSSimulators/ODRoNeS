@@ -517,10 +517,11 @@ void ReadOdr::simplifyGeometries(Odr::smaS &s, bool singleArc, bool straight, bo
         simplifyMultipleArcs(s);
 }
 
-void ReadOdr::simplifyGeometries(bool singleArc, bool straight, bool bezierToArcSeries)
+void ReadOdr::simplifyGeometries() // bool singleArc, bool straight, bool bezierToArcSeries)
 {
     for (uint i = 0; i < _sections.size(); ++i)
-        simplifyGeometries(_sections[i], singleArc, straight, bezierToArcSeries);
+        simplifyGeometries(_sections[i], _optimisations[i].singleArc,
+                           _optimisations[i].straightBits, _optimisations[i].arcSeries);
 
     return;
 }
