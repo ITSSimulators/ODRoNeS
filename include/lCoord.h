@@ -128,6 +128,13 @@ public:
                 _pos[1] + _loff * n[1]};
 
     }
+
+    bool isWithinLane() ///< return true if the lateral offset is small enough
+    {
+        if (std::abs(_loff) <= 0.5 * _l->getWidth(_s))
+            return true;
+        return false;
+    }
     // // End of Utilities // //
 
 private:
