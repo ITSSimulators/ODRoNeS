@@ -39,7 +39,7 @@ public:
 
     void addConnection(Odr::udIndexed6DPoint &c);
 
-    void addSimplification(bool singleArc, bool straight, bool arcSeries);
+    void addSimplification(bool singleArc, bool straight, bool arcSeries, bool writeAsPP3);
 
 };
 

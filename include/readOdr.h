@@ -43,6 +43,7 @@ public:
         bool singleArc;
         bool straightBits;
         bool arcSeries;
+        bool writeAsPP3;
     };
 
     ReadOdr() : _k(kind::none) {};
@@ -75,10 +76,13 @@ public:
 
     const Odr::smaS* odrSection(uint odrID) const; ///< return the section with ID = OdrID.
     Odr::smaS* odrSection(uint odrID); ///< return the section with ID = OdrID.
+    int odrSectionIndex(uint odrID) const; ///< return the section index with ID = OdrID.
 
     const std::vector<Odr::udIndexed6DPoint> &udConnections = _udConnections; ///< share a read-only version
 
     const std::vector<Odr::speedRegulation> &speedRegulation = _defaultSpeedLimit; ///< share a read-only version
+
+    optimisation getOptimisation(uint i) const { return _optimisations[i]; };
 
 private:
     void append(const ReadOdr& r);

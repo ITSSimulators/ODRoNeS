@@ -739,12 +739,13 @@ void RNS::write(const std::string &mapFile) const
         {
             // Road definition and attributes:
             tinyxml2::XMLElement* xmlRoad = xmlMap.NewElement(Odr::Elem::Road);
-            const Odr::smaS *smas = _letter.odrSection(_sections[i].odrID());
-            if (!smas)
+            int letterNdx = _letter.odrSectionIndex(_sections[i].odrID());
+            if (letterNdx == -1)
             {
                 std::cerr << "[ RNS::Write Error ] smas not found "
                           << "for road with odrID: " << _sections[i].odrID() << std::endl;
             }
+            const Odr::smaS *smas = &(_letter.sections[letterNdx]); // = _letter.odrSection(_sections[i].odrID());
             xmlRoad->SetAttribute(Odr::Attr::Name, smas->name.c_str());
             xmlUtils::setAttrDouble(xmlRoad, Odr::Attr::Length, _sections[i].zero()->getLength());
             xmlRoad->SetAttribute(Odr::Attr::Id, _sections[i].odrID());
@@ -771,7 +772,7 @@ void RNS::write(const std::string &mapFile) const
 
             // Road -> PlanView - i e, geometries
             tinyxml2::XMLElement* planView = xmlMap.NewElement(Odr::Elem::PlanView);
-            if (!_sections[i].zero()->xmlPlanView(planView, xmlMap))
+            if (!_sections[i].zero()->xmlPlanView(planView, xmlMap, _letter.getOptimisation(letterNdx).writeAsPP3))
                 std::cerr << "zero was unable to run xmlPlanView" << std::endl;
             xmlRoad->InsertEndChild(planView);
 
@@ -856,7 +857,7 @@ void RNS::write(const std::string &mapFile) const
             root->InsertEndChild(xmlRoad); // into root.
         }
     }
-    else
+    else // why should you write it?
     {
 
         /*

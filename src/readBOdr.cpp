@@ -33,9 +33,9 @@ void ReadBOdr::addConnection(Odr::udIndexed6DPoint &c)
     _udConnections.push_back(c);
 }
 
-void ReadBOdr::addSimplification(bool singleArc, bool straight, bool arcSeries)
+void ReadBOdr::addSimplification(bool singleArc, bool straight, bool arcSeries, bool writeAsPP3)
 {
-    _optimisations.push_back({singleArc, straight, arcSeries});
+    _optimisations.push_back({singleArc, straight, arcSeries, writeAsPP3});
 }
 
 

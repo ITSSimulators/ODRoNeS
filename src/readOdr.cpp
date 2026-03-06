@@ -142,6 +142,7 @@ ReadOdr& ReadOdr::operator=(const ReadOdr &r)
 {
     _k = r._k;
     _udConnections = r._udConnections;
+    _optimisations = r._optimisations;
     _sections.clear();
 
     append(r);
@@ -287,24 +288,34 @@ void ReadOdr::append(const ReadOdr &r)
 }
 
 
-Odr::smaS* ReadOdr::odrSection(uint odrID)
+int ReadOdr::odrSectionIndex(uint odrID) const
 {
-    for (uint i = 0; i < _sections.size(); ++i)
+    for (int i = 0; i < _sections.size(); ++i)
     {
         if (odrID == _sections[i].odrID)
-            return &(_sections[i]);
+            return i;
     }
-    return nullptr;
+    return -1;
+}
+
+Odr::smaS* ReadOdr::odrSection(uint odrID)
+{
+    int ndx = odrSectionIndex(odrID);
+
+    if (ndx == -1)
+        return nullptr;
+
+    return &(_sections[ndx]);
 }
 
 const Odr::smaS* ReadOdr::odrSection(uint odrID) const
 {
-    for (uint i = 0; i < _sections.size(); ++i)
-    {
-        if (odrID == _sections[i].odrID)
-            return &(_sections[i]);
-    }
-    return nullptr;
+    int ndx = odrSectionIndex(odrID);
+
+    if (ndx == -1)
+        return nullptr;
+
+    return &(_sections[ndx]);
 }
 
 void Odr::smaL::writeXMLWidth(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const
