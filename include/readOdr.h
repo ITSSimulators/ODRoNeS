@@ -43,7 +43,6 @@ public:
         bool singleArc;
         bool straightBits;
         bool arcSeries;
-        bool writeAsPP3;
     };
 
     ReadOdr() : _k(kind::none) {};

@@ -79,7 +79,7 @@ public:
     bool makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool exhaustiveLinking, bool fineTune, bool loadSidewalk);
     bool makeOneVersionRoads(std::string mapFile);
     void printLanes() const; ///< print sections and lanes
-    void write(const std::string &mapFile) const;
+    void write(const std::string &mapFile, bool beziers_as_pp3) const;
 
     void setPortAndStarboard(concepts::drivingSide drivingSide); ///< sets Port and Starboard for every section AND flips two-way sections if drivingSide is known.
     void setPortAndStarboard(); ///< it uses _drivingSide

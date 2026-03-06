@@ -697,7 +697,7 @@ void RNS::printLanes() const
     }
 }
 
-void RNS::write(const std::string &mapFile) const
+void RNS::write(const std::string &mapFile, bool beziers_as_pp3) const
 {
     // Create a TinyXML2 object:
     tinyxml2::XMLDocument xmlMap;
@@ -711,7 +711,10 @@ void RNS::write(const std::string &mapFile) const
     header->SetAttribute("vendor", "University of Leeds, Simulator5");
     // ... with some user data:
     tinyxml2::XMLElement* userData = xmlMap.NewElement(Odr::Elem::UserData);
-    userData->SetAttribute("extension", "25_01: bezier3, no junctions");
+    if (!beziers_as_pp3)
+        userData->SetAttribute("extension", "25_01: bezier3, no junctions");
+    else
+        userData->SetAttribute("extension", "26_03: no junctions");
     if (_letter.udConnections.size())
     {
         // std::cout << "rns._letter has udConnections.size()" << std::endl;
@@ -772,7 +775,7 @@ void RNS::write(const std::string &mapFile) const
 
             // Road -> PlanView - i e, geometries
             tinyxml2::XMLElement* planView = xmlMap.NewElement(Odr::Elem::PlanView);
-            if (!_sections[i].zero()->xmlPlanView(planView, xmlMap, _letter.getOptimisation(letterNdx).writeAsPP3))
+            if (!_sections[i].zero()->xmlPlanView(planView, xmlMap, beziers_as_pp3))
                 std::cerr << "zero was unable to run xmlPlanView" << std::endl;
             xmlRoad->InsertEndChild(planView);
 
