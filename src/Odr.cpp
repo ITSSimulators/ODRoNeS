@@ -48,9 +48,11 @@ std::vector<Odr::offset> Odr::offset::simplify(const std::vector<offset> &v)
     for (uint i = 1; i < order.size(); ++ i)
     {
         Odr::offset oi = v[order[i].second];
-        if ((mvf::areSameValues(off.back().s, oi.s)) && (mvf::areSameValues(off.back().se, oi.se))
-                && (off.back().lr == oi.lr))
+        if ((mvf::areSameValues(off.back().s, oi.s)) && (mvf::areSameValues(off.back().se, oi.se))) // && (off.back().lr == oi.lr))
+        {
             off.back() += oi;
+            off.back().lr = offset::overlappingRange(off.back().lr, oi.lr);
+        }
         else
             off.push_back(oi);
     }
