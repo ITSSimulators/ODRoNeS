@@ -817,6 +817,7 @@ void RNS::write(const std::string &mapFile, bool beziers_as_pp3) const
                 l->xmlLaneAttributesAndLinks(laneXML, xmlMap);
                 smas->lanes[leftUint[j]].writeXMLWidth(laneXML, xmlMap);
                 smas->lanes[leftUint[j]].writeXMLBorder(laneXML, xmlMap);
+                smas->lanes[leftUint[j]].writeXMLSpeed(laneXML, xmlMap);
                 leftXML->InsertEndChild(laneXML);
             }
             if (leftUint.size())
@@ -849,6 +850,7 @@ void RNS::write(const std::string &mapFile, bool beziers_as_pp3) const
                 l->xmlLaneAttributesAndLinks(laneXML, xmlMap, smas->lanes[rightUint[j]].kind);
                 smas->lanes[rightUint[j]].writeXMLWidth(laneXML, xmlMap);
                 smas->lanes[rightUint[j]].writeXMLBorder(laneXML, xmlMap);
+                smas->lanes[rightUint[j]].writeXMLSpeed(laneXML, xmlMap);
                 rightXML->InsertEndChild(laneXML);
             }
             if (rightUint.size())

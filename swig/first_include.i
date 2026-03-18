@@ -25,6 +25,7 @@ typedef odrones::uint uint;
 %rename(Odr_geometry) odrones::Odr::geometry;
 %template(GeometryVector) std::vector<odrones::Odr::geometry>;
 %template(OffsetVector) std::vector<odrones::Odr::offset>;
+%template(SpeedVector) std::vector<odrones::Odr::speedLimit>;
 %template(TsignVector) std::vector<odrones::Odr::tsign>;
 %template(SmaLVector) std::vector<odrones::Odr::smaL>;
 %template(smaSVector) std::vector<odrones::Odr::smaS>;

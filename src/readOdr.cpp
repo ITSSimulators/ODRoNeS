@@ -318,50 +318,6 @@ const Odr::smaS* ReadOdr::odrSection(uint odrID) const
     return &(_sections[ndx]);
 }
 
-void Odr::smaL::writeXMLWidth(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const
-{
-    for (uint k = 0; k < w.size(); ++k)
-    {
-        tinyxml2::XMLElement* width = doc.NewElement(Odr::Elem::Width);
-        xmlUtils::setAttrOffsetSOffset(width, w[k]);
-        elem->InsertEndChild(width);
-    }
-}
-
-void Odr::smaL::writeXMLBorder(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const
-{
-    for (uint k = 0; k < border.size(); ++k)
-    {
-        tinyxml2::XMLElement* b = doc.NewElement(Odr::Elem::Border);
-        xmlUtils::setAttrOffsetSOffset(b, border[k]);
-        elem->InsertEndChild(b);
-    }
-}
-
-void Odr::smaL::writeXML(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const
-{
-    elem->SetAttribute(Odr::Attr::Id, odrID);
-    elem->SetAttribute(Odr::Attr::Type, kind.c_str());
-    elem->SetAttribute(Odr::Attr::Level, Odr::Kind::False);
-
-    tinyxml2::XMLElement* link = doc.NewElement(Odr::Elem::Link);
-    if (nextLane.size())
-    {
-        tinyxml2::XMLElement* successor = doc.NewElement(Odr::Elem::Successor);
-        successor->SetAttribute(Odr::Attr::Id, nextLane[0]->odrID);
-        link->InsertEndChild(successor);
-    }
-    if (prevLane.size())
-    {
-        tinyxml2::XMLElement* predecessor = doc.NewElement(Odr::Elem::Predecessor);
-        predecessor->SetAttribute(Odr::Attr::Id, prevLane[0]->odrID);
-        link->InsertEndChild(predecessor);
-    }
-    elem->InsertEndChild(link);
-
-    writeXMLWidth(elem, doc);
-}
-
 // See if the multiple control points forming the bezier are (nearly) on an arc.
 bool ReadOdr::simplifySingleArc(Odr::smaS &s)
 {
@@ -433,7 +389,7 @@ bool ReadOdr::simplifyMultipleArcs(Odr::smaS &s)
                 t = t / 2;
                 bzi = bz3_r.getStartingPart(t);
                 err = bzi.arcError();
-                std::cout << "geom[" << i << "], ti: " << t << ", bzi.length(): " << bzi.length() << ", err: " << err << std::endl;
+                std::cout << "[simplify multiple arcs] geom[" << i << "], ti: " << t << ", bzi.length(): " << bzi.length() << ", err: " << err << std::endl;
                 if (bzi.length() < minLength)
                     success = false;
             }
