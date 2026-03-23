@@ -11,6 +11,7 @@ using namespace odrones;
 #include "bezier2.h"
 #include "bezier3.h"
 #include "rnsconcepts.h"
+#include "numerical.h"
 #include "lane.h"
 #include "lCoord.h"
 #include "section.h"
