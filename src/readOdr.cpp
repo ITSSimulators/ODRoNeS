@@ -142,6 +142,7 @@ ReadOdr& ReadOdr::operator=(const ReadOdr &r)
 {
     _k = r._k;
     _udConnections = r._udConnections;
+    _optimisations = r._optimisations;
     _sections.clear();
 
     append(r);
@@ -287,68 +288,34 @@ void ReadOdr::append(const ReadOdr &r)
 }
 
 
-Odr::smaS* ReadOdr::odrSection(uint odrID)
+int ReadOdr::odrSectionIndex(uint odrID) const
 {
-    for (uint i = 0; i < _sections.size(); ++i)
+    for (int i = 0; i < _sections.size(); ++i)
     {
         if (odrID == _sections[i].odrID)
-            return &(_sections[i]);
+            return i;
     }
-    return nullptr;
+    return -1;
+}
+
+Odr::smaS* ReadOdr::odrSection(uint odrID)
+{
+    int ndx = odrSectionIndex(odrID);
+
+    if (ndx == -1)
+        return nullptr;
+
+    return &(_sections[ndx]);
 }
 
 const Odr::smaS* ReadOdr::odrSection(uint odrID) const
 {
-    for (uint i = 0; i < _sections.size(); ++i)
-    {
-        if (odrID == _sections[i].odrID)
-            return &(_sections[i]);
-    }
-    return nullptr;
-}
+    int ndx = odrSectionIndex(odrID);
 
-void Odr::smaL::writeXMLWidth(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const
-{
-    for (uint k = 0; k < w.size(); ++k)
-    {
-        tinyxml2::XMLElement* width = doc.NewElement(Odr::Elem::Width);
-        xmlUtils::setAttrOffsetSOffset(width, w[k]);
-        elem->InsertEndChild(width);
-    }
-}
+    if (ndx == -1)
+        return nullptr;
 
-void Odr::smaL::writeXMLBorder(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const
-{
-    for (uint k = 0; k < border.size(); ++k)
-    {
-        tinyxml2::XMLElement* b = doc.NewElement(Odr::Elem::Border);
-        xmlUtils::setAttrOffsetSOffset(b, border[k]);
-        elem->InsertEndChild(b);
-    }
-}
-
-void Odr::smaL::writeXML(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const
-{
-    elem->SetAttribute(Odr::Attr::Id, odrID);
-    elem->SetAttribute(Odr::Attr::Type, kind.c_str());
-    elem->SetAttribute(Odr::Attr::Level, Odr::Kind::False);
-
-    tinyxml2::XMLElement* link = doc.NewElement(Odr::Elem::Link);
-    if (nextLane.size())
-    {
-        tinyxml2::XMLElement* successor = doc.NewElement(Odr::Elem::Successor);
-        successor->SetAttribute(Odr::Attr::Id, nextLane[0]->odrID);
-        link->InsertEndChild(successor);
-    }
-    if (prevLane.size())
-    {
-        tinyxml2::XMLElement* predecessor = doc.NewElement(Odr::Elem::Predecessor);
-        predecessor->SetAttribute(Odr::Attr::Id, prevLane[0]->odrID);
-        link->InsertEndChild(predecessor);
-    }
-    elem->InsertEndChild(link);
-
-    writeXMLWidth(elem, doc);
+    return &(_sections[ndx]);
 }
 
 // See if the multiple control points forming the bezier are (nearly) on an arc.
@@ -422,7 +389,7 @@ bool ReadOdr::simplifyMultipleArcs(Odr::smaS &s)
                 t = t / 2;
                 bzi = bz3_r.getStartingPart(t);
                 err = bzi.arcError();
-                std::cout << "geom[" << i << "], ti: " << t << ", bzi.length(): " << bzi.length() << ", err: " << err << std::endl;
+                std::cout << "[simplify multiple arcs] geom[" << i << "], ti: " << t << ", bzi.length(): " << bzi.length() << ", err: " << err << std::endl;
                 if (bzi.length() < minLength)
                     success = false;
             }
@@ -517,10 +484,13 @@ void ReadOdr::simplifyGeometries(Odr::smaS &s, bool singleArc, bool straight, bo
         simplifyMultipleArcs(s);
 }
 
-void ReadOdr::simplifyGeometries(bool singleArc, bool straight, bool bezierToArcSeries)
+void ReadOdr::simplifyGeometries() // bool singleArc, bool straight, bool bezierToArcSeries)
 {
+    if (_sections.size() != _optimisations.size()) return;
+
     for (uint i = 0; i < _sections.size(); ++i)
-        simplifyGeometries(_sections[i], singleArc, straight, bezierToArcSeries);
+        simplifyGeometries(_sections[i], _optimisations[i].singleArc,
+                           _optimisations[i].straightBits, _optimisations[i].arcSeries);
 
     return;
 }

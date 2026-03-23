@@ -482,6 +482,24 @@ namespace Odr
                 return mvf::isInRange0(t, s, se);
         }
         static std::vector<offset> simplify(const std::vector<offset> &v);
+        static LR overlappingRange(LR lra, LR lrb) ///< Given two LR inputs, return the overlapping range of the two
+        {
+            if (lra == lrb)
+                return lra;
+
+            else if ((lra == LR::RL) || (lrb == LR::RL))
+                return LR::RL;
+
+            else if ((lra == LR::L) && (lrb == LR::R))
+                return LR::RL;
+
+            else if ((lra == LR::R) && (lrb == LR::L))
+                return LR::RL;
+
+            std::cout << "wait, what?" << std::endl;
+            return LR::RL;
+        }
+
         double a, b, c, d, s, se;
         LR lr; ///< whether to use L: [s, se), R: (s, se] or LR: [s, se]
         bool seSet;
@@ -553,6 +571,7 @@ namespace Odr
         void writeXML(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const;
         void writeXMLWidth(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const;
         void writeXMLBorder(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const;
+        void writeXMLSpeed(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const;
         std::string print() const
         {
             return "laneSection: " + std::to_string(ndxLS) + ", lane: " + std::to_string(odrID);

@@ -23,6 +23,9 @@
 #include "Odr.h"
 #include <algorithm>
 #include <cstring>
+#include "xmlUtils.h"
+#include <tinyxml2.h>
+
 using namespace odrones;
 
 
@@ -48,9 +51,11 @@ std::vector<Odr::offset> Odr::offset::simplify(const std::vector<offset> &v)
     for (uint i = 1; i < order.size(); ++ i)
     {
         Odr::offset oi = v[order[i].second];
-        if ((mvf::areSameValues(off.back().s, oi.s)) && (mvf::areSameValues(off.back().se, oi.se))
-                && (off.back().lr == oi.lr))
+        if ((mvf::areSameValues(off.back().s, oi.s)) && (mvf::areSameValues(off.back().se, oi.se))) // && (off.back().lr == oi.lr))
+        {
             off.back() += oi;
+            off.back().lr = offset::overlappingRange(off.back().lr, oi.lr);
+        }
         else
             off.push_back(oi);
     }
@@ -267,4 +272,61 @@ Odr::Kind::RoadType Odr::roadTypeFromCString(const char* c)
     return Odr::Kind::RoadType::unknown;
 }
 
+
+void Odr::smaL::writeXMLWidth(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const
+{
+    for (uint k = 0; k < w.size(); ++k)
+    {
+        tinyxml2::XMLElement* width = doc.NewElement(Odr::Elem::Width);
+        xmlUtils::setAttrOffsetSOffset(width, w[k]);
+        elem->InsertEndChild(width);
+    }
+}
+
+void Odr::smaL::writeXMLBorder(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const
+{
+    for (uint k = 0; k < border.size(); ++k)
+    {
+        tinyxml2::XMLElement* b = doc.NewElement(Odr::Elem::Border);
+        xmlUtils::setAttrOffsetSOffset(b, border[k]);
+        elem->InsertEndChild(b);
+    }
+}
+
+
+void Odr::smaL::writeXMLSpeed(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const
+{
+    for (uint k = 0; k < speed.size(); ++k)
+    {
+        tinyxml2::XMLElement* s = doc.NewElement(Odr::Elem::Speed);
+        xmlUtils::setAttrDouble(s, Odr::Attr::sOffset, speed[k].s);
+        xmlUtils::setAttrDouble(s, Odr::Attr::Value, speed[k].value);
+        s->SetAttribute(Odr::Attr::Unit, "m/s");
+        elem->InsertEndChild(s);
+    }
+}
+
+void Odr::smaL::writeXML(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument &doc) const
+{
+    elem->SetAttribute(Odr::Attr::Id, odrID);
+    elem->SetAttribute(Odr::Attr::Type, kind.c_str());
+    elem->SetAttribute(Odr::Attr::Level, Odr::Kind::False);
+
+    tinyxml2::XMLElement* link = doc.NewElement(Odr::Elem::Link);
+    if (nextLane.size())
+    {
+        tinyxml2::XMLElement* successor = doc.NewElement(Odr::Elem::Successor);
+        successor->SetAttribute(Odr::Attr::Id, nextLane[0]->odrID);
+        link->InsertEndChild(successor);
+    }
+    if (prevLane.size())
+    {
+        tinyxml2::XMLElement* predecessor = doc.NewElement(Odr::Elem::Predecessor);
+        predecessor->SetAttribute(Odr::Attr::Id, prevLane[0]->odrID);
+        link->InsertEndChild(predecessor);
+    }
+    elem->InsertEndChild(link);
+
+    writeXMLWidth(elem, doc);
+}
 

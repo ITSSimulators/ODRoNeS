@@ -50,7 +50,6 @@ vwStraight::vwStraight(const Odr::geometry &odg, int sign, std::vector<Odr::offs
         std::cerr << "so is out of bonds!!" << std::endl;
 
     if (! mvf::isInRangeLR(se, 0, _l))
-    if ((se > odg.length) || (se < 0))
         std::cerr << "se is out of bonds!!" << std::endl;
 
     // and secondly, store their values into _mint and _maxt

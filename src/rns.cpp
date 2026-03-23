@@ -21,7 +21,6 @@
 //
 
 #include <filesystem>
-#include <boost/format.hpp>
 #include <tinyxml2.h>
 #include "rns.h"
 #include "xmlUtils.h"
@@ -368,10 +367,9 @@ bool RNS::makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool exhaus
     _ready = false;
 
     if (fineTune)
-    {
         fineTuneReadOdr(read);
-        read.simplifyGeometries(false, true, false);
-    }
+
+    read.simplifyGeometries();
     _letter = read;
 
     // Allocate and do the geometry for the lanes:
@@ -699,7 +697,7 @@ void RNS::printLanes() const
     }
 }
 
-void RNS::write(const std::string &mapFile) const
+void RNS::write(const std::string &mapFile, bool beziers_as_pp3) const
 {
     // Create a TinyXML2 object:
     tinyxml2::XMLDocument xmlMap;
@@ -713,7 +711,10 @@ void RNS::write(const std::string &mapFile) const
     header->SetAttribute("vendor", "University of Leeds, Simulator5");
     // ... with some user data:
     tinyxml2::XMLElement* userData = xmlMap.NewElement(Odr::Elem::UserData);
-    userData->SetAttribute("extension", "25_01: bezier3, no junctions");
+    if (!beziers_as_pp3)
+        userData->SetAttribute("extension", "25_01: bezier3, no junctions");
+    else
+        userData->SetAttribute("extension", "26_03: no junctions");
     if (_letter.udConnections.size())
     {
         // std::cout << "rns._letter has udConnections.size()" << std::endl;
@@ -741,12 +742,13 @@ void RNS::write(const std::string &mapFile) const
         {
             // Road definition and attributes:
             tinyxml2::XMLElement* xmlRoad = xmlMap.NewElement(Odr::Elem::Road);
-            const Odr::smaS *smas = _letter.odrSection(_sections[i].odrID());
-            if (!smas)
+            int letterNdx = _letter.odrSectionIndex(_sections[i].odrID());
+            if (letterNdx == -1)
             {
                 std::cerr << "[ RNS::Write Error ] smas not found "
                           << "for road with odrID: " << _sections[i].odrID() << std::endl;
             }
+            const Odr::smaS *smas = &(_letter.sections[letterNdx]); // = _letter.odrSection(_sections[i].odrID());
             xmlRoad->SetAttribute(Odr::Attr::Name, smas->name.c_str());
             xmlUtils::setAttrDouble(xmlRoad, Odr::Attr::Length, _sections[i].zero()->getLength());
             xmlRoad->SetAttribute(Odr::Attr::Id, _sections[i].odrID());
@@ -773,7 +775,7 @@ void RNS::write(const std::string &mapFile) const
 
             // Road -> PlanView - i e, geometries
             tinyxml2::XMLElement* planView = xmlMap.NewElement(Odr::Elem::PlanView);
-            if (!_sections[i].zero()->xmlPlanView(planView, xmlMap))
+            if (!_sections[i].zero()->xmlPlanView(planView, xmlMap, beziers_as_pp3))
                 std::cerr << "zero was unable to run xmlPlanView" << std::endl;
             xmlRoad->InsertEndChild(planView);
 
@@ -815,6 +817,7 @@ void RNS::write(const std::string &mapFile) const
                 l->xmlLaneAttributesAndLinks(laneXML, xmlMap);
                 smas->lanes[leftUint[j]].writeXMLWidth(laneXML, xmlMap);
                 smas->lanes[leftUint[j]].writeXMLBorder(laneXML, xmlMap);
+                smas->lanes[leftUint[j]].writeXMLSpeed(laneXML, xmlMap);
                 leftXML->InsertEndChild(laneXML);
             }
             if (leftUint.size())
@@ -847,6 +850,7 @@ void RNS::write(const std::string &mapFile) const
                 l->xmlLaneAttributesAndLinks(laneXML, xmlMap, smas->lanes[rightUint[j]].kind);
                 smas->lanes[rightUint[j]].writeXMLWidth(laneXML, xmlMap);
                 smas->lanes[rightUint[j]].writeXMLBorder(laneXML, xmlMap);
+                smas->lanes[rightUint[j]].writeXMLSpeed(laneXML, xmlMap);
                 rightXML->InsertEndChild(laneXML);
             }
             if (rightUint.size())
@@ -858,7 +862,7 @@ void RNS::write(const std::string &mapFile) const
             root->InsertEndChild(xmlRoad); // into root.
         }
     }
-    else
+    else // why should you write it?
     {
 
         /*

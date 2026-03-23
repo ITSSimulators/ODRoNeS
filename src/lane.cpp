@@ -21,11 +21,12 @@
 //
 
 #include <sstream>
+// #include <format>
+#include <boost/format.hpp>
 #include "lane.h"
 #include "xmlUtils.h"
 // DEBUG //
 #include <fstream>
-#include <boost/format.hpp>
 #include <tinyxml2.h>
 
 
@@ -381,17 +382,22 @@ void lane::convertBezierToParamPoly3(const vwBezier3 *bez, tinyxml2::XMLElement 
     double hdg = geometry->DoubleAttribute("hdg");
 
     // Convert global to local
-    auto toLocal = [&](const arr2& pt) {double dx = pt[0] - x0;
-    double dy = pt[1] - y0; double cos_h = cos(-hdg); double sin_h = sin(-hdg);
-        return arr2{dx * cos_h - dy * sin_h, dx * sin_h + dy * cos_h};};
+    auto toLocal = [&](const arr2& pt) {
+        double dx = pt[0] - x0; double dy = pt[1] - y0;
+        double cos_h = cos(-hdg); double sin_h = sin(-hdg);
+        return arr2{dx * cos_h - dy * sin_h, dx * sin_h + dy * cos_h};
+    };
 
     // Control points (global coords)
-    auto p0_global = bez->l0ControlPoint(3);auto p1_global = bez->l0ControlPoint(2);auto p2_global = bez->l0ControlPoint(1);auto p3_global = bez->l0ControlPoint(0);
+    auto p0_global = bez->l0ControlPoint(0); auto p1_global = bez->l0ControlPoint(1); auto p2_global = bez->l0ControlPoint(2); auto p3_global = bez->l0ControlPoint(3);
 
     // Convert to local coordinates and assign to polynomial coefficients
-    auto p0 = toLocal(p0_global);auto p1 = toLocal(p1_global);auto p2 = toLocal(p2_global);auto p3 = toLocal(p3_global);
-    double aU = p0[0]; double bU = 3 * (p1[0] - p0[0]); double cU = 3 * (p2[0] - 2 * p1[0] + p0[0]);double dU = p3[0] - 3 * p2[0] + 3 * p1[0] - p0[0];
-    double aV = p0[1];double bV = 3 * (p1[1] - p0[1]);double cV = 3 * (p2[1] - 2 * p1[1] + p0[1]);double dV = p3[1] - 3 * p2[1] + 3 * p1[1] - p0[1];
+    auto p0 = toLocal(p0_global); auto p1 = toLocal(p1_global); auto p2 = toLocal(p2_global); auto p3 = toLocal(p3_global);
+
+    // std::cout << "l: " << getCSUID() << " local: p0 (" << p0[0] << ", " << p0[1] << "), p3: (" << p3[0] << ", " << p3[1] << ")" << std::endl;
+
+    double aU = p0[0]; double bU = 3 * (p1[0] - p0[0]); double cU = 3 * (p2[0] - 2 * p1[0] + p0[0]); double dU = p3[0] - 3 * p2[0] + 3 * p1[0] - p0[0];
+    double aV = p0[1]; double bV = 3 * (p1[1] - p0[1]); double cV = 3 * (p2[1] - 2 * p1[1] + p0[1]); double dV = p3[1] - 3 * p2[1] + 3 * p1[1] - p0[1];
 
     auto* xmlPP3 = doc.NewElement("paramPoly3");
     xmlUtils::setAttrDouble(xmlPP3, "aU", aU);
@@ -403,6 +409,24 @@ void lane::convertBezierToParamPoly3(const vwBezier3 *bez, tinyxml2::XMLElement 
     xmlUtils::setAttrDouble(xmlPP3, "cV", cV);
     xmlUtils::setAttrDouble(xmlPP3, "dV", dV);
     xmlPP3->SetAttribute("pRange", "normalized");
+
+    /*
+    Odr::geometry odr;
+    odr.aU = aU; odr.bU = bU; odr.cU = cU; odr.dU = dU;
+    odr.aV = aV; odr.bV = bV; odr.cV = cV; odr.dV = dV;
+    odr.length = bez->length();
+    odr.x = x0; odr.y = y0; odr.hdg = hdg;
+    odr.pRange = Odr::Attr::ParamPoly3Range::normalized;
+    paramPoly3 pp3(odr, 1, 0, 0, odr.length, 0);
+
+    if (!mvf::areCloseEnough(pp3.origin(), bez->origin(), 1e-4))
+        std::cout << "origins differ: " << getCSUID() << " bz3: (" << bez->origin()[0] << ", " << bez->origin()[1] << "), "
+                  << ", pp3: (" << pp3.origin()[0] << ", " << pp3.origin()[1] << ")" << std::endl;
+
+    if (!mvf::areCloseEnough(pp3.dest(), bez->dest(), 1e-4))
+        std::cout << "destinations differ: " << getCSUID() << " bz3: (" << bez->dest()[0] << ", " << bez->dest()[1] << "), "
+                  << ", pp3: (" << pp3.dest()[0] << ", " << pp3.dest()[1] << ")" << std::endl;
+    */
 
     geometry->InsertEndChild(xmlPP3);
 }
@@ -422,33 +446,35 @@ void lane::writeDown()
 
     f.open(basename);
     for (uint i = 0; i < _pointsSize; ++i)
-    {
-        f << boost::format("%10d %12.3f %12.3f") %
-                 i % _pointsX[i] % _pointsY[i] << std::endl;
-    }
+		  f << boost::format("%10d %12.3f %12.3f") % i % _pointsX[i] % _pointsY[i] << std::endl;
+        // f << std::format("{0:10d} {1:12.3f} {2:12.3f}\n", i, _pointsX[i], _pointsY[i]);
     f.close();
 
     f.open(basename + ".box");
-    f << boost::format("%12.3f %12.3f") %
-             _bbblc[0] % _bbblc[1] << std::endl;
-    f << boost::format("%12.3f %12.3f") %
-             _bbblc[0] % _bbtrc[1] << std::endl;
-    f << boost::format("%12.3f %12.3f") %
-             _bbtrc[0] % _bbtrc[1] << std::endl;
-    f << boost::format("%12.3f %12.3f") %
-             _bbtrc[0] % _bbblc[1] << std::endl;
-    f << boost::format("%12.3f %12.3f") %
-             _bbblc[0] % _bbblc[1] << std::endl;
+	 f << boost::format("%12.3f %12.3f") % _bbblc[0] % _bbblc[1] << std::endl;
+    f << boost::format("%12.3f %12.3f") % _bbblc[0] % _bbtrc[1] << std::endl;
+    f << boost::format("%12.3f %12.3f") % _bbtrc[0] % _bbtrc[1] << std::endl;
+    f << boost::format("%12.3f %12.3f") % _bbtrc[0] % _bbblc[1] << std::endl;
+    f << boost::format("%12.3f %12.3f") % _bbblc[0] % _bbblc[1] << std::endl;
+    /* f << std::format("{0:12.3f} {1:12.3f}\n", _bbblc[0], _bbblc[1]);
+    f << std::format("{0:12.3f} {1:12.3f}\n", _bbblc[0], _bbtrc[1]);
+    f << std::format("{0:12.3f} {1:12.3f}\n", _bbtrc[0], _bbtrc[1]);
+    f << std::format("{0:12.3f} {1:12.3f}\n", _bbtrc[0], _bbblc[1]);
+    f << std::format("{0:12.3f} {1:12.3f}\n", _bbblc[0], _bbblc[1]); */
     f.close();
 
 
     f.open(basename + ".geom");
     for (uint i = 0; i < _geom.size(); ++i)
     {
-        f << boost::format("%12.3f %12.3f") %
+		  f << boost::format("%12.3f %12.3f") %
                  _geom[i]->origin()[0] % _geom[i]->origin()[1] << std::endl;
         f << boost::format("%12.3f %12.3f") %
                  _geom[i]->dest()[0] % _geom[i]->dest()[1] << std::endl;
+        /* f << std::format("{0:12.3f} {1:12.3f}\n",
+                         _geom[i]->origin()[0], _geom[i]->origin()[1]);
+        f << std::format("{0:12.3f} {1:12.3f}\n",
+                         _geom[i]->dest()[0], _geom[i]->dest()[1]); */
     }
     f.close();
 
@@ -456,7 +482,7 @@ void lane::writeDown()
     for (uint i = 0; i < _geom.size(); ++i)
     {
         f << "#" << mvf::shapeString( _geom[i]->shape() ) << std::endl;
-        f << boost::format("%12.3f %12.3f") %
+		  f << boost::format("%12.3f %12.3f") %
                  _geom[i]->blc()[0] % _geom[i]->blc()[1] << std::endl;
         f << boost::format("%12.3f %12.3f") %
                  _geom[i]->blc()[0] % _geom[i]->trc()[1] << std::endl;
@@ -466,6 +492,17 @@ void lane::writeDown()
                  _geom[i]->trc()[0] % _geom[i]->blc()[1] << std::endl;
         f << boost::format("%12.3f %12.3f") %
                  _geom[i]->blc()[0] % _geom[i]->blc()[1] << std::endl;
+
+        /* f << std::format("{0:12.3f} {1:12.3f}\n",
+                         _geom[i]->blc()[0], _geom[i]->blc()[1]);
+        f << std::format("{0:12.3f} {1:12.3f}\n",
+                         _geom[i]->blc()[0], _geom[i]->trc()[1]);
+        f << std::format("{0:12.3f} {1:12.3f}\n",
+                         _geom[i]->trc()[0], _geom[i]->trc()[1]);
+        f << std::format("{0:12.3f} {1:12.3f}\n",
+                         _geom[i]->trc()[0], _geom[i]->blc()[1]);
+        f << std::format("{0:12.3f} {1:12.3f}\n",
+                         _geom[i]->blc()[0], _geom[i]->blc()[1]); */
         f << std::endl << std::endl;
     }
     f.close();
@@ -495,11 +532,12 @@ void lane::writeDown()
         }
 
         for (uint j = 0; j < p.size(); ++j)
-            f << boost::format("%12.3f %12.3f") %
-                     p[j][0] % p[j][1] << std::endl;
+				f << boost::format("%12.3f %12.3f") % p[j][0] % p[j][1] << std::endl;
+            // f << std::format("{0:12.3f} {1:12.3f}\n", p[j][0], p[j][1]);
 
         for (uint j = 0; j < s.size(); ++j)
             ff << boost::format("%12.3f") % s[j] << std::endl;
+            // ff << std::format("{0:12.3f}\n", s[j]);
     }
     f.close();
     ff.close();
@@ -581,7 +619,7 @@ bool lane::isOdrShapeSupported(mvf::shape s) const
 }
 
 
-bool lane::xmlPlanView(tinyxml2::XMLElement *planView, tinyxml2::XMLDocument &doc) const
+bool lane::xmlPlanView(tinyxml2::XMLElement *planView, tinyxml2::XMLDocument &doc, bool writeAsPP3) const
 {
     if (_odrID != 0) return false;
 
@@ -597,7 +635,7 @@ bool lane::xmlPlanView(tinyxml2::XMLElement *planView, tinyxml2::XMLDocument &do
 
         xmlUtils::setAttrDouble(geometry, Odr::Attr::S, _geom[i]->roadSo());
         xmlUtils::setAttrDouble(geometry, Odr::Attr::X, _geom[i]->o()[0]);
-        xmlUtils::setAttrDouble(geometry, Odr::Attr::Y,  _geom[i]->o()[1]);
+        xmlUtils::setAttrDouble(geometry, Odr::Attr::Y, _geom[i]->o()[1]);
         xmlUtils::setAttrDouble(geometry, Odr::Attr::Hdg,
                                 std::atan2(_geom[i]->to()[1], _geom[i]->to()[0]));
         xmlUtils::setAttrDouble(geometry, Odr::Attr::Length,
@@ -653,7 +691,6 @@ bool lane::xmlPlanView(tinyxml2::XMLElement *planView, tinyxml2::XMLDocument &do
         }
         else if (_geom[i]->shape() == mvf::shape::vwBezier3)
         {
-            bool writeAsPP3 = false;
             if (writeAsPP3)
             {
                 vwBezier3* bez=static_cast<vwBezier3*>(_geom[i]);
