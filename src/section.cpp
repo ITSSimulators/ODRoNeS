@@ -636,7 +636,10 @@ lane* section::operator[](size_t index)
 
 const lane* section::getLane(size_t index) const
 {
-    return &(_lanes[index]);
+    if (index<_writtenSize)
+        return &(_lanes[index]);
+    else
+        return nullptr;
 }
 
 const lane* section::getOdrLane(size_t id) const
