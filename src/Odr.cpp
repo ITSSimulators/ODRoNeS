@@ -300,7 +300,7 @@ void Odr::smaL::writeXMLSpeed(tinyxml2::XMLElement *elem, tinyxml2::XMLDocument 
     {
         tinyxml2::XMLElement* s = doc.NewElement(Odr::Elem::Speed);
         xmlUtils::setAttrDouble(s, Odr::Attr::sOffset, speed[k].s);
-        xmlUtils::setAttrDouble(s, Odr::Attr::Value, speed[k].value);
+        xmlUtils::setAttrDouble(s, Odr::Attr::Max, speed[k].value);
         s->SetAttribute(Odr::Attr::Unit, "m/s");
         elem->InsertEndChild(s);
     }
