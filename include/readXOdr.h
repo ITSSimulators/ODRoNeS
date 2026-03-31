@@ -25,6 +25,8 @@
 
 #include "readOdr.h"
 
+#include <string>
+
 namespace odrones 
 {
 
@@ -76,6 +78,9 @@ private:
 
     /*! Read University of Leeds Simulator5 user data */
     void readSim5UserData(tinyxml2::XMLElement* header);
+
+private:
+    std::string readUnits(tinyxml2::XMLElement* element, double* value);
 };
 
 } // namespace odrones;
