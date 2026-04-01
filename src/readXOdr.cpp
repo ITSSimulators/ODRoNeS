@@ -283,28 +283,30 @@ std::vector<Odr::geometry> ReadXOdr::readGeometry(tinyxml2::XMLElement *pv)
     return v;
 }
 
-std::vector<Odr::offset> ReadXOdr::readLaneOffset(tinyxml2::XMLElement *lanes)
+std::vector<Odr::offset> ReadXOdr::readOffsets(tinyxml2::XMLElement *xml, const char* type, const char* s)
 {
-    std::vector<Odr::offset> loff;
-    tinyxml2::XMLElement *loffXML = lanes->FirstChildElement(Odr::Elem::LaneOffset);
-    while (loffXML)
+    std::vector<Odr::offset> off;
+    if (!xml) return off;
+    tinyxml2::XMLElement *offXML = xml->FirstChildElement(type);
+    while (offXML)
     {
-        Odr::offset loff_i;
+        Odr::offset off_i;
 
-        loff_i.lr = Odr::offset::LR::L;
-        loffXML->QueryDoubleAttribute(Odr::Attr::A, &(loff_i.a));
-        loffXML->QueryDoubleAttribute(Odr::Attr::B, &(loff_i.b));
-        loffXML->QueryDoubleAttribute(Odr::Attr::C, &(loff_i.c));
-        loffXML->QueryDoubleAttribute(Odr::Attr::D, &(loff_i.d));
-        loffXML->QueryDoubleAttribute(Odr::Attr::S, &(loff_i.s));
+        off_i.lr = Odr::offset::LR::L;
+        offXML->QueryDoubleAttribute(Odr::Attr::A, &(off_i.a));
+        offXML->QueryDoubleAttribute(Odr::Attr::B, &(off_i.b));
+        offXML->QueryDoubleAttribute(Odr::Attr::C, &(off_i.c));
+        offXML->QueryDoubleAttribute(Odr::Attr::D, &(off_i.d));
+        offXML->QueryDoubleAttribute(s, &(off_i.s));
 
-        loff.push_back(loff_i);
-        loffXML = loffXML->NextSiblingElement(Odr::Elem::LaneOffset);
+        off.push_back(off_i);
+        offXML = offXML->NextSiblingElement(type);
     }
-    if (loff.size())
-        loff.back().lr = Odr::offset::LR::RL;
-    return loff;
+    if (off.size())
+        off.back().lr = Odr::offset::LR::RL;
+    return off;
 }
+
 
 bool ReadXOdr::hasLaneOffset(tinyxml2::XMLElement *lanes)
 {
@@ -403,35 +405,13 @@ int ReadXOdr::addLane(tinyxml2::XMLElement *road, tinyxml2::XMLElement *lane, ui
         return -1;
     }
 
-    tinyxml2::XMLElement *width = lane->FirstChildElement(Odr::Elem::Width);
-    while (width)
-    {
-        _sections[ndxS].lanes.back().w.push_back(Odr::offset());
-        _sections[ndxS].lanes.back().w.back().lr = Odr::offset::LR::L;
-        xmlUtils::CheckResult(width->QueryDoubleAttribute(Odr::Attr::sOffset, &(_sections[ndxS].lanes.back().w.back().s) ));
-        xmlUtils::CheckResult(width->QueryDoubleAttribute(Odr::Attr::A, &(_sections[ndxS].lanes.back().w.back().a) ));
-        xmlUtils::CheckResult(width->QueryDoubleAttribute(Odr::Attr::B, &(_sections[ndxS].lanes.back().w.back().b) ));
-        xmlUtils::CheckResult(width->QueryDoubleAttribute(Odr::Attr::C, &(_sections[ndxS].lanes.back().w.back().c) ));
-        xmlUtils::CheckResult(width->QueryDoubleAttribute(Odr::Attr::D, &(_sections[ndxS].lanes.back().w.back().d) ));
-        width = width->NextSiblingElement(Odr::Elem::Width);
-    }
+    _sections[ndxS].lanes.back().w = readOffsets(lane, Odr::Elem::Width, Odr::Attr::sOffset);
     if (!_sections[ndxS].lanes.back().w.size())
         _sections[ndxS].lanes.back().w.push_back(Odr::offset()); // {0.,0.,0.,0.,0.});
     _sections[ndxS].lanes.back().w.back().lr = Odr::offset::LR::RL;
 
 
-    tinyxml2::XMLElement *border = lane->FirstChildElement(Odr::Elem::Border);
-    while (border)
-    {
-        _sections[ndxS].lanes.back().border.push_back(Odr::offset());
-        _sections[ndxS].lanes.back().border.back().lr = Odr::offset::LR::L;
-        xmlUtils::CheckResult(border->QueryDoubleAttribute(Odr::Attr::sOffset, &(_sections[ndxS].lanes.back().border.back().s) ));
-        xmlUtils::CheckResult(border->QueryDoubleAttribute(Odr::Attr::A, &(_sections[ndxS].lanes.back().border.back().a) ));
-        xmlUtils::CheckResult(border->QueryDoubleAttribute(Odr::Attr::B, &(_sections[ndxS].lanes.back().border.back().b) ));
-        xmlUtils::CheckResult(border->QueryDoubleAttribute(Odr::Attr::C, &(_sections[ndxS].lanes.back().border.back().c) ));
-        xmlUtils::CheckResult(border->QueryDoubleAttribute(Odr::Attr::D, &(_sections[ndxS].lanes.back().border.back().d) ));
-        border = border->NextSiblingElement(Odr::Elem::Border);
-    }
+    _sections[ndxS].lanes.back().border = readOffsets(lane, Odr::Elem::Border, Odr::Attr::sOffset);
     if (!_sections[ndxS].lanes.back().border.size())
         _sections[ndxS].lanes.back().border.push_back(Odr::offset()); // {0.,0.,0.,0.,0.} );
     _sections[ndxS].lanes.back().border.back().lr = Odr::offset::LR::RL;
@@ -672,13 +652,15 @@ int ReadXOdr::loadXodr(std::string iFile, bool isOdrFile)
         _sections[ndxS].type = readRoadType(r->FirstChildElement(Odr::Elem::Type));
 
         _sections[ndxS].geom = readGeometry(r->FirstChildElement(Odr::Elem::PlanView));
-        // simplifyGeometries(_sections[ndxS]);
+
+        _sections[ndxS].elevation = readOffsets(r->FirstChildElement(Odr::Elem::ElevationProfile), Odr::Elem::Elevation, Odr::Attr::S);
+        _sections[ndxS].superelevation = readOffsets(r->FirstChildElement(Odr::Elem::LateralProfile), Odr::Elem::Superelevation, Odr::Attr::S);
 
         tinyxml2::XMLElement *tSigns = r->FirstChildElement(Odr::Elem::Signals);
         if (tSigns) _sections[ndxS].tsigns = readTrafficSigns(tSigns);
 
         tinyxml2::XMLElement *lanes = r->FirstChildElement(Odr::Elem::Lanes);
-        _sections[ndxS].loffset = readLaneOffset(lanes);
+        _sections[ndxS].loffset = readOffsets(lanes, Odr::Elem::LaneOffset, Odr::Attr::S);
 
         uint ndxL = 0;
         uint ndxLS = 0;

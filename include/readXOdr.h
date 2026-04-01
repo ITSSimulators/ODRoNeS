@@ -48,8 +48,8 @@ private:
     /*! Read all the geometry of an XML Road into a vector */
     std::vector<Odr::geometry> readGeometry(tinyxml2::XMLElement *pv);
 
-    /*! Read all the laneOffset the lanes have given a Lanes XMLElement */
-    std::vector<Odr::offset> readLaneOffset(tinyxml2::XMLElement *lanes);
+    /*! Read all the offset-type elements in the XMLElement named type */
+    std::vector<Odr::offset> readOffsets(tinyxml2::XMLElement *xml, const char* type, const char* s);
 
     /*! Read all the Signals gien a Signals XMLElement */
     std::vector<Odr::tsign> readTrafficSigns(tinyxml2::XMLElement *xmlsgns);

@@ -55,6 +55,11 @@ namespace Odr
         constexpr static const char* LaneOffset {"laneOffset"};
         constexpr static const char* LaneSection {"laneSection"};
 
+        constexpr static const char* ElevationProfile {"elevationProfile"};
+        constexpr static const char* Elevation {"elevation"};
+        constexpr static const char* LateralProfile {"lateralProfile"};
+        constexpr static const char* Superelevation {"superelevation"};
+
         constexpr static const char* DefaultRegulations {"defaultRegulations"};
         constexpr static const char* RoadRegulations {"roadRegulations"};
         constexpr static const char* Semantics {"semantics"};
@@ -632,6 +637,8 @@ namespace Odr
         std::vector<Odr::geometry> geom;
         std::vector<Odr::offset> loffset;
         std::vector<Odr::tsign> tsigns;
+        std::vector<Odr::offset> elevation;
+        std::vector<Odr::offset> superelevation;
     };
 
     class speedRegulation
