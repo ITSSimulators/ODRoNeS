@@ -40,6 +40,10 @@ public:
 
 
     arr2 l0ControlPoint(uint i) const { return _bz0.controlPoint(i); }
+    Odr::geometry refAsParamPoly3(bool normalised) const
+    {
+        return _bz0.asParamPoly3(normalised);
+    }
 
 private:
     arr2 curvexy_a(scalar t) const override; ///< normalised or not, here t is the distance in meters.

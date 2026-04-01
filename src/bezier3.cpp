@@ -488,3 +488,47 @@ scalar bezier3::calcLength(scalar t) const
     return l;
 }
 
+
+Odr::geometry bezier3::asParamPoly3(bool normalised) const
+{
+    Odr::geometry g;
+    g.g = Odr::Attr::Geometry::paramPoly3;
+    g.s = _roadSo;
+    g.x = _origin[0];
+    g.y = _origin[1];
+    g.hdg = std::atan2(_to[1], _to[0]);
+    g.length = _length;
+
+    scalar n = 1;
+    if (!normalised)
+    {
+        n = _length;
+        g.pRange = Odr::Attr::ParamPoly3Range::arcLength;
+    }
+    else
+        g.pRange = Odr::Attr::ParamPoly3Range::normalized;
+
+    // Auxillary lambda, transforming coordinates to a local reference frame.
+    auto toLocal = [&](const arr2& pt) {
+        double dx = pt[0] - g.x; double dy = pt[1] - g.y;
+        double cos_h = cos(-g.hdg); double sin_h = sin(-g.hdg);
+        return arr2{dx * cos_h - dy * sin_h, dx * sin_h + dy * cos_h};
+    };
+
+    // Convert to local coordinates
+    auto p0 = toLocal(controlPoint(0)); auto p1 = toLocal(controlPoint(1)); auto p2 = toLocal(controlPoint(2)); auto p3 = toLocal(controlPoint(3));
+
+
+    // Assign the parameters:
+    g.aU = p0[0];
+    g.bU = 3 * (p1[0] - p0[0]) / n;
+    g.cU = 3 * (p2[0] - 2 * p1[0] + p0[0]) / (n * n);
+    g.dU = p3[0] - 3 * p2[0] + 3 * p1[0] - p0[0] / (n * n * n);
+
+    g.aV = p0[1];
+    g.bV = 3 * (p1[1] - p0[1]) / n;
+    g.cV = 3 * (p2[1] - 2 * p1[1] + p0[1]) / (n * n);
+    g.dV = p3[1] - 3 * p2[1] + 3 * p1[1] - p0[1] / (n * n * n);
+
+    return g;
+}

@@ -376,38 +376,16 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
 
 void lane::convertBezierToParamPoly3(const vwBezier3 *bez, tinyxml2::XMLElement *geometry, tinyxml2::XMLDocument &doc) const
 {
-    // Read geometry origin  attributes (global position and heading)
-    double x0 = geometry->DoubleAttribute("x");
-    double y0 = geometry->DoubleAttribute("y");
-    double hdg = geometry->DoubleAttribute("hdg");
-
-    // Convert global to local
-    auto toLocal = [&](const arr2& pt) {
-        double dx = pt[0] - x0; double dy = pt[1] - y0;
-        double cos_h = cos(-hdg); double sin_h = sin(-hdg);
-        return arr2{dx * cos_h - dy * sin_h, dx * sin_h + dy * cos_h};
-    };
-
-    // Control points (global coords)
-    auto p0_global = bez->l0ControlPoint(0); auto p1_global = bez->l0ControlPoint(1); auto p2_global = bez->l0ControlPoint(2); auto p3_global = bez->l0ControlPoint(3);
-
-    // Convert to local coordinates and assign to polynomial coefficients
-    auto p0 = toLocal(p0_global); auto p1 = toLocal(p1_global); auto p2 = toLocal(p2_global); auto p3 = toLocal(p3_global);
-
-    // std::cout << "l: " << getCSUID() << " local: p0 (" << p0[0] << ", " << p0[1] << "), p3: (" << p3[0] << ", " << p3[1] << ")" << std::endl;
-
-    double aU = p0[0]; double bU = 3 * (p1[0] - p0[0]); double cU = 3 * (p2[0] - 2 * p1[0] + p0[0]); double dU = p3[0] - 3 * p2[0] + 3 * p1[0] - p0[0];
-    double aV = p0[1]; double bV = 3 * (p1[1] - p0[1]); double cV = 3 * (p2[1] - 2 * p1[1] + p0[1]); double dV = p3[1] - 3 * p2[1] + 3 * p1[1] - p0[1];
-
+    Odr::geometry g = bez->refAsParamPoly3(true);
     auto* xmlPP3 = doc.NewElement("paramPoly3");
-    xmlUtils::setAttrDouble(xmlPP3, "aU", aU);
-    xmlUtils::setAttrDouble(xmlPP3, "bU", bU);
-    xmlUtils::setAttrDouble(xmlPP3, "cU", cU);
-    xmlUtils::setAttrDouble(xmlPP3, "dU", dU);
-    xmlUtils::setAttrDouble(xmlPP3, "aV", aV);
-    xmlUtils::setAttrDouble(xmlPP3, "bV", bV);
-    xmlUtils::setAttrDouble(xmlPP3, "cV", cV);
-    xmlUtils::setAttrDouble(xmlPP3, "dV", dV);
+    xmlUtils::setAttrDouble(xmlPP3, "aU", g.aU);
+    xmlUtils::setAttrDouble(xmlPP3, "bU", g.bU);
+    xmlUtils::setAttrDouble(xmlPP3, "cU", g.cU);
+    xmlUtils::setAttrDouble(xmlPP3, "dU", g.dU);
+    xmlUtils::setAttrDouble(xmlPP3, "aV", g.aV);
+    xmlUtils::setAttrDouble(xmlPP3, "bV", g.bV);
+    xmlUtils::setAttrDouble(xmlPP3, "cV", g.cV);
+    xmlUtils::setAttrDouble(xmlPP3, "dV", g.dV);
     xmlPP3->SetAttribute("pRange", "normalized");
 
     /*
