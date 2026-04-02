@@ -523,12 +523,32 @@ Odr::geometry bezier3::asParamPoly3(bool normalised) const
     g.aU = p0[0];
     g.bU = 3 * (p1[0] - p0[0]) / n;
     g.cU = 3 * (p2[0] - 2 * p1[0] + p0[0]) / (n * n);
-    g.dU = p3[0] - 3 * p2[0] + 3 * p1[0] - p0[0] / (n * n * n);
+    g.dU = (p3[0] - 3 * p2[0] + 3 * p1[0] - p0[0]) / (n * n * n);
 
     g.aV = p0[1];
     g.bV = 3 * (p1[1] - p0[1]) / n;
     g.cV = 3 * (p2[1] - 2 * p1[1] + p0[1]) / (n * n);
-    g.dV = p3[1] - 3 * p2[1] + 3 * p1[1] - p0[1] / (n * n * n);
+    g.dV = (p3[1] - 3 * p2[1] + 3 * p1[1] - p0[1]) / (n * n * n);
 
     return g;
 }
+
+Odr::geometry bezier3::odrGeometry() const
+{
+
+    Odr::geometry g;
+    g.g = Odr::Attr::Geometry::bezier3;
+    g.s = _roadSo;
+    g.x = _origin[0];
+    g.y = _origin[1];
+    g.hdg = std::atan2(_to[1], _to[0]);
+    g.length = _length;
+
+    g.bz0x = _wx[0]; g.bz0y = _wy[0];
+    g.bz1x = _wx[1]; g.bz1y = _wy[1];
+    g.bz2x = _wx[2]; g.bz2y = _wy[2];
+    g.bz3x = _wx[3]; g.bz3y = _wy[3];
+
+    return g;
+}
+

@@ -74,6 +74,7 @@ public:
     /*! returns an equivalent paramPoly3 geometry.
      *  If normalised, the parameter runs in [0, 1]. Otherwise, it goes in [0, l]. */
     Odr::geometry asParamPoly3(bool normalised) const;
+    Odr::geometry odrGeometry() const;
 
 };
 
