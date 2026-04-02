@@ -373,41 +373,54 @@ void lane::set(const std::vector<Odr::geometry> &odrg, std::vector<Odr::offset> 
 
 }
 
-
-void lane::convertBezierToParamPoly3(const vwBezier3 *bez, tinyxml2::XMLElement *geometry, tinyxml2::XMLDocument &doc) const
+bool lane::setElevationMethods(const Odr::smaS &sec, const std::vector<Odr::offset> &off)
 {
-    Odr::geometry g = bez->refAsParamPoly3(true);
-    auto* xmlPP3 = doc.NewElement("paramPoly3");
-    xmlUtils::setAttrDouble(xmlPP3, "aU", g.aU);
-    xmlUtils::setAttrDouble(xmlPP3, "bU", g.bU);
-    xmlUtils::setAttrDouble(xmlPP3, "cU", g.cU);
-    xmlUtils::setAttrDouble(xmlPP3, "dU", g.dU);
-    xmlUtils::setAttrDouble(xmlPP3, "aV", g.aV);
-    xmlUtils::setAttrDouble(xmlPP3, "bV", g.bV);
-    xmlUtils::setAttrDouble(xmlPP3, "cV", g.cV);
-    xmlUtils::setAttrDouble(xmlPP3, "dV", g.dV);
-    xmlPP3->SetAttribute("pRange", "normalized");
+    // se has already been set for off in section::setOdrRoad
+    _odrOffset = off; // the offset is needed to calculate the actual value of the superelevation
+    scalar maxSo = _geom.back()->sl0(_geom.back()->length());
+    for (uint i = 0 ; i < _odrOffset.size(); ++i)
+    {
+        if ((_odrOffset[i].lr == Odr::offset::LR::RL) && (_odrOffset[i].se < maxSo))
+            _odrOffset[i].se = maxSo;
+    }
 
-    /*
-    Odr::geometry odr;
-    odr.aU = aU; odr.bU = bU; odr.cU = cU; odr.dU = dU;
-    odr.aV = aV; odr.bV = bV; odr.cV = cV; odr.dV = dV;
-    odr.length = bez->length();
-    odr.x = x0; odr.y = y0; odr.hdg = hdg;
-    odr.pRange = Odr::Attr::ParamPoly3Range::normalized;
-    paramPoly3 pp3(odr, 1, 0, 0, odr.length, 0);
+    // Elevation:
+    // here we need to do the interval and se:
+    _odrElevation = sec.elevation;
+    for (uint i = 1; i < _odrElevation.size(); ++i)
+    {
+        _odrElevation[i-1].se = _odrElevation[i].s;
+        _odrElevation.back().lr = Odr::offset::LR::L;
+        _odrElevation[i-1].seSet = true;
+    }
+    if (_odrElevation.size())
+    {
+        _odrElevation.back().se = maxSo;
+        _odrElevation.back().lr = Odr::offset::LR::RL;
+        _odrElevation.back().seSet = true;
 
-    if (!mvf::areCloseEnough(pp3.origin(), bez->origin(), 1e-4))
-        std::cout << "origins differ: " << getCSUID() << " bz3: (" << bez->origin()[0] << ", " << bez->origin()[1] << "), "
-                  << ", pp3: (" << pp3.origin()[0] << ", " << pp3.origin()[1] << ")" << std::endl;
+    }
 
-    if (!mvf::areCloseEnough(pp3.dest(), bez->dest(), 1e-4))
-        std::cout << "destinations differ: " << getCSUID() << " bz3: (" << bez->dest()[0] << ", " << bez->dest()[1] << "), "
-                  << ", pp3: (" << pp3.dest()[0] << ", " << pp3.dest()[1] << ")" << std::endl;
-    */
+    // Superelevation:
+    _odrSuperelevation = sec.superelevation;
+    for (uint i = 1; i < _odrSuperelevation.size(); ++i)
+    {
+        _odrSuperelevation[i-1].se = _odrSuperelevation[i].s;
+        _odrSuperelevation.back().lr = Odr::offset::LR::L;
+        _odrSuperelevation[i-1].seSet = true;
+    }
+    if (_odrSuperelevation.size())
+    {
+        _odrSuperelevation.back().se = maxSo;
+        _odrSuperelevation.back().lr = Odr::offset::LR::RL;
+        _odrSuperelevation.back().seSet = true;
 
-    geometry->InsertEndChild(xmlPP3);
+    }
+
+
+    return true;
 }
+
 
 void lane::writeDown()
 {
@@ -672,7 +685,20 @@ bool lane::xmlPlanView(tinyxml2::XMLElement *planView, tinyxml2::XMLDocument &do
             if (writeAsPP3)
             {
                 vwBezier3* bez=static_cast<vwBezier3*>(_geom[i]);
-                convertBezierToParamPoly3(bez,geometry,doc);
+
+                Odr::geometry g = bez->refAsParamPoly3(true);
+                auto* xmlPP3 = doc.NewElement(Odr::Elem::ParamPoly3);
+                xmlUtils::setAttrDouble(xmlPP3, "aU", g.aU);
+                xmlUtils::setAttrDouble(xmlPP3, "bU", g.bU);
+                xmlUtils::setAttrDouble(xmlPP3, "cU", g.cU);
+                xmlUtils::setAttrDouble(xmlPP3, "dU", g.dU);
+                xmlUtils::setAttrDouble(xmlPP3, "aV", g.aV);
+                xmlUtils::setAttrDouble(xmlPP3, "bV", g.bV);
+                xmlUtils::setAttrDouble(xmlPP3, "cV", g.cV);
+                xmlUtils::setAttrDouble(xmlPP3, "dV", g.dV);
+                xmlPP3->SetAttribute("pRange", "normalized");
+
+                geometry->InsertEndChild(xmlPP3);
             }
             else
             {
@@ -2179,7 +2205,6 @@ void lane::setSpeed(const scalar speed)
 scalar lane::getSpeed() const
 {
     return getSpeed(0);
-    // return _speed;
 }
 
 scalar lane::getSpeed(scalar d) const
@@ -2193,6 +2218,19 @@ scalar lane::getSpeed(scalar d) const
     return speed;
 }
 
+scalar lane::refSCoordinate(scalar d) const
+{
+    int ndx = getGeometryIndex(d);
+    if (ndx < 0) return -1;
+
+    scalar lo = 0;
+    for (int i = 0; i < ndx; ++i )
+        lo += _geom[i]->length();
+
+    scalar t = _geom[ndx]->sl0(d - lo);
+    if (!_odrFwd) t = maxSo() - t; // that is if you've flipped.
+    return t;
+}
 
 scalar lane::getWidth() const
 {
@@ -2204,27 +2242,79 @@ scalar lane::getWidth(scalar d) const
     if (_constantWidth)
         return _width;
 
+    scalar t = refSCoordinate(d);
+    if (t < 0) return 0;
+    return getWidthFromRef(t);
+}
+
+scalar lane::getWidthFromRef(scalar t) const
+{
     scalar w = 0;
-    int ndx = getGeometryIndex(d);
-    if (ndx < 0) return 0;
-
-    // Call so(s) and calculate it yourself:
-    w = 0;
-    scalar lo = 0;
-    for (int i = 0; i < ndx; ++i )
-        lo += _geom[i]->length();
-
-    scalar t = _geom[ndx]->sl0(d - lo);
-    if (!_odrFwd) t = maxSo() - t; // you still need to do that if you've flipped.
     for (uint i = 0; i < _odrWidth.size(); ++i)
     {
         if (!_odrWidth[i].inRange(t)) continue;
         scalar s = t - _odrWidth[i].s;
         scalar s2 = s * s;
-        w += _odrWidth[i].a + _odrWidth[i].b * s + _odrWidth[i].c * s2 + _odrWidth[i].d * s * s2;
+        w += _odrWidth[i].a + _odrWidth[i].b * s
+             + _odrWidth[i].c * s2+ _odrWidth[i].d * s * s2;
     }
 
     return w;
+}
+
+scalar lane::getElevation(scalar d) const
+{
+    if (_odrElevation.size() == 0)
+        return 0;
+
+    scalar e = 0;
+    scalar t = refSCoordinate(d);
+    if (t < 0)
+        return 0;
+    for (uint i = 0; i < _odrElevation.size(); ++i)
+    {
+        if (!_odrElevation[i].inRange(t)) continue;
+        scalar s = t - _odrElevation[i].s;
+        scalar s2 = s * s;
+        e += _odrElevation[i].a + _odrElevation[i].b * s
+             + _odrElevation[i].c * s2 + _odrElevation[i].d * s * s2;
+    }
+
+    return e;
+}
+
+scalar lane::getSuperelevation(scalar d, scalar loff) const
+{
+    if (_odrSuperelevation.size() == 0)
+        return 0;
+
+    scalar t = refSCoordinate(d);
+    if (t < 0)
+        return 0;
+
+    // Calculate the offset at the centre of the lane:
+    scalar off = 0.5 * getWidthFromRef(t) + loff;
+    for (uint i = 0; i < _odrWidth.size(); ++i)
+    {
+        if (!_odrWidth[i].inRange(t)) continue;
+        scalar s = t - _odrWidth[i].s;
+        scalar s2 = s * s;
+        off += _odrWidth[i].a + _odrWidth[i].b * s + _odrWidth[i].c * s2
+               + _odrWidth[i].d * s * s2;
+    }
+
+    // Calculate the torsion angle:
+    scalar alpha = 0;
+    for (uint i = 0; i < _odrSuperelevation.size(); ++i)
+    {
+        if (!_odrSuperelevation[i].inRange(t)) continue;
+        scalar s = t - _odrSuperelevation[i].s;
+        scalar s2 = s * s;
+        alpha += _odrSuperelevation[i].a + _odrSuperelevation[i].b * s
+                 + _odrSuperelevation[i].c * s2 + _odrSuperelevation[i].d * s * s2;
+    }
+
+    return off * std::sin(alpha) * _odrID / std::abs(_odrID); // Check the sign;
 }
 
 void lane::addTSign(tSign ts)

@@ -244,16 +244,25 @@ public:
     scalar getLength() const; ///< returns the length of the lane.
     uint getGeometrySize() const; ///< get the size of the _geom array.
     const std::vector<odrones::geometry*> geometries() const;
-    // std::vector<std::unique_ptr<odrones::geometry>> getGeometries() const;
-    scalar maxSo() const; ///< odr; return the max So coordinate of lane 0.
 
-    scalar getWidth() const;
-    scalar getWidth(scalar d) const; ///< get the width at a certain distance down the lane.
-
+    // Speed:
+    void setSpeed(const scalar speed);
     scalar getSpeed() const;
     scalar getSpeed(scalar d) const; ///< get the speed at a certain distance down the lane... assuming it's a car.
-    void setSpeed(const scalar speed);
 
+    // Road (or reference line) s coordinate, which is needed for width, elevation and superelevation
+    scalar maxSo() const; ///< odr; return the max So coordinate of lane 0.
+    scalar refSCoordinate(scalar d) const; ///< return the s coordinate of the road given d on this lane. Return -1 if there's anything wrong!
+
+    // Width:
+    scalar getWidth() const;
+    scalar getWidth(scalar d) const; ///< get the width at a certain distance down the lane.
+    scalar getWidthFromRef(scalar t) const; ///< get the width using the ROAD distance $s$, rather than the lane one.
+
+    // Elevation:
+    bool setElevationMethods(const Odr::smaS &sec, const std::vector<Odr::offset> &off); ///< setup the ElevationProfile and the LateralProfile.
+    scalar getElevation(scalar d) const;  ///< return the elevation at that distance down the lane, as defined by the ElevationProfile, disregarding any lateral profile.
+    scalar getSuperelevation(scalar d, scalar loff = 0) const; ///< return the superelevation at the centre of the lane + loff. Just the lateral profile.
 
     // Shape...
     mvf::shape getShape(uint i) const; ///< returns the shape of _geom[i]
@@ -498,7 +507,10 @@ private:
     bool _flippable; ///< whether the lane can be flipped from forward to backwards.
     /// Variables needed for the OpenDRIVE variable width:
     scalar _odrSo; ///< start of the lane section (metres), needed for the variable width, variable speed, elevation...
+    std::vector<Odr::offset> _odrOffset; ///< from the reference line.
     std::vector<Odr::offset> _odrWidth; ///< the 5 parametres that define the width;
+    std::vector<Odr::offset> _odrElevation; ///< parameters for the elevation of the lane, as described in the ElevationProfile.
+    std::vector<Odr::offset> _odrSuperelevation; ///< parameters for the superelevation, as described in the LateralProfile.
     std::vector<Odr::speedLimit> _odrSpeed; ///< a vector of speed limits along s;
     const lane* _odrZero; ///< a pointer to section._zero for you to enjoy :)
 
