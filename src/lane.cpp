@@ -2314,7 +2314,14 @@ scalar lane::getSuperelevation(scalar d, scalar loff) const
                  + _odrSuperelevation[i].c * s2 + _odrSuperelevation[i].d * s * s2;
     }
 
-    return off * std::sin(alpha) * _odrID / std::abs(_odrID); // Check the sign;
+    scalar h = off * std::sin(alpha);
+    if (_odrID < 0)
+        h *= -1;
+
+    // std::cout << "alpha: " << alpha << " at d: " << d
+    //           << ", loff: " << off << ", resulting in h: " << h << std::endl;
+
+    return h;
 }
 
 void lane::addTSign(tSign ts)
