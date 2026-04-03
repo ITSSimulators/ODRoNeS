@@ -779,6 +779,32 @@ void RNS::write(const std::string &mapFile, bool beziers_as_pp3) const
                 std::cerr << "zero was unable to run xmlPlanView" << std::endl;
             xmlRoad->InsertEndChild(planView);
 
+            // Road -> ElevationProfile:
+            if (smas->elevation.size())
+            {
+                tinyxml2::XMLElement* elevationProfile = xmlMap.NewElement(Odr::Elem::ElevationProfile);
+                for (uint j = 0; j < smas->elevation.size(); ++j)
+                {
+                    tinyxml2::XMLElement* elevation = xmlMap.NewElement(Odr::Elem::Elevation);
+                    xmlUtils::setAttrOffsetS(elevation, smas->elevation[j]);
+                    elevationProfile->InsertEndChild(elevation);
+                }
+                xmlRoad->InsertEndChild(elevationProfile);
+            }
+
+            // Road -> LateralProfile
+            if (smas->superelevation.size())
+            {
+                tinyxml2::XMLElement* lateralProfile = xmlMap.NewElement(Odr::Elem::LateralProfile);
+                for (uint j = 0; j < smas->superelevation.size(); ++j)
+                {
+                    tinyxml2::XMLElement* superEl = xmlMap.NewElement(Odr::Elem::Superelevation);
+                    xmlUtils::setAttrOffsetS(superEl, smas->superelevation[j]);
+                    lateralProfile->InsertEndChild(superEl);
+                }
+                xmlRoad->InsertEndChild(lateralProfile);
+            }
+
             // Road -> Lanes:
             tinyxml2::XMLElement *lanes = xmlMap.NewElement(Odr::Elem::Lanes);
             // Road -> Lanes -> Lanes offset:

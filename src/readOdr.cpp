@@ -231,6 +231,8 @@ void ReadOdr::append(const ReadOdr &r)
         _sections.back().rule = r.sections[i].rule;
         _sections.back().loffset = r.sections[i].loffset;
         _sections.back().tsigns = r.sections[i].tsigns;
+        _sections.back().elevation = r.sections[i].elevation;
+        _sections.back().superelevation = r.sections[i].superelevation;
         for (uint j = 0; j < r.sections[i].lanes.size(); ++j)
         {
             Odr::smaL smal;
