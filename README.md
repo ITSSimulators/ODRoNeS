@@ -11,7 +11,7 @@ The library is written in C++ and is shipped with few open-source dependencies:
  - [tinyxml2](https://github.com/leethomason/tinyxml2)
  - [clothoids](https://github.com/ebertolazzi/Clothoids)
 
-and it uses [Qt](https://www.qt.io) for visualisation. 
+and **optionally** it uses [Qt](https://www.qt.io) for visualisation. 
 
 
 Install
