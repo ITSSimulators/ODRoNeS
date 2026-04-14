@@ -1,9 +1,10 @@
 ODRoNeS (OpenDRIVE Road Network System)
 =======================================
-The Road Network System `rns` is essentially an array of connected `sections` on a system 
+The Road Network System `rns` is a class that is essentially
+ holding an array of connected `sections` on a system 
  that will allow you to use both cartesian to road coordinates interchangeably.
 
-`sections`, are essentially a dynamic array of (roughly) parallel lanes
+A `section` class is essentially a dynamic array of (roughly) parallel lanes
  (matching OpenDRIVE laneSections)
  that can be accessed through operator[] and that can access lanes through operator[] 
  and they are the ODRoNeS equivalent to OpenDRIVE roads.
@@ -19,17 +20,18 @@ The Road Network System `rns` is essentially an array of connected `sections` on
   * whether a point is on the lane or not,
   * bounding boxes,
   * intersections with other lanes.
-  However, it relies on the geometry (and derived) class(es) to do all the calculations.
-  More details can be found later, in the [lanes](#lanes) subsection.
 
-Thus, lanes calculate these things differently depending on whether their geometry,
+It relies on the geometry (and derived) class(es) to do all the calculations.
+  More details can be found later, in the [lanes](#lanes) subsection.
+  Thus, lanes calculate these things differently depending on whether their geometry,
   and the underlying maths belong to the `mvf` class.
 
-Ultimately, users are intended be using only `rns`, `lane` and `mvf`,
- and until there's better documantation they will need to go 
- through the `rns.h`, `lane.h` and `mvf.h` headers to find out more.
+Ultimately, users are intended be using only `rns`, `section` and `lane`,
+ and until there's better documantation they will need to 
+ **read the headers directly: `rns.h`, `section.h` and `lane.h`**.
 
-The rest of this document is mostly for developers. 
+
+**The rest of this document is mostly for developers.**
 
 
 
@@ -264,9 +266,36 @@ Conflicts will be linked IF...
   under the section OpenDrive Extras.
 
 
+## Exhaustive Linkage ##
+When exhaustive linkage is set, ODRoNeS will link every lane that is close 
+ enough, as long as its directionality makes sense.
 
-OneVersion
------------
+## Lane extension ## 
+Because the underlying geometry may not be perfect, the resulting OpenDRIVE 
+ lanes extruded from the centre lane may present some gaps, 
+ and `linking-tolerance` would let you adjust that.
+
+When exhaustive linkage is used and lanes farther than lane::odrTol, 
+ lanes will be extended at their end with an extra straight geometry.
+Gory details for this follow:
+  - The extra geometry has `_roadSo` and `_roadSe` set, 
+     `_o` and `_d` are set to the same point,
+	  `_origin` and `_dest`
+  - `lane._length` is extended by the extra length
+  - `lane::calcBoundingBox` is called again after appending the new geometry.
+  - `lane` will be marked as extended (bool).	
+  - `lane::getWidth(d)` starts calculating the geometry index. 
+     If that was the newly appended geometry, substract an item.
+	  The width at the last extension is approximated 
+	  to the width at the end of the previous geometry.
+  - We're not recalculating anything with regards to `lane::getSpeed(d)`,
+     again the speed at the extension is the same as at the end of 
+	  the unmodified lane.
+	  
+
+
+OneVersion [ DEPRECATED ]
+-------------------------
 OneVersion is an internal format that ODRoNeS supports (temporarily?) though not fully. 
  This is done by linking to OneVersion and quering the library itself, which is fine to load maps.
  Because there are very similar classes and concepts, 
@@ -274,3 +303,4 @@ OneVersion is an internal format that ODRoNeS supports (temporarily?) though not
  and headers from OneVersion should never be imported directly in ODRoNeS.
  
  
+
