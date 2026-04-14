@@ -1,10 +1,10 @@
 ODRoNeS (OpenDRIVE Road Network System)
 =======================================
-The Road Network System `rns` is class that is essentially
+The Road Network System `rns` is a class that is essentially
  holding an array of connected `sections` on a system 
  that will allow you to use both cartesian to road coordinates interchangeably.
 
-`sections`, are essentially a dynamic array of (roughly) parallel lanes
+A `section` class is essentially a dynamic array of (roughly) parallel lanes
  (matching OpenDRIVE laneSections)
  that can be accessed through operator[] and that can access lanes through operator[] 
  and they are the ODRoNeS equivalent to OpenDRIVE roads.
@@ -20,10 +20,10 @@ The Road Network System `rns` is class that is essentially
   * whether a point is on the lane or not,
   * bounding boxes,
   * intersections with other lanes.
-  However, it relies on the geometry (and derived) class(es) to do all the calculations.
-  More details can be found later, in the [lanes](#lanes) subsection.
 
-Thus, lanes calculate these things differently depending on whether their geometry,
+It relies on the geometry (and derived) class(es) to do all the calculations.
+  More details can be found later, in the [lanes](#lanes) subsection.
+  Thus, lanes calculate these things differently depending on whether their geometry,
   and the underlying maths belong to the `mvf` class.
 
 Ultimately, users are intended be using only `rns`, `section` and `lane`,
