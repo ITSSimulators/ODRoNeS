@@ -493,21 +493,30 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
         }
     }
 
+    addTSigns(sec, so, se);
+
+    return;
+}
+
+void section::addTSigns(const Odr::smaS& sec, scalar so, scalar se)
+{
     // Now use getPointWithOffset(p, d, offset) to get the xy
-    //   and calculate st's/
+//   and calculate st's/
     for (uint i = 0; i < sec.tsigns.size(); ++i)
     {
         if (!mvf::isInRangeLR(sec.tsigns[i].s, so, se)) continue;
 
         lane::tSign lts;
         _zero.getPointWithOffset(lts.pos, static_cast<scalar>(sec.tsigns[i].s - so),
-                                        static_cast<scalar>(sec.tsigns[i].t));
+            static_cast<scalar>(sec.tsigns[i].t));
         lts.section = getID();
 
         if (sec.tsigns[i].name == "Sign_Yield")
             lts.info = lane::tSignInfo::giveWay;
         else if (sec.tsigns[i].name == "Sign_Stop")
             lts.info = lane::tSignInfo::stop;
+        else if (sec.tsigns[i].name == "Sign_SpeedLimit")
+            lts.info = lane::tSignInfo::speedLimit;
         else
             std::cerr << "[ Error ] Unrecognised traffic sign name: " << sec.tsigns[i].name << std::endl;
 
@@ -523,10 +532,7 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
         }
     }
 
-
-    return;
 }
-
 bool section::setZero(const std::vector<Odr::geometry> &g, scalar so, scalar se)
 {
     if ((_zero.getSign() != lane::sign::o) && (_zero.getKind() != lane::kind::unknown))
