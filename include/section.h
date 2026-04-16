@@ -70,6 +70,8 @@ public:
     int addLane(const Odr::smaS &sec, const std::vector<Odr::offset> &off, const std::vector<Odr::offset> &width, uint laneIndex, scalar se);
     int addLane(const OneVersion::smaS &sec, uint index);
 
+    void addTSigns(const Odr::smaS& sec, scalar so, scalar se);
+
     /*! Set port and starboard lanes (and potentially flip some lanes);
      * This method is of general applicability and uses the OpenDrive convention
      *  for which same _sign lanes within the section run in the same direction.

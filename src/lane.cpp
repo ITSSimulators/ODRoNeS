@@ -41,11 +41,28 @@ std::string lane::tSignInfoString(tSignInfo s)
         return "giveWay";
     case tSignInfo::stop:
         return "stop";
+    case tSignInfo::speedLimit:
+        return "speedLimit";
     case tSignInfo::unknown:
         return "unknown";
     default:
         return "Unrecognised traffic sign info";
     }
+}
+
+lane::tSignInfo odrones::lane::parseTSignInfo(const std::string& str)
+{
+    if (str == "giveWay")
+        return lane::tSignInfo::giveWay;
+    else if (str == "stop")
+        return lane::tSignInfo::stop;
+    else if (str == "speedLimit")
+        return lane::tSignInfo::speedLimit;
+    else if (str == "unknown")
+        return lane::tSignInfo::unknown;
+
+    return lane::tSignInfo::unknown;
+    return tSignInfo();
 }
 
 

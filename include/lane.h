@@ -141,8 +141,9 @@ public:
 
 
     // 2 - Traffic signs:
-    enum class tSignInfo {giveWay, stop, unknown};
+    enum class tSignInfo {giveWay, stop, speedLimit, unknown};
     static std::string tSignInfoString(tSignInfo s);
+    static tSignInfo parseTSignInfo(const std::string& str);
     class tSign
     {
     public:
@@ -159,7 +160,8 @@ public:
         int section; ///< the section that holds the sign (useful in lrn)
         int lane; ///< the lane that holds the sign (useful in lrn)
         bool assigned; ///< whether the sign has been assigned successfuly to a lane or not (useful in lrn).
-
+        //! Speed limit for a speed limit sign [m/s].
+        scalar value{ 0.0 };
     };
 
 
