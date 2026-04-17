@@ -21,6 +21,7 @@
         return (*self)[i];
     }
 }
+%template(Arr2Array) std::vector<std::array<double,2>>;
 
 %rename(Odr_Kind_False) odrones::Odr::Kind::False;
 %rename(Odr_Kind_True) odrones::Odr::Kind::True;
