@@ -11,7 +11,7 @@ The library is written in C++ and is shipped with few open-source dependencies:
  - [tinyxml2](https://github.com/leethomason/tinyxml2)
  - [clothoids](https://github.com/ebertolazzi/Clothoids)
 
-and it uses [Qt](https://www.qt.io) for visualisation. 
+and **optionally** it uses [Qt](https://www.qt.io) for visualisation. 
 
 
 Install
@@ -37,8 +37,10 @@ Alternatively, if using Microsoft Visual Studio, you can open the created soluti
 
 Usage
 -----
-In order to learn how to use the library and the headers, have a look at the `doc` folder. 
- In order to visualise your map, you can use `rnscheck`. 
+In order to learn how to use the library and the headers,
+ read the first section of this [document](doc/logics.md)
+
+In order to visualise your map on a top-down view, you can use `rnscheck`. 
  Launch it from the command line passing the path to the map as the last argument:
 
     ./rnscheck <map-file.xodr>
@@ -60,7 +62,7 @@ OpenDRIVE Support
 -----------------
 The coverage of the standard 1.8.1 is quite complete though it still misses:
 
- * Elevation and superelevation.
+ * Road shape methods (shape and cross section surface).
  * Several traffic signs.
  * Poly3 geometry (though it is deprecated).
  * Rail and railway stations (not planned).   

@@ -1,29 +1,31 @@
-// 
-//  This file is part of the ODRoNeS (OpenDRIVE Road Network System) package.
-//  
-//  Copyright (c) 2023 Albert Solernou, University of Leeds.
-// 
-//  GTSmartActors is free software: you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation, either version 3 of the License, or
-//  (at your option) any later version.
-// 
-//  GTSmartActors is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-// 
-//  You should have received a copy of the GNU General Public License
-//  along with ODRoNeS. If not, see <http://www.gnu.org/licenses/>.
-// 
-//  We would appreciate that if you use this software for work leading 
-//  to publications you cite the package and its related publications. 
 //
+//   This file is part of ODRoNeS (OpenDRIVE Road Network System).
+//
+//   Copyright (c) 2019-2026 Albert Solernou, University of Leeds.
+//
+//   The ODRoNeS package is free software; you can redistribute it and/or
+//   modify it under the terms of the GNU Lesser General Public
+//   License as published by the Free Software Foundation; either
+//   version 3 of the License, or (at your option) any later version.
+//
+//   The ODRoNeS package is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+//   Lesser General Public License for more details.
+//
+//   You should have received a copy of the GNU Lesser General Public
+//   License along with the ODRoNeS package; if not, see
+//   <https://www.gnu.org/licenses/>.
+//
+
+
 
 #ifndef ODRONES_READXODR_H
 #define ODRONES_READXODR_H
 
 #include "readOdr.h"
+
+#include <string>
 
 namespace odrones 
 {
@@ -48,8 +50,8 @@ private:
     /*! Read all the geometry of an XML Road into a vector */
     std::vector<Odr::geometry> readGeometry(tinyxml2::XMLElement *pv);
 
-    /*! Read all the laneOffset the lanes have given a Lanes XMLElement */
-    std::vector<Odr::offset> readLaneOffset(tinyxml2::XMLElement *lanes);
+    /*! Read all the offset-type elements in the XMLElement named type */
+    std::vector<Odr::offset> readOffsets(tinyxml2::XMLElement *xml, const char* type, const char* s);
 
     /*! Read all the Signals gien a Signals XMLElement */
     std::vector<Odr::tsign> readTrafficSigns(tinyxml2::XMLElement *xmlsgns);
@@ -76,6 +78,9 @@ private:
 
     /*! Read University of Leeds Simulator5 user data */
     void readSim5UserData(tinyxml2::XMLElement* header);
+
+private:
+    std::string readUnits(tinyxml2::XMLElement* element, double* value);
 };
 
 } // namespace odrones;

@@ -1,24 +1,24 @@
-// 
-//  This file is part of the ODRoNeS (OpenDRIVE Road Network System) package.
-//  
-//  Copyright (c) 2023 Albert Solernou, University of Leeds.
-// 
-//  GTSmartActors is free software: you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation, either version 3 of the License, or
-//  (at your option) any later version.
-// 
-//  GTSmartActors is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-// 
-//  You should have received a copy of the GNU General Public License
-//  along with ODRoNeS. If not, see <http://www.gnu.org/licenses/>.
-// 
-//  We would appreciate that if you use this software for work leading 
-//  to publications you cite the package and its related publications. 
 //
+//   This file is part of ODRoNeS (OpenDRIVE Road Network System).
+//
+//   Copyright (c) 2019-2026 Albert Solernou, University of Leeds.
+//
+//   The ODRoNeS package is free software; you can redistribute it and/or
+//   modify it under the terms of the GNU Lesser General Public
+//   License as published by the Free Software Foundation; either
+//   version 3 of the License, or (at your option) any later version.
+//
+//   The ODRoNeS package is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+//   Lesser General Public License for more details.
+//
+//   You should have received a copy of the GNU Lesser General Public
+//   License along with the ODRoNeS package; if not, see
+//   <https://www.gnu.org/licenses/>.
+//
+
+
 
 #include "section.h"
 #include "readXOdr.h"
@@ -223,7 +223,8 @@ int section::addLane(const std::vector<bezier3> &bzr, scalar width, scalar speed
 }
 
 
-int section::addLane(const std::vector<Odr::geometry> &geom, const std::vector<Odr::offset> &off, const std::vector<Odr::offset> &width, const Odr::smaL &odrL, scalar se)
+int section::addLane(const Odr::smaS &sec, const std::vector<Odr::offset> &off,
+                     const std::vector<Odr::offset> &width, uint laneIndex, scalar se)
 {
     int err = 0;
     if (_writtenSize == _allocSize)
@@ -236,7 +237,8 @@ int section::addLane(const std::vector<Odr::geometry> &geom, const std::vector<O
         _lanes[_writtenSize].setID(static_cast<int>(_writtenSize));
         _lanes[_writtenSize].setOdrSectionID(_odrID);
         _lanes[_writtenSize].setZero(&_zero);
-        _lanes[_writtenSize].set(geom, off, width, odrL, se);
+        _lanes[_writtenSize].set(sec.geom, off, width, sec.lanes[laneIndex], se);
+        _lanes[_writtenSize].setElevationMethods(sec, off);
         updateBoundingBox(static_cast<uint>(_writtenSize));
         _writtenSize += 1;
     }
@@ -407,7 +409,7 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
         //    the other two, w_ls_i and w_self_i must be in order already.
         if (w_prev_i.size()) std::sort(w_prev_i.begin(), w_prev_i.end());
 
-        // On a new array, put w_ls, w_prev, and w_sef, so that
+        // On a new array, put w_ls, w_prev, and w_self, so that
         //    you "append" w_self using a "first" that is io + 1
         //    and "prepend"  w_ls using a "first" that is io -1;
         std::vector<std::pair<int, Odr::offset>> w_all_i;
@@ -477,8 +479,7 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
         }
         */
 
-        // if (addLane(sec.geom, off_i, sec.lanes[i], se)) return;
-        if (addLane(sec.geom, s_off, width, sec.lanes[i], se)) return;
+        if (addLane(sec, s_off, width, i, se)) return;
         validLane = i;
 
         // and calculate the total bounding box for the section.
@@ -492,21 +493,30 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
         }
     }
 
+    addTSigns(sec, so, se);
+
+    return;
+}
+
+void section::addTSigns(const Odr::smaS& sec, scalar so, scalar se)
+{
     // Now use getPointWithOffset(p, d, offset) to get the xy
-    //   and calculate st's/
+//   and calculate st's/
     for (uint i = 0; i < sec.tsigns.size(); ++i)
     {
         if (!mvf::isInRangeLR(sec.tsigns[i].s, so, se)) continue;
 
         lane::tSign lts;
         _zero.getPointWithOffset(lts.pos, static_cast<scalar>(sec.tsigns[i].s - so),
-                                        static_cast<scalar>(sec.tsigns[i].t));
+            static_cast<scalar>(sec.tsigns[i].t));
         lts.section = getID();
 
         if (sec.tsigns[i].name == "Sign_Yield")
             lts.info = lane::tSignInfo::giveWay;
         else if (sec.tsigns[i].name == "Sign_Stop")
             lts.info = lane::tSignInfo::stop;
+        else if (sec.tsigns[i].name == "Sign_SpeedLimit")
+            lts.info = lane::tSignInfo::speedLimit;
         else
             std::cerr << "[ Error ] Unrecognised traffic sign name: " << sec.tsigns[i].name << std::endl;
 
@@ -522,10 +532,7 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
         }
     }
 
-
-    return;
 }
-
 bool section::setZero(const std::vector<Odr::geometry> &g, scalar so, scalar se)
 {
     if ((_zero.getSign() != lane::sign::o) && (_zero.getKind() != lane::kind::unknown))

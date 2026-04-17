@@ -1,24 +1,24 @@
-// 
-//  This file is part of the ODRoNeS (OpenDRIVE Road Network System) package.
-//  
-//  Copyright (c) 2023 Albert Solernou, University of Leeds.
-// 
-//  GTSmartActors is free software: you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation, either version 3 of the License, or
-//  (at your option) any later version.
-// 
-//  GTSmartActors is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-// 
-//  You should have received a copy of the GNU General Public License
-//  along with ODRoNeS. If not, see <http://www.gnu.org/licenses/>.
-// 
-//  We would appreciate that if you use this software for work leading 
-//  to publications you cite the package and its related publications. 
 //
+//   This file is part of ODRoNeS (OpenDRIVE Road Network System).
+//
+//   Copyright (c) 2019-2026 Albert Solernou, University of Leeds.
+//
+//   The ODRoNeS package is free software; you can redistribute it and/or
+//   modify it under the terms of the GNU Lesser General Public
+//   License as published by the Free Software Foundation; either
+//   version 3 of the License, or (at your option) any later version.
+//
+//   The ODRoNeS package is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+//   Lesser General Public License for more details.
+//
+//   You should have received a copy of the GNU Lesser General Public
+//   License along with the ODRoNeS package; if not, see
+//   <https://www.gnu.org/licenses/>.
+//
+
+
 
 #ifndef ODRONES_SECTION_H
 #define ODRONES_SECTION_H
@@ -67,8 +67,10 @@ public:
     int addLane(const arr2 &origin, const arr2 &dest, const arr2 &centre, scalar width, scalar speed, mvf::shape shp, lane::sign sgn, bool permanent = true);
     int addLane(const std::vector<bezier2> &bzr, scalar width, scalar speed, lane::sign sgn);
     int addLane(const std::vector<bezier3> &bzr, scalar width, scalar speed, lane::sign sgn);
-    int addLane(const std::vector<Odr::geometry> &geom, const std::vector<Odr::offset> &off, const std::vector<Odr::offset> &width, const Odr::smaL &odrL, scalar se);
+    int addLane(const Odr::smaS &sec, const std::vector<Odr::offset> &off, const std::vector<Odr::offset> &width, uint laneIndex, scalar se);
     int addLane(const OneVersion::smaS &sec, uint index);
+
+    void addTSigns(const Odr::smaS& sec, scalar so, scalar se);
 
     /*! Set port and starboard lanes (and potentially flip some lanes);
      * This method is of general applicability and uses the OpenDrive convention

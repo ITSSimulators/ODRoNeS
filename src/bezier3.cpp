@@ -1,24 +1,24 @@
-// 
-//  This file is part of the ODRoNeS (OpenDRIVE Road Network System) package.
-//  
-//  Copyright (c) 2023 Albert Solernou, University of Leeds.
-// 
-//  GTSmartActors is free software: you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation, either version 3 of the License, or
-//  (at your option) any later version.
-// 
-//  GTSmartActors is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-// 
-//  You should have received a copy of the GNU General Public License
-//  along with ODRoNeS. If not, see <http://www.gnu.org/licenses/>.
-// 
-//  We would appreciate that if you use this software for work leading 
-//  to publications you cite the package and its related publications. 
 //
+//   This file is part of ODRoNeS (OpenDRIVE Road Network System).
+//
+//   Copyright (c) 2019-2026 Albert Solernou, University of Leeds.
+//
+//   The ODRoNeS package is free software; you can redistribute it and/or
+//   modify it under the terms of the GNU Lesser General Public
+//   License as published by the Free Software Foundation; either
+//   version 3 of the License, or (at your option) any later version.
+//
+//   The ODRoNeS package is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+//   Lesser General Public License for more details.
+//
+//   You should have received a copy of the GNU Lesser General Public
+//   License along with the ODRoNeS package; if not, see
+//   <https://www.gnu.org/licenses/>.
+//
+
+
 
 #include "bezier3.h"
 using namespace odrones;
@@ -486,5 +486,69 @@ scalar bezier3::calcLength(scalar t) const
     }
     l *= t * 0.5;
     return l;
+}
+
+
+Odr::geometry bezier3::asParamPoly3(bool normalised) const
+{
+    Odr::geometry g;
+    g.g = Odr::Attr::Geometry::paramPoly3;
+    g.s = _roadSo;
+    g.x = _origin[0];
+    g.y = _origin[1];
+    g.hdg = std::atan2(_to[1], _to[0]);
+    g.length = _length;
+
+    scalar n = 1;
+    if (!normalised)
+    {
+        n = _length;
+        g.pRange = Odr::Attr::ParamPoly3Range::arcLength;
+    }
+    else
+        g.pRange = Odr::Attr::ParamPoly3Range::normalized;
+
+    // Auxillary lambda, transforming coordinates to a local reference frame.
+    auto toLocal = [&](const arr2& pt) {
+        double dx = pt[0] - g.x; double dy = pt[1] - g.y;
+        double cos_h = cos(-g.hdg); double sin_h = sin(-g.hdg);
+        return arr2{dx * cos_h - dy * sin_h, dx * sin_h + dy * cos_h};
+    };
+
+    // Convert to local coordinates
+    auto p0 = toLocal(controlPoint(0)); auto p1 = toLocal(controlPoint(1)); auto p2 = toLocal(controlPoint(2)); auto p3 = toLocal(controlPoint(3));
+
+
+    // Assign the parameters:
+    g.aU = p0[0];
+    g.bU = 3 * (p1[0] - p0[0]) / n;
+    g.cU = 3 * (p2[0] - 2 * p1[0] + p0[0]) / (n * n);
+    g.dU = (p3[0] - 3 * p2[0] + 3 * p1[0] - p0[0]) / (n * n * n);
+
+    g.aV = p0[1];
+    g.bV = 3 * (p1[1] - p0[1]) / n;
+    g.cV = 3 * (p2[1] - 2 * p1[1] + p0[1]) / (n * n);
+    g.dV = (p3[1] - 3 * p2[1] + 3 * p1[1] - p0[1]) / (n * n * n);
+
+    return g;
+}
+
+Odr::geometry bezier3::odrGeometry() const
+{
+
+    Odr::geometry g;
+    g.g = Odr::Attr::Geometry::bezier3;
+    g.s = _roadSo;
+    g.x = _origin[0];
+    g.y = _origin[1];
+    g.hdg = std::atan2(_to[1], _to[0]);
+    g.length = _length;
+
+    g.bz0x = _wx[0]; g.bz0y = _wy[0];
+    g.bz1x = _wx[1]; g.bz1y = _wy[1];
+    g.bz2x = _wx[2]; g.bz2y = _wy[2];
+    g.bz3x = _wx[3]; g.bz3y = _wy[3];
+
+    return g;
 }
 

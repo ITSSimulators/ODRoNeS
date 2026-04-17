@@ -1,24 +1,24 @@
-// 
-//  This file is part of the ODRoNeS (OpenDRIVE Road Network System) package.
-//  
-//  Copyright (c) 2023 Albert Solernou, University of Leeds.
-// 
-//  GTSmartActors is free software: you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation, either version 3 of the License, or
-//  (at your option) any later version.
-// 
-//  GTSmartActors is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-// 
-//  You should have received a copy of the GNU General Public License
-//  along with ODRoNeS. If not, see <http://www.gnu.org/licenses/>.
-// 
-//  We would appreciate that if you use this software for work leading 
-//  to publications you cite the package and its related publications. 
 //
+//   This file is part of ODRoNeS (OpenDRIVE Road Network System).
+//
+//   Copyright (c) 2019-2026 Albert Solernou, University of Leeds.
+//
+//   The ODRoNeS package is free software; you can redistribute it and/or
+//   modify it under the terms of the GNU Lesser General Public
+//   License as published by the Free Software Foundation; either
+//   version 3 of the License, or (at your option) any later version.
+//
+//   The ODRoNeS package is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+//   Lesser General Public License for more details.
+//
+//   You should have received a copy of the GNU Lesser General Public
+//   License along with the ODRoNeS package; if not, see
+//   <https://www.gnu.org/licenses/>.
+//
+
+
 
 #ifndef ODRONES_ODR_H
 #define ODRONES_ODR_H
@@ -54,6 +54,11 @@ namespace Odr
         constexpr static const char* Lanes {"lanes"};
         constexpr static const char* LaneOffset {"laneOffset"};
         constexpr static const char* LaneSection {"laneSection"};
+
+        constexpr static const char* ElevationProfile {"elevationProfile"};
+        constexpr static const char* Elevation {"elevation"};
+        constexpr static const char* LateralProfile {"lateralProfile"};
+        constexpr static const char* Superelevation {"superelevation"};
 
         constexpr static const char* DefaultRegulations {"defaultRegulations"};
         constexpr static const char* RoadRegulations {"roadRegulations"};
@@ -632,6 +637,8 @@ namespace Odr
         std::vector<Odr::geometry> geom;
         std::vector<Odr::offset> loffset;
         std::vector<Odr::tsign> tsigns;
+        std::vector<Odr::offset> elevation;
+        std::vector<Odr::offset> superelevation;
     };
 
     class speedRegulation

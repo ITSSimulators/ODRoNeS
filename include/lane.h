@@ -1,24 +1,24 @@
-// 
-//  This file is part of the ODRoNeS (OpenDRIVE Road Network System) package.
-//  
-//  Copyright (c) 2023 Albert Solernou, University of Leeds.
-// 
-//  GTSmartActors is free software: you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation, either version 3 of the License, or
-//  (at your option) any later version.
-// 
-//  GTSmartActors is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-// 
-//  You should have received a copy of the GNU General Public License
-//  along with ODRoNeS. If not, see <http://www.gnu.org/licenses/>.
-// 
-//  We would appreciate that if you use this software for work leading 
-//  to publications you cite the package and its related publications. 
 //
+//   This file is part of ODRoNeS (OpenDRIVE Road Network System).
+//
+//   Copyright (c) 2019-2026 Albert Solernou, University of Leeds.
+//
+//   The ODRoNeS package is free software; you can redistribute it and/or
+//   modify it under the terms of the GNU Lesser General Public
+//   License as published by the Free Software Foundation; either
+//   version 3 of the License, or (at your option) any later version.
+//
+//   The ODRoNeS package is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+//   Lesser General Public License for more details.
+//
+//   You should have received a copy of the GNU Lesser General Public
+//   License along with the ODRoNeS package; if not, see
+//   <https://www.gnu.org/licenses/>.
+//
+
+
 
 #ifndef ODRONES_LANE_H
 #define ODRONES_LANE_H
@@ -141,8 +141,9 @@ public:
 
 
     // 2 - Traffic signs:
-    enum class tSignInfo {giveWay, stop, unknown};
+    enum class tSignInfo {giveWay, stop, speedLimit, unknown};
     static std::string tSignInfoString(tSignInfo s);
+    static tSignInfo parseTSignInfo(const std::string& str);
     class tSign
     {
     public:
@@ -159,7 +160,8 @@ public:
         int section; ///< the section that holds the sign (useful in lrn)
         int lane; ///< the lane that holds the sign (useful in lrn)
         bool assigned; ///< whether the sign has been assigned successfuly to a lane or not (useful in lrn).
-
+        //! Speed limit for a speed limit sign [m/s].
+        scalar value{ 0.0 };
     };
 
 
@@ -244,16 +246,25 @@ public:
     scalar getLength() const; ///< returns the length of the lane.
     uint getGeometrySize() const; ///< get the size of the _geom array.
     const std::vector<odrones::geometry*> geometries() const;
-    // std::vector<std::unique_ptr<odrones::geometry>> getGeometries() const;
-    scalar maxSo() const; ///< odr; return the max So coordinate of lane 0.
 
-    scalar getWidth() const;
-    scalar getWidth(scalar d) const; ///< get the width at a certain distance down the lane.
-
+    // Speed:
+    void setSpeed(const scalar speed);
     scalar getSpeed() const;
     scalar getSpeed(scalar d) const; ///< get the speed at a certain distance down the lane... assuming it's a car.
-    void setSpeed(const scalar speed);
 
+    // Road (or reference line) s coordinate, which is needed for width, elevation and superelevation
+    scalar maxSo() const; ///< odr; return the max So coordinate of lane 0.
+    scalar refSCoordinate(scalar d) const; ///< return the s coordinate of the road given d on this lane. Return -1 if there's anything wrong!
+
+    // Width:
+    scalar getWidth() const;
+    scalar getWidth(scalar d) const; ///< get the width at a certain distance down the lane.
+    scalar getWidthFromRef(scalar t) const; ///< get the width using the ROAD distance $s$, rather than the lane one.
+
+    // Elevation:
+    bool setElevationMethods(const Odr::smaS &sec, const std::vector<Odr::offset> &off); ///< setup the ElevationProfile and the LateralProfile.
+    scalar getElevation(scalar d) const;  ///< return the elevation at that distance down the lane, as defined by the ElevationProfile, disregarding any lateral profile.
+    scalar getSuperelevation(scalar d, scalar loff = 0) const; ///< return the superelevation at the centre of the lane + loff. Just the lateral profile.
 
     // Shape...
     mvf::shape getShape(uint i) const; ///< returns the shape of _geom[i]
@@ -445,10 +456,6 @@ public:
 
     //! Writing:
     void writeDown(); ///< For debugging purposes: write down getCSUID.box, getCSUID.geom, getCSUID.geom.boxes, getCSUID.geom.numerical, getCSUID.geom.S
-    //! FUNCTION TO CALL IN ORDER TO CONVERT BEZIER POINTS FROM GLOBAL TO LOCAL COORDINATES AND THEN INTO PARAMPOLY3 COEFFICIENTS
-    void convertBezierToParamPoly3(const vwBezier3* bez, tinyxml2::XMLElement* geometry,
-                                       tinyxml2::XMLDocument& doc) const;
-
 
 
 private:
@@ -498,7 +505,10 @@ private:
     bool _flippable; ///< whether the lane can be flipped from forward to backwards.
     /// Variables needed for the OpenDRIVE variable width:
     scalar _odrSo; ///< start of the lane section (metres), needed for the variable width, variable speed, elevation...
+    std::vector<Odr::offset> _odrOffset; ///< from the reference line.
     std::vector<Odr::offset> _odrWidth; ///< the 5 parametres that define the width;
+    std::vector<Odr::offset> _odrElevation; ///< parameters for the elevation of the lane, as described in the ElevationProfile.
+    std::vector<Odr::offset> _odrSuperelevation; ///< parameters for the superelevation, as described in the LateralProfile.
     std::vector<Odr::speedLimit> _odrSpeed; ///< a vector of speed limits along s;
     const lane* _odrZero; ///< a pointer to section._zero for you to enjoy :)
 

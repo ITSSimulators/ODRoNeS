@@ -1,24 +1,24 @@
-// 
-//  This file is part of the ODRoNeS (OpenDRIVE Road Network System) package.
-//  
-//  Copyright (c) 2023 Albert Solernou, University of Leeds.
-// 
-//  GTSmartActors is free software: you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation, either version 3 of the License, or
-//  (at your option) any later version.
-// 
-//  GTSmartActors is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-// 
-//  You should have received a copy of the GNU General Public License
-//  along with ODRoNeS. If not, see <http://www.gnu.org/licenses/>.
-// 
-//  We would appreciate that if you use this software for work leading 
-//  to publications you cite the package and its related publications. 
 //
+//   This file is part of ODRoNeS (OpenDRIVE Road Network System).
+//
+//   Copyright (c) 2019-2026 Albert Solernou, University of Leeds.
+//
+//   The ODRoNeS package is free software; you can redistribute it and/or
+//   modify it under the terms of the GNU Lesser General Public
+//   License as published by the Free Software Foundation; either
+//   version 3 of the License, or (at your option) any later version.
+//
+//   The ODRoNeS package is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+//   Lesser General Public License for more details.
+//
+//   You should have received a copy of the GNU Lesser General Public
+//   License along with the ODRoNeS package; if not, see
+//   <https://www.gnu.org/licenses/>.
+//
+
+
 
 #include <filesystem>
 #include <tinyxml2.h>
@@ -778,6 +778,32 @@ void RNS::write(const std::string &mapFile, bool beziers_as_pp3) const
             if (!_sections[i].zero()->xmlPlanView(planView, xmlMap, beziers_as_pp3))
                 std::cerr << "zero was unable to run xmlPlanView" << std::endl;
             xmlRoad->InsertEndChild(planView);
+
+            // Road -> ElevationProfile:
+            if (smas->elevation.size())
+            {
+                tinyxml2::XMLElement* elevationProfile = xmlMap.NewElement(Odr::Elem::ElevationProfile);
+                for (uint j = 0; j < smas->elevation.size(); ++j)
+                {
+                    tinyxml2::XMLElement* elevation = xmlMap.NewElement(Odr::Elem::Elevation);
+                    xmlUtils::setAttrOffsetS(elevation, smas->elevation[j]);
+                    elevationProfile->InsertEndChild(elevation);
+                }
+                xmlRoad->InsertEndChild(elevationProfile);
+            }
+
+            // Road -> LateralProfile
+            if (smas->superelevation.size())
+            {
+                tinyxml2::XMLElement* lateralProfile = xmlMap.NewElement(Odr::Elem::LateralProfile);
+                for (uint j = 0; j < smas->superelevation.size(); ++j)
+                {
+                    tinyxml2::XMLElement* superEl = xmlMap.NewElement(Odr::Elem::Superelevation);
+                    xmlUtils::setAttrOffsetS(superEl, smas->superelevation[j]);
+                    lateralProfile->InsertEndChild(superEl);
+                }
+                xmlRoad->InsertEndChild(lateralProfile);
+            }
 
             // Road -> Lanes:
             tinyxml2::XMLElement *lanes = xmlMap.NewElement(Odr::Elem::Lanes);

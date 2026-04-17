@@ -1,24 +1,24 @@
-// 
-//  This file is part of the ODRoNeS (OpenDRIVE Road Network System) package.
-//  
-//  Copyright (c) 2024 Albert Solernou, University of Leeds.
-// 
-//  GTSmartActors is free software: you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation, either version 3 of the License, or
-//  (at your option) any later version.
-// 
-//  GTSmartActors is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-// 
-//  You should have received a copy of the GNU General Public License
-//  along with ODRoNeS. If not, see <http://www.gnu.org/licenses/>.
-// 
-//  We would appreciate that if you use this software for work leading 
-//  to publications you cite the package and its related publications. 
 //
+//   This file is part of ODRoNeS (OpenDRIVE Road Network System).
+//
+//   Copyright (c) 2019-2026 Albert Solernou, University of Leeds.
+//
+//   The ODRoNeS package is free software; you can redistribute it and/or
+//   modify it under the terms of the GNU Lesser General Public
+//   License as published by the Free Software Foundation; either
+//   version 3 of the License, or (at your option) any later version.
+//
+//   The ODRoNeS package is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+//   Lesser General Public License for more details.
+//
+//   You should have received a copy of the GNU Lesser General Public
+//   License along with the ODRoNeS package; if not, see
+//   <https://www.gnu.org/licenses/>.
+//
+
+
 
 #include "readXOdr.h"
 #include "xmlUtils.h"
@@ -283,28 +283,30 @@ std::vector<Odr::geometry> ReadXOdr::readGeometry(tinyxml2::XMLElement *pv)
     return v;
 }
 
-std::vector<Odr::offset> ReadXOdr::readLaneOffset(tinyxml2::XMLElement *lanes)
+std::vector<Odr::offset> ReadXOdr::readOffsets(tinyxml2::XMLElement *xml, const char* type, const char* s)
 {
-    std::vector<Odr::offset> loff;
-    tinyxml2::XMLElement *loffXML = lanes->FirstChildElement(Odr::Elem::LaneOffset);
-    while (loffXML)
+    std::vector<Odr::offset> off;
+    if (!xml) return off;
+    tinyxml2::XMLElement *offXML = xml->FirstChildElement(type);
+    while (offXML)
     {
-        Odr::offset loff_i;
+        Odr::offset off_i;
 
-        loff_i.lr = Odr::offset::LR::L;
-        loffXML->QueryDoubleAttribute(Odr::Attr::A, &(loff_i.a));
-        loffXML->QueryDoubleAttribute(Odr::Attr::B, &(loff_i.b));
-        loffXML->QueryDoubleAttribute(Odr::Attr::C, &(loff_i.c));
-        loffXML->QueryDoubleAttribute(Odr::Attr::D, &(loff_i.d));
-        loffXML->QueryDoubleAttribute(Odr::Attr::S, &(loff_i.s));
+        off_i.lr = Odr::offset::LR::L;
+        offXML->QueryDoubleAttribute(Odr::Attr::A, &(off_i.a));
+        offXML->QueryDoubleAttribute(Odr::Attr::B, &(off_i.b));
+        offXML->QueryDoubleAttribute(Odr::Attr::C, &(off_i.c));
+        offXML->QueryDoubleAttribute(Odr::Attr::D, &(off_i.d));
+        offXML->QueryDoubleAttribute(s, &(off_i.s));
 
-        loff.push_back(loff_i);
-        loffXML = loffXML->NextSiblingElement(Odr::Elem::LaneOffset);
+        off.push_back(off_i);
+        offXML = offXML->NextSiblingElement(type);
     }
-    if (loff.size())
-        loff.back().lr = Odr::offset::LR::RL;
-    return loff;
+    if (off.size())
+        off.back().lr = Odr::offset::LR::RL;
+    return off;
 }
+
 
 bool ReadXOdr::hasLaneOffset(tinyxml2::XMLElement *lanes)
 {
@@ -403,35 +405,13 @@ int ReadXOdr::addLane(tinyxml2::XMLElement *road, tinyxml2::XMLElement *lane, ui
         return -1;
     }
 
-    tinyxml2::XMLElement *width = lane->FirstChildElement(Odr::Elem::Width);
-    while (width)
-    {
-        _sections[ndxS].lanes.back().w.push_back(Odr::offset());
-        _sections[ndxS].lanes.back().w.back().lr = Odr::offset::LR::L;
-        xmlUtils::CheckResult(width->QueryDoubleAttribute(Odr::Attr::sOffset, &(_sections[ndxS].lanes.back().w.back().s) ));
-        xmlUtils::CheckResult(width->QueryDoubleAttribute(Odr::Attr::A, &(_sections[ndxS].lanes.back().w.back().a) ));
-        xmlUtils::CheckResult(width->QueryDoubleAttribute(Odr::Attr::B, &(_sections[ndxS].lanes.back().w.back().b) ));
-        xmlUtils::CheckResult(width->QueryDoubleAttribute(Odr::Attr::C, &(_sections[ndxS].lanes.back().w.back().c) ));
-        xmlUtils::CheckResult(width->QueryDoubleAttribute(Odr::Attr::D, &(_sections[ndxS].lanes.back().w.back().d) ));
-        width = width->NextSiblingElement(Odr::Elem::Width);
-    }
+    _sections[ndxS].lanes.back().w = readOffsets(lane, Odr::Elem::Width, Odr::Attr::sOffset);
     if (!_sections[ndxS].lanes.back().w.size())
         _sections[ndxS].lanes.back().w.push_back(Odr::offset()); // {0.,0.,0.,0.,0.});
     _sections[ndxS].lanes.back().w.back().lr = Odr::offset::LR::RL;
 
 
-    tinyxml2::XMLElement *border = lane->FirstChildElement(Odr::Elem::Border);
-    while (border)
-    {
-        _sections[ndxS].lanes.back().border.push_back(Odr::offset());
-        _sections[ndxS].lanes.back().border.back().lr = Odr::offset::LR::L;
-        xmlUtils::CheckResult(border->QueryDoubleAttribute(Odr::Attr::sOffset, &(_sections[ndxS].lanes.back().border.back().s) ));
-        xmlUtils::CheckResult(border->QueryDoubleAttribute(Odr::Attr::A, &(_sections[ndxS].lanes.back().border.back().a) ));
-        xmlUtils::CheckResult(border->QueryDoubleAttribute(Odr::Attr::B, &(_sections[ndxS].lanes.back().border.back().b) ));
-        xmlUtils::CheckResult(border->QueryDoubleAttribute(Odr::Attr::C, &(_sections[ndxS].lanes.back().border.back().c) ));
-        xmlUtils::CheckResult(border->QueryDoubleAttribute(Odr::Attr::D, &(_sections[ndxS].lanes.back().border.back().d) ));
-        border = border->NextSiblingElement(Odr::Elem::Border);
-    }
+    _sections[ndxS].lanes.back().border = readOffsets(lane, Odr::Elem::Border, Odr::Attr::sOffset);
     if (!_sections[ndxS].lanes.back().border.size())
         _sections[ndxS].lanes.back().border.push_back(Odr::offset()); // {0.,0.,0.,0.,0.} );
     _sections[ndxS].lanes.back().border.back().lr = Odr::offset::LR::RL;
@@ -444,13 +424,7 @@ int ReadXOdr::addLane(tinyxml2::XMLElement *road, tinyxml2::XMLElement *lane, ui
         xmlUtils::CheckResult(speed->QueryDoubleAttribute(Odr::Attr::Max, &(_sections[ndxS].lanes.back().speed.back().value)));
         xmlUtils::CheckResult(speed->QueryDoubleAttribute(Odr::Attr::sOffset, &(_sections[ndxS].lanes.back().speed.back().s)));
 
-        std::string units = speed->Attribute(Odr::Attr::Unit);
-        if (units.compare(Odr::Kind::mph) == 0)
-            _sections[ndxS].lanes.back().speed.back().value *= ct::mphToMs;
-        else if (units.compare(Odr::Kind::kmh) == 0)
-            _sections[ndxS].lanes.back().speed.back().value *= ct::kmhToMs;
-        else if (units.compare(Odr::Kind::ms) != 0)
-            std::cerr << "[ Error ] unknown speed units: " << units << std::endl;
+        std::string units = readUnits(speed, &_sections[ndxS].lanes.back().speed.back().value);
 
         speed = speed->NextSiblingElement(Odr::Elem::Speed);
     }
@@ -558,8 +532,11 @@ void ReadXOdr::readHeader(tinyxml2::XMLElement *header)
     {
         std::string roadType = xmlUtils::ReadConstCharAttr(xmlRR_i, Odr::Attr::Type);
         if (roadType.empty())
+        {
+            // TH20260331:Avoid infinite loop if there is no road type.
+            xmlRR_i = xmlRR_i->NextSiblingElement(Odr::Elem::RoadRegulations);
             continue;
-
+        }
         tinyxml2::XMLElement *xmlSem = xmlRR_i->FirstChildElement(Odr::Elem::Semantics);
         if (!xmlSem) continue;
 
@@ -571,18 +548,11 @@ void ReadXOdr::readHeader(tinyxml2::XMLElement *header)
             xmlUtils::ReadConstCharAttr(xmlSpeed_j, Odr::Attr::Type, sr.type);
             xmlUtils::CheckResult(xmlSpeed_j->QueryDoubleAttribute(Odr::Attr::Value, &sr.value));
 
-            std::string units;
-            xmlUtils::ReadConstCharAttr(xmlSpeed_j, Odr::Attr::Unit, units);
-            if (units.compare(Odr::Kind::mph) == 0)
-                sr.value *= ct::mphToMs;
-            else if (units.compare(Odr::Kind::kmh) == 0)
-                sr.value *= ct::kmhToMs;
-            else if (units.compare(Odr::Kind::ms) != 0)
-                std::cerr << "[ Error ] unknown speed units: " << units << std::endl;
+            std::string units = readUnits(xmlSpeed_j, &sr.value);
 
             _defaultSpeedLimit.push_back(sr);
 
-            xmlSpeed_j->NextSiblingElement(Odr::Elem::Speed);
+            xmlSpeed_j = xmlSpeed_j->NextSiblingElement(Odr::Elem::Speed);
         }
 
         xmlRR_i = xmlRR_i->NextSiblingElement(Odr::Elem::RoadRegulations);
@@ -613,6 +583,32 @@ void ReadXOdr::readSim5UserData(tinyxml2::XMLElement* header)
 
         xmlCP = xmlCP->NextSiblingElement(Odr::Elem::UDConnectionPoint);
     }
+}
+
+std::string odrones::ReadXOdr::readUnits(tinyxml2::XMLElement* element, double* value)
+{
+    if (element)
+    {
+        std::string units = xmlUtils::ReadConstCharAttr(element, Odr::Attr::Unit);
+        // TH20260331:Unit is optional, defaulting to m/s if not specified
+        if (units.empty())
+        {
+            units = "m/s";
+        }
+        if (value)
+        {
+            if (units.compare(Odr::Kind::mph) == 0)
+                *value *= ct::mphToMs;
+            else if (units.compare(Odr::Kind::kmh) == 0)
+                *value *= ct::kmhToMs;
+            else if (units.compare(Odr::Kind::ms) != 0)
+                std::cerr << "[ Error ] unknown speed units: " << units << std::endl;
+        }
+
+        return units;
+    }
+
+    return {};
 }
 
 Odr::Kind::RoadType ReadXOdr::readRoadType(tinyxml2::XMLElement *xmlRT)
@@ -672,13 +668,15 @@ int ReadXOdr::loadXodr(std::string iFile, bool isOdrFile)
         _sections[ndxS].type = readRoadType(r->FirstChildElement(Odr::Elem::Type));
 
         _sections[ndxS].geom = readGeometry(r->FirstChildElement(Odr::Elem::PlanView));
-        // simplifyGeometries(_sections[ndxS]);
+
+        _sections[ndxS].elevation = readOffsets(r->FirstChildElement(Odr::Elem::ElevationProfile), Odr::Elem::Elevation, Odr::Attr::S);
+        _sections[ndxS].superelevation = readOffsets(r->FirstChildElement(Odr::Elem::LateralProfile), Odr::Elem::Superelevation, Odr::Attr::S);
 
         tinyxml2::XMLElement *tSigns = r->FirstChildElement(Odr::Elem::Signals);
         if (tSigns) _sections[ndxS].tsigns = readTrafficSigns(tSigns);
 
         tinyxml2::XMLElement *lanes = r->FirstChildElement(Odr::Elem::Lanes);
-        _sections[ndxS].loffset = readLaneOffset(lanes);
+        _sections[ndxS].loffset = readOffsets(lanes, Odr::Elem::LaneOffset, Odr::Attr::S);
 
         uint ndxL = 0;
         uint ndxLS = 0;
