@@ -33,6 +33,7 @@
 
 //! Include matvec.h before rns.h ???
 %include "matvec.h"
+%include "numerical.h"
 %include "lane.h"
 %include "lCoord.h"
 %include "section.h"
