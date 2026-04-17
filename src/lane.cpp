@@ -1,4 +1,4 @@
-//
+﻿//
 //   This file is part of ODRoNeS (OpenDRIVE Road Network System).
 //
 //   Copyright (c) 2019-2026 Albert Solernou, University of Leeds.
@@ -22,7 +22,6 @@
 
 #include <sstream>
 // #include <format>
-#include <boost/format.hpp>
 #include "lane.h"
 #include "xmlUtils.h"
 // DEBUG //
@@ -446,62 +445,79 @@ void lane::writeDown()
               << " _dest: (" << getDestination()[0] << ", " << getDestination()[1] << ")"
               << std::endl;
 
-    std::ofstream f;
     std::string basename = getCSUID();
 #if _WINDOWS
     std::replace(basename.begin(), basename.end(), ':', ';'); // we cannot have a filename with colons on Windows...
 #endif
 
+    std::FILE* f = std::fopen(basename.c_str(), "w");
+    for (uint i = 0; i < _pointsSize; ++i)
+        std::fprintf(f, "%10d %12.3f %12.3f\n", i, _pointsX[i], _pointsY[i]);
+    std::fclose(f);
+    /* std::ofstream f;
     f.open(basename);
     for (uint i = 0; i < _pointsSize; ++i)
-		  f << boost::format("%10d %12.3f %12.3f") % i % _pointsX[i] % _pointsY[i] << std::endl;
-        // f << std::format("{0:10d} {1:12.3f} {2:12.3f}\n", i, _pointsX[i], _pointsY[i]);
-    f.close();
+        f << std::format("{0:10d} {1:12.3f} {2:12.3f}\n", i, _pointsX[i], _pointsY[i]); // format
+    f.close(); */
 
-    f.open(basename + ".box");
-	 f << boost::format("%12.3f %12.3f") % _bbblc[0] % _bbblc[1] << std::endl;
-    f << boost::format("%12.3f %12.3f") % _bbblc[0] % _bbtrc[1] << std::endl;
-    f << boost::format("%12.3f %12.3f") % _bbtrc[0] % _bbtrc[1] << std::endl;
-    f << boost::format("%12.3f %12.3f") % _bbtrc[0] % _bbblc[1] << std::endl;
-    f << boost::format("%12.3f %12.3f") % _bbblc[0] % _bbblc[1] << std::endl;
+
+    f = std::fopen((basename + ".box").c_str(), "w");
+    std::fprintf(f, "%12.3f %12.3f\n", _bbblc[0], _bbblc[1]);
+    std::fprintf(f, "%12.3f %12.3f\n", _bbblc[0], _bbtrc[1]);
+    std::fprintf(f, "%12.3f %12.3f\n", _bbtrc[0], _bbtrc[1]);
+    std::fprintf(f, "%12.3f %12.3f\n", _bbtrc[0], _bbblc[1]);
+    std::fprintf(f, "%12.3f %12.3f\n", _bbblc[0], _bbblc[1]);
+    std::fclose(f);
+    // f.open(basename + ".box"); // format
     /* f << std::format("{0:12.3f} {1:12.3f}\n", _bbblc[0], _bbblc[1]);
     f << std::format("{0:12.3f} {1:12.3f}\n", _bbblc[0], _bbtrc[1]);
     f << std::format("{0:12.3f} {1:12.3f}\n", _bbtrc[0], _bbtrc[1]);
     f << std::format("{0:12.3f} {1:12.3f}\n", _bbtrc[0], _bbblc[1]);
-    f << std::format("{0:12.3f} {1:12.3f}\n", _bbblc[0], _bbblc[1]); */
-    f.close();
+    f << std::format("{0:12.3f} {1:12.3f}\n", _bbblc[0], _bbblc[1]); */ // format
+    // f.close(); // format
 
 
-    f.open(basename + ".geom");
+    f = std::fopen((basename + ".geom").c_str(), "w");
     for (uint i = 0; i < _geom.size(); ++i)
     {
-		  f << boost::format("%12.3f %12.3f") %
-                 _geom[i]->origin()[0] % _geom[i]->origin()[1] << std::endl;
-        f << boost::format("%12.3f %12.3f") %
-                 _geom[i]->dest()[0] % _geom[i]->dest()[1] << std::endl;
-        /* f << std::format("{0:12.3f} {1:12.3f}\n",
+        std::fprintf(f, "%12.3f %12.3f\n",
+                     _geom[i]->origin()[0], _geom[i]->origin()[1]);
+        std::fprintf(f, "%12.3f %12.3f\n",
+                     _geom[i]->dest()[0], _geom[i]->dest()[1]);
+    }
+    std::fclose(f);
+    /* f.open(basename + ".geom"); // format
+    for (uint i = 0; i < _geom.size(); ++i)
+    {
+        f << std::format("{0:12.3f} {1:12.3f}\n",
                          _geom[i]->origin()[0], _geom[i]->origin()[1]);
         f << std::format("{0:12.3f} {1:12.3f}\n",
-                         _geom[i]->dest()[0], _geom[i]->dest()[1]); */
+                         _geom[i]->dest()[0], _geom[i]->dest()[1]);
     }
-    f.close();
+    f.close(); */
 
-    f.open(basename + ".geom.boxes");
+
+    f = std::fopen((basename + ".geom.boxes").c_str(), "w");
+    for (uint i = 0; i < _geom.size(); ++i)
+    {
+        std::fprintf(f, "# %s\n", mvf::shapeString( _geom[i]->shape()).c_str());
+        std::fprintf(f, "%12.3f %12.3f\n",
+                     _geom[i]->blc()[0], _geom[i]->blc()[1]);
+        std::fprintf(f, "%12.3f %12.3f\n",
+                     _geom[i]->blc()[0], _geom[i]->trc()[1]);
+        std::fprintf(f, "%12.3f %12.3f\n",
+                     _geom[i]->trc()[0], _geom[i]->trc()[1]);
+        std::fprintf(f, "%12.3f %12.3f\n",
+                     _geom[i]->trc()[0], _geom[i]->blc()[1]);
+        std::fprintf(f, "%12.3f %12.3f\n\n\n",
+                     _geom[i]->blc()[0], _geom[i]->blc()[1]);
+    }
+    std::fclose(f);
+    /* f.open(basename + ".geom.boxes");
     for (uint i = 0; i < _geom.size(); ++i)
     {
         f << "#" << mvf::shapeString( _geom[i]->shape() ) << std::endl;
-		  f << boost::format("%12.3f %12.3f") %
-                 _geom[i]->blc()[0] % _geom[i]->blc()[1] << std::endl;
-        f << boost::format("%12.3f %12.3f") %
-                 _geom[i]->blc()[0] % _geom[i]->trc()[1] << std::endl;
-        f << boost::format("%12.3f %12.3f") %
-                 _geom[i]->trc()[0] % _geom[i]->trc()[1] << std::endl;
-        f << boost::format("%12.3f %12.3f") %
-                 _geom[i]->trc()[0] % _geom[i]->blc()[1] << std::endl;
-        f << boost::format("%12.3f %12.3f") %
-                 _geom[i]->blc()[0] % _geom[i]->blc()[1] << std::endl;
-
-        /* f << std::format("{0:12.3f} {1:12.3f}\n",
+        f << std::format("{0:12.3f} {1:12.3f}\n",
                          _geom[i]->blc()[0], _geom[i]->blc()[1]);
         f << std::format("{0:12.3f} {1:12.3f}\n",
                          _geom[i]->blc()[0], _geom[i]->trc()[1]);
@@ -510,12 +526,44 @@ void lane::writeDown()
         f << std::format("{0:12.3f} {1:12.3f}\n",
                          _geom[i]->trc()[0], _geom[i]->blc()[1]);
         f << std::format("{0:12.3f} {1:12.3f}\n",
-                         _geom[i]->blc()[0], _geom[i]->blc()[1]); */
+                         _geom[i]->blc()[0], _geom[i]->blc()[1]);
         f << std::endl << std::endl;
     }
-    f.close();
+    f.close(); */
 
-    f.open(basename + ".geom.numerical");
+
+    f = std::fopen((basename + ".geom.numerical").c_str(), "w");
+    std::FILE* ff = std::fopen((basename + ".geom.S").c_str(), "w");
+    for (uint i = 0; i < _geom.size(); ++i)
+    {
+        if (!_geom[i]->isNumerical()) continue;
+        std::fprintf(f, "# %s\n", mvf::shapeString(_geom[i]->shape()).c_str());
+        std::vector<arr2> p;
+        std::vector<scalar> s;
+        if ((_geom[i]->shape() == mvf::shape::vwStraight) ||
+            (_geom[i]->shape() == mvf::shape::vwArc) ||
+            (_geom[i]->shape() == mvf::shape::vwParamPoly3) ||
+            (_geom[i]->shape() == mvf::shape::vwSpiral))
+
+        {
+            p = static_cast<vwNumerical*>(_geom[i])->points();
+            s = static_cast<vwNumerical*>(_geom[i])->S();
+        }
+        else if (_geom[i]->shape() == mvf::shape::paramPoly3)
+        {
+            p = static_cast<paramPoly3*>(_geom[i])->points();
+            s = static_cast<paramPoly3*>(_geom[i])->S();
+        }
+
+        for (uint j = 0; j < p.size(); ++j)
+            std::fprintf(f, "%12.3f %12.3f\n", p[j][0], p[j][1]);
+
+        for (uint j = 0; j < s.size(); ++j)
+            std::fprintf(ff, "%12.3f\n", s[j]);
+    }
+    std::fclose(f);
+    std::fclose(ff);
+    /* f.open(basename + ".geom.numerical");
     std::ofstream ff;
     ff.open(basename + ".geom.S");
     for (uint i = 0; i < _geom.size(); ++i)
@@ -540,15 +588,13 @@ void lane::writeDown()
         }
 
         for (uint j = 0; j < p.size(); ++j)
-				f << boost::format("%12.3f %12.3f") % p[j][0] % p[j][1] << std::endl;
-            // f << std::format("{0:12.3f} {1:12.3f}\n", p[j][0], p[j][1]);
+            f << std::format("{0:12.3f} {1:12.3f}\n", p[j][0], p[j][1]);
 
         for (uint j = 0; j < s.size(); ++j)
-            ff << boost::format("%12.3f") % s[j] << std::endl;
-            // ff << std::format("{0:12.3f}\n", s[j]);
+            ff << std::format("{0:12.3f}\n", s[j]);
     }
     f.close();
-    ff.close();
+    ff.close(); */
 }
 
 void lane::set(const OneVersion::smaS &sec, uint index)
