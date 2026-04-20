@@ -101,11 +101,11 @@ public:
     void getDimensions(int &minX, int &minY, int &maxX, int &maxY) const;
     void getDimensions(scalar &minX, scalar &minY, scalar &maxX, scalar &maxY) const;
 
+    // Traffic Signs:
+    std::vector<lane::tSign> tSigns() const; ///< return a copy of all the traffic signs
+    bool appendTSign(lane::tSign ts, int orientation);  ///< add a traffic sign to every lane in ts.section that has the correct orientation.
 
-    std::vector<lane::tSign> tSigns() const;
 private:
-    void tSigns(const std::vector<lane::tSign> &t);
-
     lane* getLaneWithSUID(int sID, int lID) const;
     lane* getLaneWithOVId(const OneVersion::OVID &lID) const;
     section* getSectionWithOVId(const OneVersion::OVID &sID) const;
@@ -189,9 +189,6 @@ private:
     uint _sectionsSize; ///< the amount of sections
 
     concepts::drivingSide _drivingSide; ///< driving side of the road.
-
-    std::vector<lane::tSign> _tSigns;  ///< a convenience vector with an instance of every traffic sign.
-    // std::vector<conflict::staticObj> _sObjects; ///< a convenience vector with
 
     ReadOdr _letter; ///< keep a copy of the ReadOdr that was used to configure the rns in case we need printing.
     bool _ready; ///< whether the RNS is ready or not.

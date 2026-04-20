@@ -2260,7 +2260,7 @@ bool lane::hasMultiplePrevLanes() const
 }
 
 
-void lane::setSpeed(const scalar speed)
+void lane::setSpeed(scalar speed)
 {
     _speed = speed;
 }
@@ -2268,6 +2268,33 @@ void lane::setSpeed(const scalar speed)
 scalar lane::getSpeed() const
 {
     return getSpeed(0);
+}
+
+void lane::addSpeed(Odr::speedLimit sl)
+{
+    int ndx = 0;
+    bool assigned = false;
+    for (uint i = 0; i < _odrSpeed.size(); ++i)
+    {
+        if (_odrSpeed[i].s == sl.s)
+        {
+            _odrSpeed[i].value = sl.value;
+            assigned = true;
+            break;
+        }
+        else if (_odrSpeed[i].s > sl.s)
+        {
+            _odrSpeed.insert(_odrSpeed.begin() + i, sl);
+            assigned = true;
+            break;
+        }
+
+    }
+    if (!assigned)
+        _odrSpeed.push_back(sl);
+
+    if (_odrSpeed.size() == 1)
+        _speed = _odrSpeed[0].value;
 }
 
 scalar lane::getSpeed(scalar d) const
@@ -2396,6 +2423,8 @@ void lane::addTSign(tSign ts)
     //  and assign it an s coordinate.
     ts.s = unsafeDistanceFromTheBoL(ts.lpos);
     _tSigns.push_back(ts);
+    if (ts.info == lane::tSignInfo::speedLimit)
+        addSpeed(Odr::speedLimit(ts.value, ts.s));
 }
 
 

@@ -493,20 +493,12 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
         }
     }
 
-    addTSigns(sec, so, se);
-
-    return;
-}
-
-void section::addTSigns(const Odr::smaS& sec, scalar so, scalar se)
-{
-    // Now use getPointWithOffset(p, d, offset) to get the xy
-//   and calculate st's/
     for (uint i = 0; i < sec.tsigns.size(); ++i)
     {
         if (!mvf::isInRangeLR(sec.tsigns[i].s, so, se)) continue;
 
         lane::tSign lts;
+        // Now use getPointWithOffset(p, d, offset) to get the xy and calculate st's/
         _zero.getPointWithOffset(lts.pos, static_cast<scalar>(sec.tsigns[i].s - so),
             static_cast<scalar>(sec.tsigns[i].t));
         lts.section = getID();
@@ -520,19 +512,31 @@ void section::addTSigns(const Odr::smaS& sec, scalar so, scalar se)
         else
             std::cerr << "[ Error ] Unrecognised traffic sign name: " << sec.tsigns[i].name << std::endl;
 
-        for (uint j = 0; j < _writtenSize; ++j)
-        {
-            if (sec.tsigns[i].orientation * _lanes[j].odrID() < 0) continue; // orientation may be -1, 0 or +1
-
-            if (_lanes[j].odrID() > 0) lts.mDir = 1;
-            else lts.mDir = -1;
-            lts.lane = j;
-            lts.assigned = true;
-            _lanes[j].addTSign(lts);
-        }
+        addTSign(lts, sec.tsigns[i].orientation);
     }
 
+    return;
 }
+
+bool section::addTSign(lane::tSign lts, int orientation)
+{
+    lts.section = _id;
+
+    bool appended = false;
+    for (uint j = 0; j < _writtenSize; ++j)
+    {
+        if (orientation * _lanes[j].odrID() < 0) continue; // orientation may be -1, 0 or +1
+
+        lts.lane = j;
+        lts.assigned = true;
+        _lanes[j].addTSign(lts);
+
+        appended = true;
+    }
+    return appended;
+}
+
+
 bool section::setZero(const std::vector<Odr::geometry> &g, scalar so, scalar se)
 {
     if ((_zero.getSign() != lane::sign::o) && (_zero.getKind() != lane::kind::unknown))
@@ -549,10 +553,10 @@ bool section::setZero(const std::vector<Odr::geometry> &g, scalar so, scalar se)
     odrl0.kind = Odr::Kind::None;
     _zero.set(g, {Odr::offset(0.,0.,0.,0.,so,se)},
               {Odr::offset(0.,0.,0.,0.,so,se)}, odrl0, se);
+    _zero.lockFlippable();
 
     return true;
 }
-
 
 scalar section::maxSpeed() const
 {
@@ -573,6 +577,7 @@ Odr::Kind::RoadType section::type() const
 {
     return _type;
 }
+
 
 
 std::vector<lane::tSign> section::getTSigns() const

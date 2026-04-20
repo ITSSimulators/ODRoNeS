@@ -546,13 +546,13 @@ namespace Odr
     class speedLimit
     {
     public:
-        speedLimit()
-        {
-            value = 0; s = 0;
-        }
+        speedLimit() { };
+        speedLimit(scalar iValue, scalar iS) {
+            value = iValue; s = iS; };
+
     public:
-        double value; ///< stored in m/s;
-        double s; ///< starting s coordinate;
+        double value {0}; ///< stored in m/s;
+        double s {0}; ///< starting s coordinate;
     };
 
     extern std::string geomString(const Odr::Attr::Geometry &g);

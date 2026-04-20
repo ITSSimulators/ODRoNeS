@@ -148,23 +148,22 @@ public:
     {
     public:
         tSign()
-        { pos = {0., 0.}; lpos = {0., 0.}; s = 0; info = tSignInfo::unknown; mDir = 0; section = 0; lane = 0; assigned = false;}
-        tSign(arr2 ipos, arr2 ilpos, scalar is, tSignInfo iinfo, int imDir, int isection, int ilane, bool iassigned)
-        { pos = ipos; lpos = ilpos; s = is; info = iinfo; mDir = imDir; section = isection; lane = ilane; assigned = iassigned;}
+        { pos = {0., 0.}; lpos = {0., 0.}; s = 0; info = tSignInfo::unknown; section = 0; lane = 0; assigned = false;}
+        tSign(arr2 ipos, arr2 ilpos, scalar is, tSignInfo iinfo, int isection, int ilane, bool iassigned)
+        { pos = ipos; lpos = ilpos; s = is; info = iinfo; section = isection; lane = ilane; assigned = iassigned;}
     public:
         arr2 pos; ///< the actual position of the sign
         arr2 lpos; ///< the projected position on the lane (in lane)
         scalar s; ///< the distance from the beginning of the lane, calculated with the projected position (in lane)
         tSignInfo info; ///< the meaning of the traffic sign.
-        int mDir; ///< either +1 or -1 depending on the orientation of the sign.
         int section; ///< the section that holds the sign (useful in lrn)
         int lane; ///< the lane that holds the sign (useful in lrn)
         bool assigned; ///< whether the sign has been assigned successfuly to a lane or not (useful in lrn).
-        //! Speed limit for a speed limit sign [m/s].
-        scalar value{ 0.0 };
+        scalar value{ 0.0 }; ///< Speed limit for a speed limit sign [m/s].
     };
 
 
+    // 3 - Constants:
     static constexpr scalar odrTol = 1e-2;
 
 
@@ -248,7 +247,8 @@ public:
     const std::vector<odrones::geometry*> geometries() const;
 
     // Speed:
-    void setSpeed(const scalar speed);
+    void setSpeed(scalar speed);
+    void addSpeed(Odr::speedLimit sl);
     scalar getSpeed() const;
     scalar getSpeed(scalar d) const; ///< get the speed at a certain distance down the lane... assuming it's a car.
 

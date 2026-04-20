@@ -82,7 +82,6 @@ void RNS::clearMemory()
         _sectionsSize = 0;
     }
     _sectionsSize = 0;
-    _tSigns.clear();
     _ready = false;
 
 }
@@ -214,14 +213,21 @@ void RNS::drivingSide(concepts::drivingSide side)
 
 std::vector<lane::tSign> RNS::tSigns() const
 {
-    return _tSigns;
+    // Collect the traffic signs:
+    std::vector<lane::tSign> vts;
+    for (uint i = 0; i < _sectionsSize; ++i)
+    {
+        std::vector<lane::tSign> ts = _sections[i].getTSigns();
+        vts.insert(std::end(vts), std::begin(ts), std::end(ts));
+    }
+    return vts;
 }
 
-void RNS::tSigns(const std::vector<lane::tSign> &t)
+bool RNS::appendTSign(lane::tSign ts, int orientation)
 {
-    _tSigns = t;
-
+    return _sections[ts.section].addTSign(ts, orientation);
 }
+
 
 bool RNS::makeRoads(std::string mapFile, const char* drivingSide, bool exhaustiveLinking, bool fineTune, bool loadSidewalk)
 {
@@ -419,8 +425,6 @@ bool RNS::makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool exhaus
             // read just the lanes within this laneSection:
             _sections[sectionsNdx].setOdrRoad(read.sections[i], j);
 
-            // ask _sections to spit out a tsigns vector for display purposes.
-            // _tSigns.insert(_tSigns.end(), _sections[sectionsNdx].lrnTSigns().begin(), _sections[sectionsNdx].lrnTSigns().end())
             sectionsNdx += 1;
         }
     }
@@ -501,14 +505,6 @@ bool RNS::makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool exhaus
 
     if (exhaustiveLinking)
         linkLanesGeometrically(_linkTol);
-
-    // Get the traffic signs:
-    for (uint i = 0; i < _sectionsSize; ++i)
-    {
-        std::vector<lane::tSign> ts = _sections[i].getTSigns();
-        _tSigns.insert(std::end(_tSigns), std::begin(ts), std::end(ts));
-    }
-
 
     // MISSING Crosswalk lanes:
 
