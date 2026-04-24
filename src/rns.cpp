@@ -114,31 +114,31 @@ void RNS::assignInputRNSToThis(const RNS& r)
             _sections[is][jl]->setSection( _sections[is] ); // this one's easy, lanes belong to sections.
 
             // Port Lane:
-            const lane* wl = _sections[is][jl]->getPortLane();
+            const lane* wl = r._sections[is][jl]->getPortLane();
             if (wl)
-                _sections[is][jl]->setPortLane( getLaneWithSUID(wl->getID(), wl->getSectionID()) );
+                _sections[is][jl]->setPortLane( getLaneWithSUID( wl->getSectionID(), wl->getID() ) );
 
             // Starboard Lane:
-            wl = _sections[is][jl]->getStarboardLane();
+            wl = r._sections[is][jl]->getStarboardLane();
             if (wl)
-                _sections[is][jl]->setStarboardLane( getLaneWithSUID(wl->getID(), wl->getSectionID()) );
+                _sections[is][jl]->setStarboardLane( getLaneWithSUID( wl->getSectionID(), wl->getID() ) );
 
             // Next Lane:
-            if (_sections[is][jl]->hasNextLane())
+            if (r._sections[is][jl]->hasNextLane())
             {
                 const lane** nls; size_t nlsSize;
-                std::tie(nls, nlsSize) = _sections[is][jl]->getNextLanes();
+                std::tie(nls, nlsSize) = r._sections[is][jl]->getNextLanes();
                 for (uint knl = 0; knl < nlsSize; ++knl)
-                    _sections[is][jl]->setNextLane(knl, getLaneWithSUID(nls[knl]->getID(), nls[knl]->getSectionID()));
+                    _sections[is][jl]->setNextLane(knl, getLaneWithSUID( nls[knl]->getSectionID(), nls[knl]->getID() ));
             }
 
             // Prev Lane:
-            if (_sections[is][jl]->hasPrevLane())
+            if (r._sections[is][jl]->hasPrevLane())
             {
                 const lane** pls; size_t plsSize;
-                std::tie(pls, plsSize) = _sections[is][jl]->getPrevLanes();
+                std::tie(pls, plsSize) = r._sections[is][jl]->getPrevLanes();
                 for (uint knl = 0; knl < plsSize; ++knl)
-                    _sections[is][jl]->setPrevLane(knl, getLaneWithSUID(pls[knl]->getID(), pls[knl]->getSectionID()));
+                    _sections[is][jl]->setPrevLane(knl, getLaneWithSUID( pls[knl]->getSectionID(), pls[knl]->getID() ));
             }
         }
     }
