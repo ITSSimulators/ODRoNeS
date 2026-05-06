@@ -127,15 +127,15 @@ int main(int argc, char *argv[])
     if (result.count("identify"))
         gSettings.identify = true;
 
-    // Option 4 - Identify lanes
+    // Option 4 - Add the reference line
     if (result.count("zero"))
         gSettings.zero = true;
 
-    // Option 5 - Identify lanes
+    // Option 5 - Show only the reference line
     if (result.count("zero-only"))
         gSettings.zeroOnly = true;
 
-    // Option 6 - Every other lane.
+    // Option 6 - Do not hide hard shoulders, etc.
     if (result.count("all-but-zero"))
         gSettings.allButZero = true;
 
