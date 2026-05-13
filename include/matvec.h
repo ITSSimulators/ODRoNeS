@@ -39,7 +39,7 @@ namespace odrones
 typedef std::array<scalar, 2> arr2;
 class segment {
 public:
-    segment(const std::array<scalar, 2> &a1, const std::array<scalar, 2> &a2)
+    segment(const arr2 &a1, const arr2 &a2)
     {
         p1 = a1; p2 = a2;
     }
