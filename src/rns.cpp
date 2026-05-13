@@ -504,7 +504,7 @@ bool RNS::makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool exhaus
     setPortAndStarboard(_drivingSide);
 
     if (exhaustiveLinking)
-        linkLanesGeometrically(_linkTol);
+        linkLanesGeometrically(_linkTol, true);
 
     // MISSING Crosswalk lanes:
 
@@ -918,7 +918,7 @@ void RNS::write(const std::string &mapFile, bool beziers_as_pp3) const
     xmlUtils::CheckResult(xmlMap.SaveFile(mapFile.c_str()));
 }
 
-void RNS::linkLanesGeometrically(scalar tol)
+void RNS::linkLanesGeometrically(scalar tol, bool sameKind)
 {
     // scalar largeTol = 20 * tol;
     // 1 - Link two-way sections, we've already run setPortAndStarboard which flips them correctly.
@@ -929,7 +929,7 @@ void RNS::linkLanesGeometrically(scalar tol)
         {
             if (_sections[j].isOneWay()) continue;
             if (!sectionEdgesInRange(_sections[i], _sections[j])) continue;
-            if ((!linkLanesInSectionsOD(_sections[i], _sections[j], tol)) && (false))
+            if ((!linkLanesInSectionsOD(_sections[i], _sections[j], tol, sameKind)) && (false))
                 std::cerr << "[ WARNING ] no lanes between sections: " << _sections[i].getCSUID() << " and "
                           << _sections[j].getCSUID() << " were linked because their edges are too separated" << std::endl;
         }
@@ -952,6 +952,9 @@ void RNS::linkLanesGeometrically(scalar tol)
             {
                 for (uint lj = 0; lj < _sections[sj].size(); ++lj)
                 {
+                    if ((sameKind) && (_sections[si][li]->getKind() != _sections[sj][lj]->getKind()))
+                        continue;
+
                     uint linkErr = linkLanesIfSound(_sections[si][li], _sections[sj][lj], tol);
                     if (linkErr != 1) link = true;
                     if (linkErr != 2) continue;
@@ -976,7 +979,7 @@ void RNS::linkLanesGeometrically(scalar tol)
         {
             if (!_sections[j].isOneWay()) continue;
             if (!sectionEdgesInRange(_sections[i], _sections[j])) continue;
-            if ((!linkLanesInSectionsIfSound(_sections[i], _sections[j], tol)) && (false))
+            if ((!linkLanesInSectionsIfSound(_sections[i], _sections[j], tol, sameKind)) && (false))
                 std::cerr << "[ WARNING ] no lanes between sections: " << _sections[i].getCSUID() << " and "
                           << _sections[j].getCSUID() << " were linked because their edges are too separated" << std::endl;
         }
@@ -1028,8 +1031,11 @@ uint RNS::linkLanesIfInRange(lane *li, lane *lj, scalar tol)
 }
 
 
-uint RNS::linkLanesIfSound(lane *li, lane *lj, scalar tol)
+uint RNS::linkLanesIfSound(lane *li, lane *lj, scalar tol, bool sameKind)
 {
+    if ( (sameKind) && (li->getKind() != lj->getKind()) )
+        return 1;
+
     if (mvf::areCloseEnough(li->getDestination(), lj->getOrigin(), tol))
     {
         if (! mvf::areCloseEnough( 1,  mvf::scalarProduct(li->getTangentInPoint(li->getDestination()), lj->getTo()), lane::odrTol ) )
@@ -1087,13 +1093,15 @@ bool RNS::linkLanesInSections(section &si, section &sj, scalar tol)
     return link;
 }
 
-bool RNS::linkLanesInSectionsOD(section &si, section &sj, scalar tol)
+bool RNS::linkLanesInSectionsOD(section &si, section &sj, scalar tol, bool sameKind)
 {
     bool link = false;
     for (uint i = 0; i < si.size(); ++i)
     {
         for (uint j = 0; j < sj.size(); ++j)
         {
+            if ((sameKind) && (si[i]->getKind() != sj[j]->getKind()))
+                continue;
             if (linkLanesIfInRangeAndOD(si[i], sj[j], tol) == true)
                 link = true;
         }
@@ -1101,7 +1109,7 @@ bool RNS::linkLanesInSectionsOD(section &si, section &sj, scalar tol)
     return link;
 }
 
-bool RNS::linkLanesInSectionsIfSound(section &si, section &sj, scalar tol)
+bool RNS::linkLanesInSectionsIfSound(section &si, section &sj, scalar tol, bool sameKind)
 {
     bool link = false;
     for (uint i = 0; i < si.size(); ++i)
@@ -1556,9 +1564,11 @@ bool RNS::makePrioritiesSameEndingDifferentSectionLanes(scalar anticipationTime)
             for (uint li = 0; li < _sections[i].size(); ++li)
             {
                 if (_sections[i][li]->hasConflicts()) continue; // priority is already defined.
+                if (_sections[i][li]->getKind() == lane::kind::none) continue;
                 for (uint lj = 0; lj < _sections[j].size(); ++lj)
                 {
                     if (_sections[j][lj]->hasConflicts()) continue; // priority is already defined.
+                    if (_sections[j][lj]->getKind() == lane::kind::none) continue;
                     if ( !mvf::areCloseEnough( _sections[i][li]->getDestination(), _sections[j][lj]->getDestination(), lane::odrTol ) )
                         continue;
 

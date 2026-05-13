@@ -139,7 +139,7 @@ public:
     bool swapConflictPriority(lane *l, scalar s); ///< overload
 
 
-    void linkLanesGeometrically(scalar tol = lane::odrTol); ///< Go over all the section pairs, and link all the lanes if in range
+    void linkLanesGeometrically(scalar tol, bool sameKind); ///< Go over all the section pairs, and link all the lanes if in range and of same kind.
 
 private:
     //! Given two lanes l1 and l2, take a point on each one that is at a fraction (scalar between 0 and 1)
@@ -156,12 +156,12 @@ private:
     //!  ... as long as the end / start of li and lj are closer than tol.
     bool linkLanesIfInRangeAndOD(lane *li, lane *lj, scalar tol = lane::odrTol);
     //!  ... as long as any ending pair of points for li and lj are closer than tol and the tangents align correctly.
-    uint linkLanesIfSound(lane *li, lane *lj, scalar tol = lane::odrTol);
+    uint linkLanesIfSound(lane *li, lane *lj, scalar tol = lane::odrTol, bool sameKind = false);
 
     //! Assign nextLanes and prevLanes to the lanes in sections si and sj by calling linkLanesIfInRange on a double loop. Return true if anything was linked.
     bool linkLanesInSections(section &si, section &sj, scalar tol = lane::odrTol);
-    bool linkLanesInSectionsOD(section &si, section &sj, scalar tol = lane::odrTol);
-    bool linkLanesInSectionsIfSound(section &si, section &sj, scalar tol = lane::odrTol);
+    bool linkLanesInSectionsOD(section &si, section &sj, scalar tol = lane::odrTol, bool sameKind = false);
+    bool linkLanesInSectionsIfSound(section &si, section &sj, scalar tol = lane::odrTol, bool sameKind = false);
 
     /*! Check if any two edges of these two sections are close enough */
     bool sectionEdgesInRange(section &si, section &sj, scalar tol = lane::odrTol) const;
