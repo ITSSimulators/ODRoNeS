@@ -122,11 +122,11 @@ public:
     void setID(int id); ///< sets the section ID.
     std::string getCSUID() const; ///< just like in lane
 
-    std::vector<lane::tSign> getTSigns() const; ///< return a vector with non-repeated traffic signs, i e, query the different _lanes and take the physical traffic signs rather than all the repeated allocations.
+    std::vector<tSign> getTSigns() const; ///< return a vector with non-repeated traffic signs, i e, query the different _lanes and take the physical traffic signs rather than all the repeated allocations.
     /*! Add this traffic sign to every relevant lane.
      *  lts needs: lts.pos (absolute pos), lts.mDir, lts.info and lts.value (if needed).
      *  orientation: positive for odr left lanes, negative for odr right lanes. */
-    bool addTSign(lane::tSign lts, int orientation);
+    bool addTSign(tSign lts, int orientation);
 
 
     void getBoundingBox(arr2 &blc, arr2 &trc) const;

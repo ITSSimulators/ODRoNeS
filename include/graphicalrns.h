@@ -84,7 +84,7 @@ private:
     uint *_subRoads; ///< the number of 'parts' (geometries) in which this lane has been divided.
     Qt::PenStyle *_penStyle;
 
-    std::vector<lane::tSign> _tSigns;
+    std::vector<tSign> _tSigns;
     std::vector<conflict::staticObj> _sObjs;
 
     /*! bounding box, for the boundingRect()

@@ -32,36 +32,35 @@
 using namespace odrones;
 
 // Static methods:
-std::string lane::tSignInfoString(tSignInfo s)
+std::string tSign::infoToString(tSign::Info s)
 {
     switch(s)
     {
-    case tSignInfo::giveWay:
+    case Info::giveWay:
         return "giveWay";
-    case tSignInfo::stop:
+    case Info::stop:
         return "stop";
-    case tSignInfo::speedLimit:
+    case Info::speedLimit:
         return "speedLimit";
-    case tSignInfo::unknown:
+    case Info::unknown:
         return "unknown";
     default:
         return "Unrecognised traffic sign info";
     }
 }
 
-lane::tSignInfo odrones::lane::parseTSignInfo(const std::string& str)
+tSign::Info odrones::tSign::parseInfo(const std::string& str)
 {
     if (str == "giveWay")
-        return lane::tSignInfo::giveWay;
+        return Info::giveWay;
     else if (str == "stop")
-        return lane::tSignInfo::stop;
+        return Info::stop;
     else if (str == "speedLimit")
-        return lane::tSignInfo::speedLimit;
+        return Info::speedLimit;
     else if (str == "unknown")
-        return lane::tSignInfo::unknown;
+        return Info::unknown;
 
-    return lane::tSignInfo::unknown;
-    return tSignInfo();
+    return Info::unknown;
 }
 
 
@@ -2416,14 +2415,14 @@ scalar lane::getSuperelevation(scalar d, scalar loff) const
 
 void lane::addTSign(tSign ts)
 {
-    std::cout << "[ Lane ] adding traffic sign: " << tSignInfoString(ts.info) << " to lane " << getSUID() << std::endl;
+    std::cout << "[ Lane ] adding traffic sign: " << tSign::infoToString(ts.info) << " to lane " << getSUID() << std::endl;
 
     // place the sign on the road:
     projectPointOntoLane(ts.lpos, ts.pos);
     //  and assign it an s coordinate.
     ts.s = unsafeDistanceFromTheBoL(ts.lpos);
     _tSigns.push_back(ts);
-    if (ts.info == lane::tSignInfo::speedLimit)
+    if (ts.info == tSign::Info::speedLimit)
         addSpeed(Odr::speedLimit(ts.value, ts.s));
 }
 
@@ -2439,7 +2438,7 @@ uint lane::tSignsSize() const
     return static_cast<uint>(_tSigns.size());
 }
 
-lane::tSignInfo lane::getTSignInfo(uint i) const
+tSign::Info lane::getTSignInfo(uint i) const
 {
     return _tSigns[i].info;
 }
@@ -2737,7 +2736,7 @@ void lane::setConflictHPLanes(scalar s, lane *hpLane, scalar anticipationTime)
 
 
 
-std::vector<lane::tSign> lane::getTSigns() const
+std::vector<tSign> lane::getTSigns() const
 {
     return _tSigns;
 }

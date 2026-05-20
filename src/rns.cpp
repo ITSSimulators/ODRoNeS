@@ -211,19 +211,19 @@ void RNS::drivingSide(concepts::drivingSide side)
     _drivingSide = side;
 }
 
-std::vector<lane::tSign> RNS::tSigns() const
+std::vector<tSign> RNS::tSigns() const
 {
     // Collect the traffic signs:
-    std::vector<lane::tSign> vts;
+    std::vector<tSign> vts;
     for (uint i = 0; i < _sectionsSize; ++i)
     {
-        std::vector<lane::tSign> ts = _sections[i].getTSigns();
+        std::vector<tSign> ts = _sections[i].getTSigns();
         vts.insert(std::end(vts), std::begin(ts), std::end(ts));
     }
     return vts;
 }
 
-bool RNS::appendTSign(lane::tSign ts, int orientation)
+bool RNS::appendTSign(tSign ts, int orientation)
 {
     return _sections[ts.section].addTSign(ts, orientation);
 }

@@ -102,8 +102,8 @@ public:
     void getDimensions(scalar &minX, scalar &minY, scalar &maxX, scalar &maxY) const;
 
     // Traffic Signs:
-    std::vector<lane::tSign> tSigns() const; ///< return a copy of all the traffic signs
-    bool appendTSign(lane::tSign ts, int orientation);  ///< add a traffic sign to every lane in ts.section that has the correct orientation.
+    std::vector<tSign> tSigns() const; ///< return a copy of all the traffic signs
+    bool appendTSign(tSign ts, int orientation);  ///< add a traffic sign to every lane in ts.section that has the correct orientation.
 
 private:
     lane* getLaneWithSUID(int sID, int lID) const;

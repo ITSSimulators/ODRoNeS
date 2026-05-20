@@ -127,7 +127,35 @@ public:
 
 };
 
+class tSign
+{
+public:
+    // 2 - Traffic signs:
+    enum class Info { giveWay, stop, speedLimit, unknown };
+public:
+    tSign()
+    {
+        pos = { 0., 0. }; lpos = { 0., 0. }; s = 0; info = Info::unknown; section = 0; lane = 0; assigned = false;
+    }
+    tSign(arr2 ipos, arr2 ilpos, scalar is, Info iinfo, int isection, int ilane, bool iassigned)
+    {
+        pos = ipos; lpos = ilpos; s = is; info = iinfo; section = isection; lane = ilane; assigned = iassigned;
+    }
+public:
+    std::uint32_t id{ ~0U };
+    std::string name;
+    arr2 pos; ///< the actual position of the sign
+    arr2 lpos; ///< the projected position on the lane (in lane)
+    scalar s; ///< the distance from the beginning of the lane, calculated with the projected position (in lane)
+    Info info; ///< the meaning of the traffic sign.
+    int section; ///< the section that holds the sign (useful in lrn)
+    int lane; ///< the lane that holds the sign (useful in lrn)
+    bool assigned; ///< whether the sign has been assigned successfuly to a lane or not (useful in lrn).
+    scalar value{ 0.0 }; ///< Speed limit for a speed limit sign [m/s].
 
+    static std::string infoToString(Info s);
+    static Info parseInfo(const std::string& str);
+};
 
 class lane : public numerical
 {
@@ -140,27 +168,6 @@ public:
     enum class kind { tarmac, pavement, roundabout, crosswalk, none, unknown };
 
 
-    // 2 - Traffic signs:
-    enum class tSignInfo {giveWay, stop, speedLimit, unknown};
-    static std::string tSignInfoString(tSignInfo s);
-    static tSignInfo parseTSignInfo(const std::string& str);
-    class tSign
-    {
-    public:
-        tSign()
-        { pos = {0., 0.}; lpos = {0., 0.}; s = 0; info = tSignInfo::unknown; section = 0; lane = 0; assigned = false;}
-        tSign(arr2 ipos, arr2 ilpos, scalar is, tSignInfo iinfo, int isection, int ilane, bool iassigned)
-        { pos = ipos; lpos = ilpos; s = is; info = iinfo; section = isection; lane = ilane; assigned = iassigned;}
-    public:
-        arr2 pos; ///< the actual position of the sign
-        arr2 lpos; ///< the projected position on the lane (in lane)
-        scalar s; ///< the distance from the beginning of the lane, calculated with the projected position (in lane)
-        tSignInfo info; ///< the meaning of the traffic sign.
-        int section; ///< the section that holds the sign (useful in lrn)
-        int lane; ///< the lane that holds the sign (useful in lrn)
-        bool assigned; ///< whether the sign has been assigned successfuly to a lane or not (useful in lrn).
-        scalar value{ 0.0 }; ///< Speed limit for a speed limit sign [m/s].
-    };
 
 
     // 3 - Constants:
@@ -301,7 +308,7 @@ public:
     uint tSignsSize() const;
     bool hasTSigns() const;
     // tSign getTSign(uint i) const; ///< return a copy of the ith traffic sign.
-    tSignInfo getTSignInfo(uint i) const; ///< return the sign info of the ith sign.
+    tSign::Info getTSignInfo(uint i) const; ///< return the sign info of the ith sign.
     scalar getTSignSCoord(uint i) const; ///< return the distance from the begining of the lane of the ith traffic sign.
     void addStaticObj(conflict::staticObj so);
     // std::vector<sObject> getSObjects() const;

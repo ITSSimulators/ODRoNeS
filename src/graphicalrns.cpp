@@ -234,14 +234,14 @@ void graphicalRNS::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QW
 
     for (uint i = 0; i < _tSigns.size(); ++i)
     {
-        if (_tSigns[i].info == lane::tSignInfo::giveWay)
+        if (_tSigns[i].info == tSign::Info::giveWay)
         {
             if (_tSigns[i].assigned) pen.setColor(Qt::red);
             else pen.setColor(Qt::black);
             painter->setPen(pen);
             painter->drawPath(giveWay(_tSigns[i].pos));
         }
-        else if (_tSigns[i].info == lane::tSignInfo::stop)
+        else if (_tSigns[i].info == tSign::Info::stop)
         {
             if (_tSigns[i].assigned)
                 painter->fillPath(stop(_tSigns[i].pos), QBrush(Qt::red));
