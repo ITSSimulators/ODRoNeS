@@ -57,6 +57,7 @@ namespace odrones {
 class section;
 class lane;
 class conflict;
+class DynamicTrafficSignal;
 
 typedef odrones::mvf mvf;
 typedef odrones::bezier2 bezier2;
@@ -131,7 +132,15 @@ class tSign
 {
 public:
     // 2 - Traffic signs:
-    enum class Info { giveWay, stop, speedLimit, unknown };
+    enum class Info { giveWay, stop, speedLimit, trafficLight, unknown };
+    enum class State
+    {
+        unknown,
+        stop,
+        ready,
+        go,
+        caution
+    };
 public:
     tSign()
     {
@@ -143,18 +152,22 @@ public:
     }
 public:
     std::uint32_t id{ ~0U };
-    std::string name;
     arr2 pos; ///< the actual position of the sign
     arr2 lpos; ///< the projected position on the lane (in lane)
     scalar s; ///< the distance from the beginning of the lane, calculated with the projected position (in lane)
-    Info info; ///< the meaning of the traffic sign.
+    Info info{ Info::unknown }; ///< the meaning of the traffic sign.
     int section; ///< the section that holds the sign (useful in lrn)
     int lane; ///< the lane that holds the sign (useful in lrn)
     bool assigned; ///< whether the sign has been assigned successfuly to a lane or not (useful in lrn).
     scalar value{ 0.0 }; ///< Speed limit for a speed limit sign [m/s].
+    bool dynamic{ false };
+    State state{ State::unknown };
 
     static std::string infoToString(Info s);
     static Info parseInfo(const std::string& str);
+
+    static std::string stateToString(State value);
+    static State parseState(const std::string& str);
 };
 
 class lane : public numerical
@@ -303,7 +316,7 @@ public:
 
 
     // Traffic Signs:
-    void addTSign(tSign ts);
+    void addTSign(tSign ts, DynamicTrafficSignal* masterCopy);
     std::vector<tSign> getTSigns() const;
     uint tSignsSize() const;
     bool hasTSigns() const;

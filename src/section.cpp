@@ -22,6 +22,7 @@
 
 #include "section.h"
 #include "readXOdr.h"
+#include "rns.h"
 
 using namespace odrones;
 
@@ -291,7 +292,7 @@ void section::setOneVersionRoad(const OneVersion::smaS &sec, uint lgID)
     }
 }
 
-void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
+void section::setOdrRoad(const Odr::smaS &sec, uint lsID, RNS& rns)
 {
     _odrID = sec.odrID;
     _ovID = sec.ovID;
@@ -512,13 +513,14 @@ void section::setOdrRoad(const Odr::smaS &sec, uint lsID)
         else
             std::cerr << "[ Error ] Unrecognised traffic sign name: " << sec.tsigns[i].name << std::endl;
 
-        addTSign(lts, sec.tsigns[i].orientation);
+        rns.appendTSign(lts, sec.tsigns[i].orientation);
+        //addTSign(lts, sec.tsigns[i].orientation, nullptr);
     }
 
     return;
 }
 
-bool section::addTSign(tSign lts, int orientation)
+bool section::addTSign(tSign lts, int orientation, DynamicTrafficSignal * masterCopy)
 {
     lts.section = _id;
 
@@ -529,7 +531,7 @@ bool section::addTSign(tSign lts, int orientation)
 
         lts.lane = j;
         lts.assigned = true;
-        _lanes[j].addTSign(lts);
+        _lanes[j].addTSign(lts, masterCopy);
 
         appended = true;
     }

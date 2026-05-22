@@ -223,9 +223,30 @@ std::vector<tSign> RNS::tSigns() const
     return vts;
 }
 
+void odrones::RNS::addDynamicTrafficSignal(DynamicTrafficSignal* signal)
+{
+    if (signal)
+    {
+        if (signal->id() >= _trafficSignals.size())
+        {
+            _trafficSignals.resize(signal->id() + 1);
+        }
+        _trafficSignals[signal->id()] = signal;
+    }
+}
+
 bool RNS::appendTSign(tSign ts, int orientation)
 {
-    return _sections[ts.section].addTSign(ts, orientation);
+    if (ts.id < _trafficSignals.size())
+    {
+        return _sections[ts.section].addTSign(ts, orientation, _trafficSignals[ts.id]);
+    }
+    else
+    {
+        return _sections[ts.section].addTSign(ts, orientation, nullptr);
+    }
+
+    return false;
 }
 
 
@@ -423,7 +444,7 @@ bool RNS::makeOpenDRIVERoads(ReadOdr &read, const char* drivingSide, bool exhaus
             _sections[sectionsNdx].set(jthLSSize);
 
             // read just the lanes within this laneSection:
-            _sections[sectionsNdx].setOdrRoad(read.sections[i], j);
+            _sections[sectionsNdx].setOdrRoad(read.sections[i], j, *this);
 
             sectionsNdx += 1;
         }
@@ -2250,6 +2271,14 @@ lane* RNS::getLane(const lane *l)
     return _sections[l->getSectionID()][l->getID()];
 }
 
+DynamicTrafficSignal* odrones::RNS::dynamicTrafficSignal(std::uint32_t id)
+{
+    if (id < _trafficSignals.size())
+        return _trafficSignals[id];
+
+    return nullptr;
+}
+
 void RNS::crosslinkConflict(lane *l, uint cndx, conflict::cuid ocuid)
 {
     conflict::cuid tcuid = {l, l->getConflictSCoord(cndx)};
@@ -2336,4 +2365,77 @@ bool RNS::swapConflictPriority(lane *l, uint ci)
 bool RNS::swapConflictPriority(lane *l, scalar s)
 {
     return swapConflictPriority(l, static_cast<uint>(l->getConflictIdx(s)));
+}
+
+void DynamicTrafficSignal::addPhase(tSign::State state, double duration)
+{
+    _phases.emplace_back(state, duration);
+}
+
+void DynamicTrafficSignal::setState(State newState, double simTime)
+{
+    std::cout << '[' << simTime << "]:DynamicTrafficSignal:" << this << ":Changing state from " << stateToString(_state) << " to " << stateToString(newState) << std::endl;
+    _state = newState;
+}
+
+std::string DynamicTrafficSignal::stateToString(State value)
+{
+    switch (value)
+    {
+    case STATE_UNKNOWN:
+        return "STATE_UNKNOWN";
+    case STATE_INITIAL:
+        return "STATE_INITIAL";
+    case STATE_PHASE:
+        return "STATE_PHASE";
+    }
+
+    return "<error>";
+}
+
+DynamicTrafficSignal::State DynamicTrafficSignal::parseState(const std::string& str)
+{
+    if (str == "STATE_UNKNOWN")
+        return STATE_UNKNOWN;
+    else if (str == "STATE_INITIAL")
+        return STATE_INITIAL;
+    else if (str == "STATE_PHASE")
+        return STATE_PHASE;
+
+    return STATE_UNKNOWN;
+}
+
+void DynamicTrafficSignal::step(double simTime)
+{
+    switch (_state)
+    {
+    case STATE_INITIAL:
+        if (_phaseIndex < _phases.size())
+        {
+            setLightState(_phases[_phaseIndex].state(), simTime);
+            setState(STATE_PHASE, simTime);
+        }
+        break;
+    case STATE_PHASE:
+        if (_phaseIndex < _phases.size())
+        {
+            if (simTime - _stateChangeTime >= _phases[_phaseIndex].duration())
+            {
+                ++_phaseIndex;
+                if (_phaseIndex < _phases.size())
+                {
+                    setLightState(_phases[_phaseIndex].state(), simTime);
+                }
+            }
+        }
+        break;
+    }
+}
+
+TrafficLightPhase::TrafficLightPhase(tSign::State s, double duration)
+    :
+    _state(s),
+    _duration(duration)
+{
+    // Do nothing.
 }

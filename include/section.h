@@ -34,6 +34,8 @@
 
 namespace odrones
 {
+    class DynamicTrafficSignal;
+    class RNS;
 /*! A section is a bundle of lanes that run parallel (roughly).
  *  Lanes are kept in a vector that cannot be resized,
  *  because this could mean that the pointers to lanes
@@ -95,7 +97,7 @@ public:
     bool isOneWay() const;
 
     /*! store the input data, and add all the lanes for this laneSection ID */
-    void setOdrRoad(const Odr::smaS &sec, uint lsID);
+    void setOdrRoad(const Odr::smaS &sec, uint lsID, RNS& rns);
 
     /*! store the input data and all the lanes for this OneVersion laneGroup */
     void setOneVersionRoad(const OneVersion::smaS &sec, uint lgID);
@@ -126,7 +128,7 @@ public:
     /*! Add this traffic sign to every relevant lane.
      *  lts needs: lts.pos (absolute pos), lts.mDir, lts.info and lts.value (if needed).
      *  orientation: positive for odr left lanes, negative for odr right lanes. */
-    bool addTSign(tSign lts, int orientation);
+    bool addTSign(tSign lts, int orientation, DynamicTrafficSignal * masterCopy);
 
 
     void getBoundingBox(arr2 &blc, arr2 &trc) const;

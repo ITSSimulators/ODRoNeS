@@ -23,6 +23,7 @@
 #include <sstream>
 // #include <format>
 #include "lane.h"
+#include "rns.h"
 #include "xmlUtils.h"
 // DEBUG //
 #include <fstream>
@@ -44,6 +45,8 @@ std::string tSign::infoToString(tSign::Info s)
         return "speedLimit";
     case Info::unknown:
         return "unknown";
+    case Info::trafficLight:
+        return "trafficLight";
     default:
         return "Unrecognised traffic sign info";
     }
@@ -57,10 +60,47 @@ tSign::Info odrones::tSign::parseInfo(const std::string& str)
         return Info::stop;
     else if (str == "speedLimit")
         return Info::speedLimit;
+    else if (str == "trafficLight")
+        return Info::trafficLight;
     else if (str == "unknown")
         return Info::unknown;
 
     return Info::unknown;
+}
+
+std::string odrones::tSign::stateToString(odrones::tSign::State value)
+{
+    switch (value)
+    {
+    case State::unknown:
+        return "unknown";
+    case State::stop:
+        return "stop";
+    case State::ready:
+        return "ready";
+    case State::go:
+        return "go";
+    case State::caution:
+        return "caution";
+    }
+
+    return "<error>";
+}
+
+odrones::tSign::State odrones::tSign::parseState(const std::string& str)
+{
+    if (str == "unknown")
+        return State::unknown;
+    else if (str == "stop")
+        return State::stop;
+    else if (str == "ready")
+        return State::ready;
+    else if (str == "go")
+        return State::go;
+    else if (str == "caution")
+        return State::caution;
+
+    return State::unknown;
 }
 
 
@@ -2413,7 +2453,7 @@ scalar lane::getSuperelevation(scalar d, scalar loff) const
     return h;
 }
 
-void lane::addTSign(tSign ts)
+void lane::addTSign(tSign ts, DynamicTrafficSignal* masterCopy)
 {
     std::cout << "[ Lane ] adding traffic sign: " << tSign::infoToString(ts.info) << " to lane " << getSUID() << std::endl;
 
@@ -2421,7 +2461,11 @@ void lane::addTSign(tSign ts)
     projectPointOntoLane(ts.lpos, ts.pos);
     //  and assign it an s coordinate.
     ts.s = unsafeDistanceFromTheBoL(ts.lpos);
-    _tSigns.push_back(ts);
+    _tSigns.emplace_back(ts);
+    if (masterCopy)
+    {
+        masterCopy->addTSign(&_tSigns.back());
+    }
     if (ts.info == tSign::Info::speedLimit)
         addSpeed(Odr::speedLimit(ts.value, ts.s));
 }

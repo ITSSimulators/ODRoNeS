@@ -36,6 +36,132 @@ typedef odrones::OneVersion OneVersion;
 typedef odrones::mvf mvf;
 typedef odrones::conflict conflict;
 
+class TrafficLightPhase
+{
+public:
+    TrafficLightPhase(tSign::State s, double duration);
+
+    void setState(tSign::State newState)
+    {
+        _state = newState;
+    }
+
+    tSign::State state() const
+    {
+        return _state;
+    }
+
+    void setDuration(double duration)
+    {
+        _duration = duration;
+    }
+
+    double duration() const
+    {
+        return _duration;
+    }
+private:
+    tSign::State _state{ tSign::State::unknown };
+    double _duration{ 0.0 };
+};
+
+class DynamicTrafficSignal
+{
+public:
+    enum State : std::uint32_t
+    {
+        STATE_UNKNOWN,
+        STATE_INITIAL,
+        STATE_PHASE
+    };
+public:
+    void setId(std::uint32_t id)
+    {
+        _id = id;
+    }
+
+    std::uint32_t id() const
+    {
+        return _id;
+    }
+
+    void setName(const std::string& name)
+    {
+        _name = name;
+    }
+
+    const std::string& name() const
+    {
+        return _name;
+    }
+
+    void setLightState(tSign::State newState, double simTime)
+    {
+        std::cout << '[' << simTime << "]:DynamicTrafficSignal(" << this << "):Changing light state from " << odrones::tSign::stateToString(_lightState) << " to " << odrones::tSign::stateToString(newState) << '\n';
+        _lightState = newState;
+        _stateChangeTime = simTime;
+    }
+
+    tSign::State state() const
+    {
+        return _lightState;
+    }
+
+    std::size_t numTSigns() const
+    {
+        return _tSigns.size();
+    }
+
+    void addTSign(tSign* sign)
+    {
+        _tSigns.emplace_back(sign);
+    }
+
+    tSign* sign(std::size_t index)
+    {
+        if (index < _tSigns.size())
+            return _tSigns[index];
+
+        return nullptr;
+    }
+
+    const tSign* sign(std::size_t index) const
+    {
+        if (index < _tSigns.size())
+            return _tSigns[index];
+
+        return nullptr;
+    }
+
+    void addPhase(tSign::State state, double duration);
+
+    TrafficLightPhase* phase(std::size_t index)
+    {
+        if (index < _phases.size())
+            return &_phases[index];
+
+        return nullptr;
+    }
+
+    void step(double simTime);
+
+    static std::string stateToString(State value);
+
+    static State parseState(const std::string& str);
+private:
+    std::uint32_t _id{ ~0U };
+    std::string _name;
+    using TSignArray = std::vector<tSign*>;
+    TSignArray _tSigns;
+    using PhaseArray = std::vector<TrafficLightPhase>;
+    PhaseArray _phases;
+    tSign::State _lightState{ tSign::State::unknown };
+    std::size_t _phaseIndex{ 0 };
+    State _state{ STATE_INITIAL };
+    double _stateChangeTime{ 0.0 };
+    void setState(State newState, double simTime);
+};
+
 ///! The Road Network System:
 class RNS
 {
@@ -60,6 +186,13 @@ public:
     section& operator[](uint ndx); ///< access section ndx.
 
     lane* getLane(const lane *l); ///< access a lane for which you only have a const pointer.
+
+    std::size_t numDynamicTrafficSignals() const
+    {
+        return _trafficSignals.size();
+    }
+
+    DynamicTrafficSignal* dynamicTrafficSignal(std::uint32_t id);
 
     bool ready() const; /*! return true if _sections are ready */
     void ready(bool r); ///< manually set _ready to r.
@@ -103,8 +236,10 @@ public:
 
     // Traffic Signs:
     std::vector<tSign> tSigns() const; ///< return a copy of all the traffic signs
-    bool appendTSign(tSign ts, int orientation);  ///< add a traffic sign to every lane in ts.section that has the correct orientation.
 
+    void addDynamicTrafficSignal(DynamicTrafficSignal* signal);
+
+    bool appendTSign(tSign ts, int orientation);  ///< add a traffic sign to every lane in ts.section that has the correct orientation.
 private:
     lane* getLaneWithSUID(int sID, int lID) const;
     lane* getLaneWithOVId(const OneVersion::OVID &lID) const;
@@ -195,7 +330,7 @@ private:
     bool _verbose; ///< whether to print out to std::out or not.
 
     scalar _linkTol; ///< linking tolerance.
-
+    std::vector<DynamicTrafficSignal*> _trafficSignals;
 };
 
 }
