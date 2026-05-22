@@ -95,12 +95,7 @@ public:
         return _name;
     }
 
-    void setLightState(tSign::State newState, double simTime)
-    {
-        std::cout << '[' << simTime << "]:DynamicTrafficSignal(" << this << "):Changing light state from " << odrones::tSign::stateToString(_lightState) << " to " << odrones::tSign::stateToString(newState) << '\n';
-        _lightState = newState;
-        _stateChangeTime = simTime;
-    }
+    void setLightState(tSign::State newState, double simTime);
 
     tSign::State state() const
     {

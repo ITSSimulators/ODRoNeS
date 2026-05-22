@@ -2367,6 +2367,17 @@ bool RNS::swapConflictPriority(lane *l, scalar s)
     return swapConflictPriority(l, static_cast<uint>(l->getConflictIdx(s)));
 }
 
+void odrones::DynamicTrafficSignal::setLightState(tSign::State newState, double simTime)
+{
+    std::cout << '[' << simTime << "]:DynamicTrafficSignal(" << this << "):Changing light state from " << odrones::tSign::stateToString(_lightState) << " to " << odrones::tSign::stateToString(newState) << '\n';
+    _lightState = newState;
+    _stateChangeTime = simTime;
+    for (auto sign : _tSigns)
+    {
+        sign->state = newState;
+    }
+}
+
 void DynamicTrafficSignal::addPhase(tSign::State state, double duration)
 {
     _phases.emplace_back(state, duration);
