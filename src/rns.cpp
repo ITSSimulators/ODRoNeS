@@ -2421,7 +2421,8 @@ void DynamicTrafficSignal::step(double simTime)
         {
             if (simTime - _stateChangeTime >= _phases[_phaseIndex].duration())
             {
-                ++_phaseIndex;
+                _phaseIndex = (_phaseIndex + 1) % _phases.size();
+                
                 if (_phaseIndex < _phases.size())
                 {
                     setLightState(_phases[_phaseIndex].state(), simTime);
