@@ -48,3 +48,8 @@
 %rename(Odr_Kind_True) odrones::Odr::Kind::True;
 %rename(Odr_Kind_None) odrones::Odr::Kind::None;
 %rename(Odr_laneLink_from) odrones::Odr::laneLink::from;
+
+%rename(__add__) odrones::vec2::operator+(const vec2&) const;
+%rename(__sub__) odrones::vec2::operator-(const vec2&) const;
+%rename(__mul__) odrones::vec2::operator*(scalar) const;
+%rename(__truediv__) odrones::vec2::operator/(scalar) const;
