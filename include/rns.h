@@ -95,6 +95,8 @@ public:
         return _name;
     }
 
+    void setPhase(std::size_t phaseIndex, double simTime);
+
     void setLightState(tSign::State newState, double simTime);
 
     tSign::State state() const
