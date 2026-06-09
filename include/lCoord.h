@@ -38,7 +38,10 @@ public:
     {
         _l = l; _pos = pos; _s = s; _loff = loff;
     }
-
+    bool operator==(const lCoord& other) const
+    {
+        return _l == other._l && _pos == other._pos && _s == other._s && _loff == other._loff;
+    }
 
     // // Accessors // //
     void l(const lane *l) { _l = l; }
