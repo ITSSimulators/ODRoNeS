@@ -115,6 +115,7 @@ public:
     static std::string sideString(side s);
     static side parseSide(const char* str);
     enum class intersectionToSegment {none, forward, backward};
+    static std::string intersectionToSegmentString(intersectionToSegment its);
     //! whether point p on the segment determined by a---b.
     static bool isPointOnSegment(const arr2 &p, const arr2 &a, const arr2 &b);
     //! whether points (1, ..., n - 1) are on the segment 0---n.

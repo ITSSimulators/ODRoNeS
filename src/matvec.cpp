@@ -395,6 +395,21 @@ bool mvf::areSamePoints(const arr2 &a, const arr2 &b)
 // 3 - Geometry                       //
 ////////////////////////////////////////
 
+std::string mvf::intersectionToSegmentString(mvf::intersectionToSegment its)
+{
+    switch(its)
+    {
+    case mvf::intersectionToSegment::none:
+        return "none";
+    case mvf::intersectionToSegment::forward:
+        return "forward";
+    case mvf::intersectionToSegment::backward:
+        return "backward";
+    default:
+        return "unrecognised";
+    }
+}
+
 bool mvf::isPointOnSegment(const arr2 &p, const arr2 &a, const arr2 &b)
 {
     arr2 t;
@@ -921,8 +936,52 @@ arr2 mvf::projectPointToSegment(const arr2 &p, const arr2 &o, const arr2 &to, sc
 
 arr2 mvf::projectPointToArc(const arr2 &p, const arr2 &o, const arr2 &c, const arr2 &co, scalar a)
 {
-    scalar ds = 0.1;
     scalar r = mvf::distance(c, o);
+
+    // int npID = 0;
+    constexpr scalar maxErr = 1e12;
+    // scalar d1 = maxErr, d2 = maxErr, d3 = maxErr, d4 = maxErr;
+    arr2 npOK, np1, np2, np3, np4;
+    arr2 nto = mvf::tangent(p, c);
+    if (mvf::getCodedIntersectionPointToArc(np1, p, nto, c, co, r, a) != mvf::intersectionToSegment::none)
+    {
+        // d1 = mvf::distance(np1, p);
+        npOK = np1;
+        // npID = 1;
+    }
+    // the following "backwards" intersection is redundant, I don't think we need that. Still, it's cheaper than the previous numerical approach.
+    else if (mvf::getCodedIntersectionPointToArc(np2, p, {-nto[0], -nto[1]}, c, co, r, a) != mvf::intersectionToSegment::none)
+    {
+        // d2 = mvf::distance(np2, p);
+        npOK = np2;
+        std::cout << "mvf::projectPointToArc - that's a nice surprise" << std::endl;
+        // npID = 2;
+    }
+    else
+    {
+        np3 = {c[0] + r * co[0], c[1] + r * co[1]};
+        scalar d3 = mvf::distance(np3, p);
+        arr2 ce = co;
+        mvf::rotateVectorByAngle(ce, a);
+        np4 = {c[0] + r * ce[0], c[1] + r * ce[1]};
+        scalar d4 = mvf::distance(np4, p);
+        if (d3 < d4)
+        {
+            npOK = np3;
+            // npID = 3;
+        }
+        else
+        {
+            npOK = np4;
+            // npID = 4;
+        }
+    }
+
+    return npOK;
+
+    /*
+    // Previous numerical approach:
+    scalar ds = 0.1;
     scalar length = std::abs(a) * r;
     uint parts = (std::max)(50, static_cast<int>(length / ds));
 
@@ -989,7 +1048,32 @@ arr2 mvf::projectPointToArc(const arr2 &p, const arr2 &o, const arr2 &c, const a
 
     arr2 coi = co;
     mvf::rotateVectorByAngle(coi, ao);
+    arr2 check = {c[0] + r * coi[0], c[1] + r * coi[1]};
+
+    // // // //
+    // testing:
+    // // // //
+    if (mvf::distance(npOK, check) > 1e-3)
+    {
+        std::cout << "np discrepancy: "
+                  << mvf::distance(npOK, check)
+                  << ", " << mvf::distance(check, np1)
+                  << ", " << mvf::distance(check, np2)
+                  << ", " << mvf::distance(check, np3)
+                  << ", " << mvf::distance(check, np4)
+                  << ", " << npID
+                  << std::endl;
+    }
+    else
+        std::cout << "spot on: " << mvf::distance(npOK, check) << ", " << npID
+                  << ", code: " << mvf::intersectionToSegmentString(code) << std::endl;
+    // // // // // //
+    // testing ends
+    // // // // // //
+
     return {c[0] + r * coi[0], c[1] + r * coi[1]};
+    return check;
+    */
 
 }
 
@@ -1053,6 +1137,10 @@ mvf::intersectionToSegment mvf::getCodedIntersectionPointToArc(arr2 &p, const ar
     }
     dA = mvf::positiveZero(dA);
     dB = mvf::positiveZero(dB);
+
+
+    int validA = 0; // 1 means valid, 0 means untested, -1 means invalid
+    int validB = 0;
     // Try to return forwards:
     if (dA >= 0)
     {
@@ -1064,11 +1152,16 @@ mvf::intersectionToSegment mvf::getCodedIntersectionPointToArc(arr2 &p, const ar
                 p = {pA[0], pA[1]};
                 return mvf::intersectionToSegment::forward;
             }
-            else if (isPointOnArc(pB, c, co, R, alpha))
+            else
+                validA = -1;
+
+            if (isPointOnArc(pB, c, co, R, alpha))
             {
                 p = {pB[0], pB[1]};
                 return mvf::intersectionToSegment::forward;
             }
+            else
+                validB = -1;
         }
         else
         {
@@ -1079,52 +1172,104 @@ mvf::intersectionToSegment mvf::getCodedIntersectionPointToArc(arr2 &p, const ar
                     p = {pB[0], pB[1]};
                     return mvf::intersectionToSegment::forward;
                 }
+                else
+                    validB = -1;
             }
             else if (isPointOnArc(pA, c, co, R, alpha))
             {
                 p = {pA[0], pA[1]};
                 return mvf::intersectionToSegment::forward;
             }
+            else
+                validA = -1;
         }
     }
-    else if (dB >= 0)
+
+    if (dB >= 0)
     {
-        if (isPointOnArc(pB, c, co, R, alpha))
+        if ((validB != -1) && (isPointOnArc(pB, c, co, R, alpha)))
         {
             p = {pB[0], pB[1]};
             return mvf::intersectionToSegment::forward;
         }
+        else
+            validB = -1;
     }
-    else // so both are backwards:
+
+    // If both are invalid, forget it:
+    if ((validA == -1) && (validB == -1))
+        return mvf::intersectionToSegment::none;
+
+    // maybe both are backwards, or some are invalid:
+    if (dA > dB) // then we'd prefer dA because of being closer (negative numbers)
     {
-        if (dA > dB) // then we'd prefer dA because of being closer (negative numbers)
+        if ((validA != -1) && (isPointOnArc(pA, c, co, R, alpha)))
         {
-            if (isPointOnArc(pA, c, co, R, alpha))
-            {
-                p = {pA[0], pA[1]};
-                return mvf::intersectionToSegment::backward;
-            }
-            else if (isPointOnArc(pB, c, co, R, alpha))
-            {
-                p = {pB[0], pB[1]};
-                return mvf::intersectionToSegment::backward;
-            }
+            p = {pA[0], pA[1]};
+            return mvf::intersectionToSegment::backward;
         }
         else
+            validA = -1;
+
+        if ((validB != -1) && (isPointOnArc(pB, c, co, R, alpha)))
         {
-            if (isPointOnArc(pB, c, co, R, alpha))
-            {
-                p = {pB[0], pB[1]};
-                return mvf::intersectionToSegment::backward;
-            }
-            else if (isPointOnArc(pA, c, co, R, alpha))
-            {
-                p = {pA[0], pA[1]};
-                return mvf::intersectionToSegment::backward;
-            }
+            p = {pB[0], pB[1]};
+            return mvf::intersectionToSegment::backward;
+        }
+        else
+            validB = -1;
+    }
+    else
+    {
+        if ((validB != -1) && (isPointOnArc(pB, c, co, R, alpha)))
+        {
+            p = {pB[0], pB[1]};
+            return mvf::intersectionToSegment::backward;
+        }
+        else
+            validB = -1;
+
+        if ((validA != -1) && (isPointOnArc(pA, c, co, R, alpha)))
+        {
+            p = {pA[0], pA[1]};
+            return mvf::intersectionToSegment::backward;
+        }
+        else
+            validA = -1;
+    }
+
+    // I don't think that we'll ever end there, but I will have this safety net for now:
+    if ((validA != -1) || (validB != -1))
+    {
+        std::cout << "Is that possible? " << validA << ", " << dA << ", " << validB << ", " << dB << std::endl;
+        int returnAB = 0; // 0 is default, 1 is A, 2 is B;
+        if ((validA != -1) && (validB != -1))
+        {
+            if (std::fabs(dA) < std::fabs(dB))
+                returnAB = 1;
+            else
+                returnAB = 2;
+        }
+        else if (validA != -1)
+            returnAB = 1;
+        else if (validB != -1)
+            returnAB = 2;
+
+        if (returnAB == 1)
+        {
+            p = {pA[0], pA[1]};
+            if (dA >= 0) return mvf::intersectionToSegment::forward;
+            else return mvf::intersectionToSegment::backward;
         }
 
+        if (returnAB == 2)
+        {
+            p = pB;
+            if (dB >= 0) return mvf::intersectionToSegment::forward;
+            else return mvf::intersectionToSegment::backward;
+        }
     }
+
 
     return mvf::intersectionToSegment::none;
 }
