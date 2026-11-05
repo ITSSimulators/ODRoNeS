@@ -43,11 +43,60 @@ public:
         return _l == other._l && _pos == other._pos && _s == other._s && _loff == other._loff;
     }
 
-    // // Accessors // //
+    // // lane-related methods // //
     void l(const lane *l) { _l = l; }
     const lane* l() const { return _l; }
     void deleteL() { delete _l; _l = nullptr; }
+    //! Change l to the next or previous lane if s is larger than _length or negative BUT
+    //! IT WILL FAIL and return false if there is more than one lane "successor" or "predecessor", unable to choose.
+    bool lConsistentWithS()
+    {
+        _s = mvf::positiveZero(_s);
+        if ((_s >= 0) && (_s <= _l->getLength()))
+            return true;
 
+        const lane* l_bckp = _l;
+        if (_s < 0)
+        {
+            if (_l->getPrevLaneSize() != 1)
+                return false;
+
+            _l = _l->getPrevLane();
+            scalar d = std::fabs(_s);
+            while (_l->getLength() < d)
+            {
+                d -= _l->getLength();
+                if (_l->getPrevLaneSize() != 1)
+                {
+                    _l = l_bckp;
+                    return false;
+                }
+                _l = _l->getPrevLane();
+            }
+            _s = _l->getLength() - d;
+        }
+
+
+        else if (_s > _l->getLength())
+        {
+            scalar s_bckp = _s;
+            while (_l->getLength() < _s)
+            {
+                _s -= _l->getLength();
+                if (_l->getNextLaneSize() != 1)
+                {
+                    _l = l_bckp;
+                    _s = s_bckp;
+                    return false;
+                }
+                _l = _l->getNextLane();
+            }
+        }
+
+        return true;
+    }
+
+    // pos-related methods
     void pos(const arr2& pos) { _pos = pos; }
     arr2 pos() const { return _pos; }
     bool posProjectedFromPos(const arr2& pos) { return _l->projectPointOntoLane(_pos, pos); }
@@ -68,6 +117,7 @@ public:
     }
     */
 
+    // s-related methods
     void s(scalar s) { _s = s; }
     scalar s() const { return _s; }
     void sConsistentWithLAndPos() { _s = _l->unsafeDistanceFromTheBoL(_pos); }
