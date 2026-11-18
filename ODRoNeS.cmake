@@ -45,7 +45,13 @@ include(${CLOTHOIDS_DIR}/CMakeLists.txt)
 # cxxOpts:
 include_directories(${RNS_DIR}/3rdParty/cxxopts)
 # tinyxml
-include_directories(${RNS_DIR}/3rdParty/tinyxml2)
+find_package(tinyxml2 QUIET)
+if (NOT tinyxml2_FOUND)
+   include_directories(${RNS_DIR}/3rdParty/tinyxml2)
+else()
+   get_target_property(tinyxml2_include tinyxml2::tinyxml2 INTERFACE_INCLUDE_DIRECTORIES)
+   include_directories(${tinyxml2_include})
+endif()
 
 
 # Qt graphical interface:
@@ -93,12 +99,12 @@ if(ODRONES_USE_ONEVERSION)
 endif(ODRONES_USE_ONEVERSION)
 
 # Build the RNS library:
-add_library(rns
+set(RNS_SOURCES
     ${RNS_DIR}/include/constants.h 
     ${RNS_DIR}/src/rnsconcepts.cpp ${RNS_DIR}/include/rnsconcepts.h
     ${RNS_DIR}/src/matvec.cpp ${RNS_DIR}/include/matvec.h
-	 ${RNS_DIR}/src/xmlUtils.cpp ${RNS_DIR}/include/xmlUtils.h
-	 ${RNS_DIR}/src/Odr.cpp ${RNS_DIR}/include/Odr.h
+    ${RNS_DIR}/src/xmlUtils.cpp ${RNS_DIR}/include/xmlUtils.h
+    ${RNS_DIR}/src/Odr.cpp ${RNS_DIR}/include/Odr.h
     ${RNS_DIR}/src/readOdr.cpp ${RNS_DIR}/include/readOdr.h
     ${RNS_DIR}/src/readXOdr.cpp ${RNS_DIR}/include/readXOdr.h
     ${RNS_DIR}/src/readBOdr.cpp ${RNS_DIR}/include/readBOdr.h
@@ -127,9 +133,18 @@ add_library(rns
     # Qt plots:
     ${RNS_DIR}/src/graphicalrns.cpp ${RNS_DIR}/include/graphicalrns.h
     ${RNS_DIR}/src/graphicalZoom.cpp ${RNS_DIR}/include/graphicalZoom.h
-    ${RNS_DIR}/3rdParty/tinyxml2/tinyxml2.cpp
 )
-target_link_libraries(rns clothoids ${QT_LIBRARIES})
+
+set(RNS_LIBRARIES clothoids ${QT_LIBRARIES})
+if (NOT tinyxml2_FOUND)
+    list(APPEND RNS_SOURCES ${RNS_DIR}/3rdParty/tinyxml2/tinyxml2.cpp)
+else()
+    list(APPEND RNS_LIBRARIES tinyxml2::tinyxml2)
+endif()
+
+add_library(rns ${RNS_SOURCES})
+
+target_link_libraries(rns ${RNS_LIBRARIES})
 
 #How about Python bindings:
 option(ODRONES_PYTHON_BINDINGS "Build Python3 bindings for ODRoNeS" OFF)
@@ -141,8 +156,8 @@ if (ODRONES_PYTHON_BINDINGS)
 
    set_source_files_properties(${RNS_DIR}/swig/odrones_python.i PROPERTIES 
 	                            CPLUSPLUS ON 
-										 USE_SWIG_DEPENDENCIES ON
-										 SWIG_FLAGS "-I${RNS_DIR}/include")
+	                            USE_SWIG_DEPENDENCIES ON
+	                            SWIG_FLAGS "-I${RNS_DIR}/include")
 	swig_add_library(odrones TYPE SHARED LANGUAGE python
                     SOURCES ${RNS_DIR}/swig/odrones_python.i)
 	swig_link_libraries(odrones ${Python_LIBRARIES} rns clothoids)
