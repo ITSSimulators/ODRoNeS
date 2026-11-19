@@ -432,6 +432,7 @@ public:
     std::string getOdrSUID() const; ///< Odr String Unique ID
     std::string getOVSUID() const; ///< OneVersion String ID
     std::string getCSUID() const; ///< Complete SUID: "<SUID> (<OdrSUID>)"
+    bool isSUID(int sID, int lID) const;
     bool isSUID(std::string name) const;
     bool isCSUID(std::string name) const;
     bool isOdrSUID(std::string name) const;

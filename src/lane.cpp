@@ -1748,6 +1748,13 @@ std::string lane::getSUID() const
     return sUID(_sectionID, _id);
 }
 
+bool lane::isSUID(int sID, int lID) const
+{
+    if (_sectionID != sID) return false;
+    if (_id != lID) return false;
+    return true;
+}
+
 bool lane::isSUID(std::string name) const
 {
     if (!name.compare(getSUID())) return true;
