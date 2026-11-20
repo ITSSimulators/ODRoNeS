@@ -46,6 +46,7 @@ public:
     static std::string drivingString(drivingSide d);
 
     static bool actorIsFourWheeled( actor a );
+    static bool actorIsMotorist( actor a );
 
 };
 

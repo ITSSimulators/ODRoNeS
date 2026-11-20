@@ -73,3 +73,12 @@ bool concepts::actorIsFourWheeled(actor a)
         return true;
     return false;
 }
+
+bool concepts::actorIsMotorist(actor a)
+{
+    if ((a == actor::car) || (a == actor::bus) || (a == actor::semitrailer) ||
+        (a == actor::trailer) || (a == actor::tram) || (a == actor::truck) ||
+        (a == actor::van) || (a == actor::motorbike))
+        return true;
+    return false;
+}
